@@ -6,8 +6,7 @@ import java.util.concurrent.ExecutionException;
 public class Main {
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
-
-       /* Set set = new OCCABTree(2,Constants.DEGREE);
+        Set set = new OCCABTree(2,Constants.DEGREE);
         set.add(1,1);
         set.add(2,1);
         set.add(3,1);
@@ -26,11 +25,31 @@ public class Main {
         set.add(16,1);
         set.add(17,1);
         set.add(18,1);
+        set.remove(1);
+        set.remove(2);
+        set.remove(3);
+        set.remove(4);
+        set.remove(5);
+        set.remove(6);
+        set.remove(7);
+        set.remove(8);
+        set.remove(9);
+        set.remove(11);
+        set.remove(11);
+        set.remove(12);
+        set.remove(13);
+        set.remove(14);
+        set.remove(15);
+        set.remove(16);
+        set.remove(17);
+        set.remove(18);
+
+
 
         boolean res = set.contains(19);
         boolean res2 = set.contains(2);
-      */
 
+       /*
        for (int i = 1; i <= 1; i++) {
             int numberOfThreads =3;//nteger.parseInt(args[1]);
             Set concurrenSet = new OCCABTree(2, Constants.DEGREE);
@@ -43,6 +62,6 @@ public class Main {
 
             System.out.println("Total time: " + timeElapsed + " ms with " + numberOfThreads + " threads");
 
-        }
+        }*/
     }
      }

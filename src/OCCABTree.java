@@ -457,6 +457,7 @@ public class OCCABTree implements Set {
                int oldVersion = node.ver.get();
                node.ver.set(oldVersion);
                node.keys[i] = 0;
+               node.values[i] = 0;
                node.size = newSize;
                node.ver.set(oldVersion+2);
 
