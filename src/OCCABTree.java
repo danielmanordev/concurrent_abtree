@@ -463,6 +463,7 @@ public class OCCABTree implements Set {
                if(newSize == a-1) {
                    node.unlock();
                    fixUnderfull(node);
+                   return new Result(deletedValue, ReturnCode.SUCCESS);
                }
                node.unlock();
                return new Result(deletedValue, ReturnCode.SUCCESS);
