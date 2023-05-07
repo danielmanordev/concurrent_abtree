@@ -464,6 +464,7 @@ public class OCCABTree implements Set {
                    node.unlock();
                    fixUnderfull(node);
                }
+               node.unlock();
                return new Result(deletedValue, ReturnCode.SUCCESS);
            }
         }
@@ -506,9 +507,6 @@ public class OCCABTree implements Set {
            int siblingIndex = (pathInfo.nIdx > 0 ? pathInfo.nIdx - 1 : 1);
 
            sibling = parent.nodes[siblingIndex];
-
-           node.lock();
-           sibling.lock();
 
            int leftIndex;
            int rightIndex;
