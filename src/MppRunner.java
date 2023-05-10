@@ -49,16 +49,18 @@ public class MppRunner {
         boolean res2 = set.contains(2);
        */
 
-       for (int i = 1; i <= 1; i++) {
-            int numberOfThreads =4;//nteger.parseInt(args[1]);
-            Set concurrenSet = new OCCABTree(2, Constants.DEGREE);
+        for (int i = 1; i <= 1; i++) {
+            int numberOfThreads =18;//nteger.parseInt(args[1]);
+            Set concurrentSet = new OCCABTree(2, Constants.DEGREE);
 
 
             long start = System.currentTimeMillis();
-            TestSet.runTest(concurrenSet, numberOfThreads, 10000, 0, 100, 10000);
+            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, 10000, 0, 100, 10000);
             long finish = System.currentTimeMillis();
             long timeElapsed = finish - start;
-
+            System.out.println("Adds per microsecond: "+ testResult.TotalAdds.intValue()/(timeElapsed*1000));
+            System.out.println("Removes per microsecond: "+ testResult.TotalRemoves.intValue()/(timeElapsed*1000));
+            System.out.println("Contains per microsecond: "+ testResult.TotalContains.intValue()/(timeElapsed*1000));
             System.out.println("Total time: " + timeElapsed + " ms with " + numberOfThreads + " threads");
 
         }

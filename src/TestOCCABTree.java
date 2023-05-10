@@ -1,5 +1,6 @@
 // the entry-point for the testbed is the static runTest() method
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -10,9 +11,9 @@ class TestSet extends Thread
     private final int	dataRange;
     private final int	perCon;
     private final int	perAdd;
-    private int numberOfAdds=0;
-    private int numberOfContains=0;
-    private int numberOfRemoves=0;
+    private BigInteger numberOfAdds = BigInteger.ZERO;
+    private BigInteger numberOfContains = BigInteger.ZERO;
+    private BigInteger numberOfRemoves = BigInteger.ZERO;
     private List<String> prints;
     public TestSet(Set set, int dataRange, int perCon, int perAdd)
     {
@@ -41,7 +42,7 @@ class TestSet extends Thread
                     else {
                         prints.add(randomInt + " not found");
                     }
-                    numberOfContains++;
+                    numberOfContains=numberOfContains.add(BigInteger.ONE);
                 }
 
                 // add
@@ -52,7 +53,7 @@ class TestSet extends Thread
                     else {
                         prints.add(randomInt + " exists and was not added") ;
                     }
-                    numberOfAdds++;
+                    numberOfAdds=numberOfAdds.add(BigInteger.ONE);
                 }
                 // remove
                 else {
@@ -62,7 +63,7 @@ class TestSet extends Thread
                     else {
                         prints.add(randomInt +  " was NOT removed");
                     }
-                    numberOfRemoves++;
+                    numberOfRemoves=numberOfRemoves.add(BigInteger.ONE);
                 }
 
                 if (Thread.interrupted()) {// Clears interrupted status!}
@@ -84,11 +85,9 @@ class TestSet extends Thread
      * @param perAdd percentage of add(x) operations
      * @param ms length of test (in milliseconds)
      */
-    public static void runTest(Set set, int numThreads, int dataRange, int perCon, int perAdd, int ms)
+    public static TestResult runTest(Set set, int numThreads, int dataRange, int perCon, int perAdd, int ms)
     {
-        int totalAdds=0;
-        int totalRemoves=0;
-        int totalContains=0;
+
 
         // create all threads for the test
         TestSet[] threads = new TestSet[numThreads];
@@ -109,21 +108,25 @@ class TestSet extends Thread
         for (int i = 0; i < numThreads; ++i) {
             threads[i].interrupt();
         }
-
+         TestResult testResult = new TestResult();
         // print details
         for (int i = 0; i < numThreads; ++i) {
             for (int j=0; j< threads[i].prints.size();++j){
                 System.out.println("Thread "+ i +" "+threads[i].prints.get(j));
             }
-            totalRemoves  += threads[i].numberOfRemoves;
-            totalAdds     += threads[i].numberOfAdds;
-            totalContains += threads[i].numberOfContains;
+            testResult.TotalRemoves = testResult.TotalRemoves.add(threads[i].numberOfRemoves);
+            testResult.TotalAdds = testResult.TotalAdds.add(threads[i].numberOfAdds);
+            testResult.TotalContains = testResult.TotalContains.add(threads[i].numberOfContains);
         }
 
-        System.out.println("Total add invocations: "+ totalAdds );
-        System.out.println("Total remove invocations: "+ totalRemoves );
-        System.out.println("Total contains invocations: "+ totalContains );
-        int total = totalContains+totalAdds+totalRemoves;
-        System.out.println("Total invocations: "+ total );
+        System.out.println("Total add invocations: "+ testResult.TotalAdds );
+        System.out.println("Total remove invocations: "+ testResult.TotalRemoves );
+        System.out.println("Total contains invocations: "+ testResult.TotalContains );
+        testResult.Total = testResult.Total.add(testResult.TotalAdds);
+        testResult.Total = testResult.Total.add(testResult.TotalRemoves);
+        testResult.Total = testResult.Total.add(testResult.TotalContains);
+        System.out.println("Total invocations: "+ testResult.Total );
+        return testResult;
+
     }
 }
