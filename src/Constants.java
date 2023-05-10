@@ -1,3 +1,3 @@
 public class Constants {
-    public static final int DEGREE = 4;
+    public static final int DEGREE = 12;
 }

@@ -1,12 +1,9 @@
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
 
-public class Main {
+public class MppRunner {
 
-    public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
-        Set set = new OCCABTree(2,Constants.DEGREE);
+    public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {/*Set set = new OCCABTree(2,Constants.DEGREE);
         set.add(1,1);
         set.add(2,1);
         set.add(3,1);
@@ -50,20 +47,20 @@ public class Main {
 
         boolean res = set.contains(19);
         boolean res2 = set.contains(2);
+       */
 
-       /*
        for (int i = 1; i <= 1; i++) {
-            int numberOfThreads =3;//nteger.parseInt(args[1]);
+            int numberOfThreads =4;//nteger.parseInt(args[1]);
             Set concurrenSet = new OCCABTree(2, Constants.DEGREE);
 
 
             long start = System.currentTimeMillis();
-            TestSet.runTest(concurrenSet, numberOfThreads, 1000, 0, 100, 10000);
+            TestSet.runTest(concurrenSet, numberOfThreads, 10000, 0, 100, 10000);
             long finish = System.currentTimeMillis();
             long timeElapsed = finish - start;
 
             System.out.println("Total time: " + timeElapsed + " ms with " + numberOfThreads + " threads");
 
-        }*/
+        }
     }
      }

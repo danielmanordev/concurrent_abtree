@@ -1,23 +1,7 @@
 import java.util.Arrays;
 import java.util.Comparator;
 
-class SortKeyValues implements Comparator<KeyValue> {
 
-    @Override
-    public int compare(KeyValue o1, KeyValue o2) {
-        if(o1 == null || o2 == null) {
-            return -1;
-        }
-        if (o1.getKey() > o2.getKey()) {
-            return 1;
-        }
-        if (o1.getKey() < o2.getKey()) {
-            return -1;
-        } else {
-            return 0;
-        }
-    }
-}
 
 
 public class OCCABTree implements Set {
@@ -80,11 +64,13 @@ public class OCCABTree implements Set {
         node.lock();
 
         if(node.isMarked()){
+            node.unlock();
             return new Result(ReturnCode.RETRY);
         }
 
        for (int i = 0; i < Constants.DEGREE; ++i) {
             if (node.keys[i] == key) {
+                node.unlock();
                 return new Result(ReturnCode.FAILURE);
             }
         }
@@ -202,16 +188,6 @@ public class OCCABTree implements Set {
         }
         }
 
-
-    private void lockAllNodes(PathInfo pathInfo) {
-        pathInfo.n.lock();
-        pathInfo.p.lock();
-        if (pathInfo.gp != null) {
-            pathInfo.gp.lock();
-        }
-
-    }
-
     private void unlockAllNodes(PathInfo pathInfo) {
         pathInfo.n.unlock();
         pathInfo.p.unlock();
@@ -239,20 +215,36 @@ public class OCCABTree implements Set {
                 return ReturnCode.UNNECCESSARY;
             }
 
-            if (pathInfo.n != node) {
+            Node n = pathInfo.n;
+            Node p = pathInfo.p;
+            Node gp = pathInfo.gp;
+
+
+            if (n != node) {
                 return ReturnCode.UNNECCESSARY;
             }
 
             // we cannot apply this update if p has a weight violation
             // so, we check if this is the case, and, if so, try to fix it
-            if (!pathInfo.p.getWeight()) {
-                fixTagged(pathInfo.p);
+            if (!p.getWeight()) {
+                fixTagged(p);
                 continue;
             }
 
-            lockAllNodes(pathInfo);
 
-            if (node.isMarked() || pathInfo.p.isMarked()) {
+            n.lock();
+            p.lock();
+            if (gp != null) {
+               gp.lock();
+            }
+
+
+            if(n.isMarked()){
+                unlockAllNodes(pathInfo);
+                continue;
+            }
+
+            if(p.isMarked()){
                 unlockAllNodes(pathInfo);
                 continue;
             }
@@ -264,28 +256,24 @@ public class OCCABTree implements Set {
                 }
             }
 
-
-            Node gParent = pathInfo.gp;
-            Node parent = pathInfo.p;
-            Node n = pathInfo.n;
-            int size = parent.size + n.size - 1;
+            int size = p.size + n.size - 1;
 
 
 
             if (size <= b) {
                 Node newNode = createInternalNode(true,size,0);
-                System.arraycopy(parent.nodes, 0, newNode.nodes, 0, pathInfo.nIdx);
+                System.arraycopy(p.nodes, 0, newNode.nodes, 0, pathInfo.nIdx);
                 System.arraycopy(n.nodes, 0, newNode.nodes, pathInfo.nIdx, n.size);
-                System.arraycopy(parent.nodes, pathInfo.nIdx + 1, newNode.nodes, pathInfo.nIdx + n.size, parent.size - (pathInfo.nIdx + 1));
+                System.arraycopy(p.nodes, pathInfo.nIdx + 1, newNode.nodes, pathInfo.nIdx + n.size, p.size - (pathInfo.nIdx + 1));
 
-                System.arraycopy(parent.keys, 0, newNode.keys, 0, pathInfo.nIdx);
+                System.arraycopy(p.keys, 0, newNode.keys, 0, pathInfo.nIdx);
                 System.arraycopy(n.keys, 0, newNode.keys, pathInfo.nIdx, getKeyCount(n));
-                System.arraycopy(parent.keys, pathInfo.nIdx, newNode.keys, pathInfo.nIdx + getKeyCount(n), getKeyCount(parent) - (pathInfo.nIdx));
+                System.arraycopy(p.keys, pathInfo.nIdx, newNode.keys, pathInfo.nIdx + getKeyCount(n), getKeyCount(p) - (pathInfo.nIdx));
                 newNode.searchKey = newNode.keys[0];
 
-                gParent.nodes[pathInfo.pIdx] = newNode;
+                gp.nodes[pathInfo.pIdx] = newNode;
                 node.mark();
-                parent.mark();
+                p.mark();
                 unlockAllNodes(pathInfo);
                 return ReturnCode.SUCCESS;
             } else {
@@ -296,12 +284,12 @@ public class OCCABTree implements Set {
                 int keys[] = new int[Constants.DEGREE * 2];
                 Node nodes[] = new Node[Constants.DEGREE * 2];
 
-                System.arraycopy(parent.nodes, 0, nodes, 0, pathInfo.nIdx);
+                System.arraycopy(p.nodes, 0, nodes, 0, pathInfo.nIdx);
                 System.arraycopy(n.nodes, 0, nodes, pathInfo.nIdx, n.size);
-                System.arraycopy(parent.nodes, pathInfo.nIdx + 1, nodes, pathInfo.nIdx + n.size, parent.size - (pathInfo.nIdx + 1));
-                System.arraycopy(parent.keys, 0, keys, 0, pathInfo.nIdx);
+                System.arraycopy(p.nodes, pathInfo.nIdx + 1, nodes, pathInfo.nIdx + n.size, p.size - (pathInfo.nIdx + 1));
+                System.arraycopy(p.keys, 0, keys, 0, pathInfo.nIdx);
                 System.arraycopy(n.keys, 0, keys, pathInfo.nIdx, getKeyCount(n));
-                System.arraycopy(parent.keys, pathInfo.nIdx, keys, pathInfo.nIdx + getKeyCount(node), getKeyCount(parent) - pathInfo.nIdx);
+                System.arraycopy(p.keys, pathInfo.nIdx, keys, pathInfo.nIdx + getKeyCount(node), getKeyCount(p) - pathInfo.nIdx);
 
                 // the new arrays are too big to fit in a single node,
                 // so we replace p by a new internal node and two new children.
@@ -323,14 +311,14 @@ public class OCCABTree implements Set {
                 System.arraycopy(nodes, leftSize, right.nodes, 0, rightSize);
 
                 // note: keys[Node - 1] should be the same as n->keys[0]
-                Node newNode = createInternalNode(gParent == entry, 2, keys[leftSize - 1]);
+                Node newNode = createInternalNode(gp == entry, 2, keys[leftSize - 1]);
                 newNode.isTagged = true;
                 newNode.keys[0] = keys[leftSize-1];
                 newNode.nodes[0] = left;
                 newNode.nodes[1] = right;
-                gParent.nodes[pathInfo.pIdx] = newNode;
+                gp.nodes[pathInfo.pIdx] = newNode;
                 node.mark();
-                parent.mark();
+                p.mark();
 
                 unlockAllNodes(pathInfo);
                 fixTagged(newNode);
