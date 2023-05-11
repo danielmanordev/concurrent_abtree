@@ -7,6 +7,12 @@ class SortKeyValues implements Comparator<KeyValue> {
         if(o1 == null || o2 == null) {
             return -1;
         }
+        if(o1.getKey() == 0) {
+            return 1;
+        }
+        if(o2.getKey() == 0) {
+            return -1;
+        }
         if (o1.getKey() > o2.getKey()) {
             return 1;
         }

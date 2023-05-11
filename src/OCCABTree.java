@@ -712,7 +712,7 @@ public class OCCABTree implements Set {
                }
 
                if (!left.isLeaf()) {
-                   keyValues[keyCounter++] = new KeyValue(parent.keys[leftIndex]);
+                   keyValues[keyCounter++].key = parent.keys[leftIndex];
                }
 
                if (right.isLeaf()) {
