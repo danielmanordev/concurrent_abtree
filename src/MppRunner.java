@@ -5,10 +5,10 @@ public class MppRunner {
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
         int dataRange = 10000;
-        int numberOfThreads = 4;
+        int numberOfThreads = 12;
         int a = 2;
         int b = 4;
-        int numberOfTests = 8;
+        int numberOfTests = 32;
         for (int i = 0; i < numberOfTests; i++) {
 
             Set concurrentSet = new OCCABTree(a, b);
