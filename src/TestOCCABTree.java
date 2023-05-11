@@ -77,6 +77,15 @@ class TestSet extends Thread
         }
     }
 
+    public static void seed(Set set, int dataRange, int numberOfKeys){
+
+        for (int i=0;i<numberOfKeys;i++){
+            int key = ThreadLocalRandom.current().nextInt(1,dataRange);
+            int value = ThreadLocalRandom.current().nextInt(1,dataRange);
+            set.add(key,value);
+        }
+    }
+
     /** This is the base method for the TestSet class, which executes a single test.
      * @param set the set to test
      * @param numThreads number of threads for the current set
