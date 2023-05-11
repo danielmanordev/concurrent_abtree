@@ -336,17 +336,17 @@ public class OCCABTree implements Set {
         pathInfo.nIdx = 0;
 
 
-        while (!pathInfo.n.isLeaf() && (targetNode == null || pathInfo.n != targetNode)) {
+        while (!pathInfo.n.isLeaf() && (targetNode == null ? pathInfo.n != targetNode : true)) {
 
             if (pathInfo.n == targetNode) {
                 break;
             }
-
             pathInfo.gp = pathInfo.p;
             pathInfo.p = pathInfo.n;
             pathInfo.pIdx = pathInfo.nIdx;
             pathInfo.nIdx = getChildIndex(pathInfo.n, key);
             pathInfo.n = pathInfo.n.nodes[pathInfo.nIdx];
+
         }
 
         if (targetNode != null) {
@@ -637,6 +637,7 @@ public class OCCABTree implements Set {
                    fixUnderfull(newNode);
                    return new Result(ReturnCode.SUCCESS);
                } else {
+
                    Node newParent = createInternalNode(true, psize - 1, parent.searchKey);
                    for (int i = 0; i < leftIndex; i++) {
                        newParent.keys[i] = parent.keys[i];
@@ -677,7 +678,7 @@ public class OCCABTree implements Set {
                } else { /**
             * Distribute
             */
-
+               // TODO: there is probably a bug in this else
                int leftSize = size / 2;
                int rightSize = size - leftSize;
 
