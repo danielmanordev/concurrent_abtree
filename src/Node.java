@@ -9,17 +9,20 @@ public class Node {
 
     private boolean weight = false;
 
-    public Node(boolean weight, int size, int searchKey){
+    public Node(boolean weight, int size, int searchKey, int maxNodeSize){
         this.weight = weight;
         this.size = size;
         this.searchKey = searchKey;
+        this.keys = new int[maxNodeSize];
+        this.values = new int[maxNodeSize];
+        this.nodes = new Node[maxNodeSize];
     }
 
     public int size;
-    public int[] keys = new int[Constants.DEGREE];
+    public int[] keys;
     public AtomicInteger ver = new AtomicInteger(0);
-    public int[] values = new int[Constants.DEGREE];
-    public Node[] nodes = new Node[Constants.DEGREE];
+    public int[] values;
+    public Node[] nodes;
     public int searchKey;
 
     public Lock lock = new MCSLock();

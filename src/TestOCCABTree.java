@@ -36,38 +36,41 @@ class TestSet extends Thread
                 // contains
                 if(opValue >= 0 && opValue < this.perCon) {
 
-                    if(set.contains(randomInt)){
+                   /* if(set.contains(randomInt)){
                         prints.add(randomInt + " exists");
                     }
                     else {
                         prints.add(randomInt + " not found");
-                    }
+                    }*/
+                    set.contains(randomInt);
                     numberOfContains=numberOfContains.add(BigInteger.ONE);
                 }
 
                 // add
                 else if (opValue >= this.perCon && opValue <this.perCon+this.perAdd){
-                    if(set.add(randomInt, randomInt)){
-                        //prints.add(randomInt + " was added");
+                   /*if(){
+
                     }
                     else {
                         prints.add(randomInt + " exists and was not added") ;
-                    }
+                    }*/
+                    set.add(randomInt, randomInt);
                     numberOfAdds=numberOfAdds.add(BigInteger.ONE);
                 }
                 // remove
                 else {
-                    if(set.remove(randomInt)){
-                        prints.add(randomInt +  " was removed");
+                    /*if(set.remove(randomInt)){
+                        //prints.add(randomInt +  " was removed");
                     }
                     else {
-                        prints.add(randomInt +  " was NOT removed");
-                    }
+                        //prints.add(randomInt +  " was NOT removed");
+                    }*/
+                    set.remove(randomInt);
                     numberOfRemoves=numberOfRemoves.add(BigInteger.ONE);
                 }
 
                 if (Thread.interrupted()) {// Clears interrupted status!}
-                    System.out.println("Thread Id: "+Thread.currentThread().getId()+"   interrupted");
+                   // System.out.println("Thread Id: "+Thread.currentThread().getId()+"   interrupted");
                     throw new InterruptedException();
                 }
             }
@@ -128,13 +131,13 @@ class TestSet extends Thread
             testResult.TotalContains = testResult.TotalContains.add(threads[i].numberOfContains);
         }
 
-        System.out.println("Total add invocations: "+ testResult.TotalAdds );
-        System.out.println("Total remove invocations: "+ testResult.TotalRemoves );
-        System.out.println("Total contains invocations: "+ testResult.TotalContains );
+        //System.out.println("Total add invocations: "+ testResult.TotalAdds );
+        //System.out.println("Total remove invocations: "+ testResult.TotalRemoves );
+        //System.out.println("Total contains invocations: "+ testResult.TotalContains );
         testResult.Total = testResult.Total.add(testResult.TotalAdds);
         testResult.Total = testResult.Total.add(testResult.TotalRemoves);
         testResult.Total = testResult.Total.add(testResult.TotalContains);
-        System.out.println("Total invocations: "+ testResult.Total );
+        //System.out.println("Total invocations: "+ testResult.Total );
         return testResult;
 
     }

@@ -6,8 +6,6 @@ import java.util.Comparator;
 
 public class OCCABTree implements Set {
 
-    private int MAX_NODE_SIZE = 11;
-    private int MIN_NODE_SIZE = 2;
  
     private int NULL = 0;
     private Node entry;
@@ -36,7 +34,7 @@ public class OCCABTree implements Set {
             }
 
             int val = NULL;
-            for (int keyIndex = 0; keyIndex < MAX_NODE_SIZE - 1; keyIndex++) {
+            for (int keyIndex = 0; keyIndex < this.b - 1; keyIndex++) {
                 if (leaf.keys[keyIndex] == key) {
                     val = leaf.values[keyIndex];
                     break;
@@ -68,7 +66,7 @@ public class OCCABTree implements Set {
             return new Result(ReturnCode.RETRY);
         }
 
-       for (int i = 0; i < Constants.DEGREE; ++i) {
+       for (int i = 0; i < b; ++i) {
             if (node.keys[i] == key) {
                 node.unlock();
                 return new Result(ReturnCode.FAILURE);
@@ -78,7 +76,7 @@ public class OCCABTree implements Set {
         // At this point, we are guaranteed key is not in node
         int currSize = node.size;
         if(currSize < b) {
-            for (int i = 0; i < Constants.DEGREE; ++i) {
+            for (int i = 0; i < b; ++i) {
                 if (node.keys[i] == NULL) {
                     int oldVersion = node.ver.get();
                     node.ver.set(oldVersion+1);
@@ -103,11 +101,11 @@ public class OCCABTree implements Set {
             // We do not have room for this key, we need to make new nodes so it fits
             // first, we create a std::pair of large arrays
             // containing too many keys and pointers to fit in a single node
-            int keyValuesSize = Constants.DEGREE + 1;
+            int keyValuesSize = b + 1;
             KeyValue[] keyValues = new KeyValue[keyValuesSize];
 
             int k=0;
-            for (int i = 0; i < Constants.DEGREE; i++) {
+            for (int i = 0; i < b; i++) {
                 if(node.keys[i] != NULL){
                     keyValues[k] = new KeyValue(node.keys[i], node.values[i]);
                     ++k;
@@ -132,7 +130,7 @@ public class OCCABTree implements Set {
                 left.values[i] = keyValues[i].getValue();
             }
 
-            int rightSize = (Constants.DEGREE+1) - leftSize;
+            int rightSize = (b+1) - leftSize;
             Node right = createExternalNode(true,rightSize, keyValues[leftSize].getKey());
             for (int i = 0; i < rightSize; i++) {
                 right.keys[i] = keyValues[i+leftSize].getKey();
@@ -168,7 +166,7 @@ public class OCCABTree implements Set {
     }
 
     private Node createInternalNode(boolean weight, int size, int searchKey){
-       return new Node(weight,size,searchKey);
+       return new Node(weight,size,searchKey,this.b);
     }
 
     private Result tryInsert(int key, int value) {
@@ -281,8 +279,8 @@ public class OCCABTree implements Set {
                  * Split
                  */
 
-                int keys[] = new int[Constants.DEGREE * 2];
-                Node nodes[] = new Node[Constants.DEGREE * 2];
+                int keys[] = new int[b * 2];
+                Node nodes[] = new Node[b * 2];
 
                 System.arraycopy(p.nodes, 0, nodes, 0, pathInfo.nIdx);
                 System.arraycopy(n.nodes, 0, nodes, pathInfo.nIdx, n.size);
@@ -370,10 +368,10 @@ public class OCCABTree implements Set {
         do {
             while (((version = node.ver.get()) & 1) != 0) {}
             keyIndex = 0;
-            while (keyIndex < Constants.DEGREE && node.keys[keyIndex] != key) {
+            while (keyIndex < b && node.keys[keyIndex] != key) {
                 ++keyIndex;
             }
-            value = keyIndex < Constants.DEGREE ? node.values[keyIndex] : NULL;
+            value = keyIndex < b ? node.values[keyIndex] : NULL;
         } while (node.ver.get() != version);
         return value == NULL ? new KeyIndexValueVersionResult(NULL,NULL,NULL,ReturnCode.FAILURE) : new KeyIndexValueVersionResult(value,keyIndex,version,ReturnCode.SUCCESS);
 
@@ -440,7 +438,7 @@ public class OCCABTree implements Set {
         }
         int newSize = node.size - 1;
         int deletedValue = NULL;
-        for (int i = 0; i < Constants.DEGREE; ++i) {
+        for (int i = 0; i < b; ++i) {
            if(node.keys[i] == key) {
                deletedValue = node.values[i];
                int oldVersion = node.ver.get();
@@ -588,14 +586,14 @@ public class OCCABTree implements Set {
                if (left.isLeaf()) {
                    //duplicate code can be cleaned up, but it would make it far less readable...
                    Node newNodeExt = createExternalNode(true, size, node.searchKey);
-                   for (int i = 0; i < Constants.DEGREE; i++) {
+                   for (int i = 0; i < b; i++) {
                        if (left.keys[i] != NULL) {
                            newNodeExt.keys[keyCounter++] = left.keys[i];
                            newNodeExt.values[ptrCounter++] = left.values[i];
                        }
                    }
                    assert (right.isLeaf());
-                   for (int i = 0; i < Constants.DEGREE; i++) {
+                   for (int i = 0; i < b; i++) {
                        if (right.keys[i] != NULL) {
                            newNodeExt.keys[keyCounter++] = right.keys[i];
                            newNodeExt.values[ptrCounter++] = right.values[i];
@@ -685,9 +683,9 @@ public class OCCABTree implements Set {
                Node newLeft;
                Node newRight;
 
-               KeyValue[] keyValues = new KeyValue[2*Constants.DEGREE];
+               KeyValue[] keyValues = new KeyValue[2*b];
 
-               for (int i=0;i<2*Constants.DEGREE;i++){
+               for (int i=0;i<2*b;i++){
                    keyValues[i] = new KeyValue();
                }
                // combine the contents of l and s (and one key from p if l and s are internal)
@@ -696,7 +694,7 @@ public class OCCABTree implements Set {
                int valCounter = 0;
                if (left.isLeaf()) {
                    assert(right.isLeaf());
-                   for (int i = 0; i < Constants.DEGREE; i++) {
+                   for (int i = 0; i < b; i++) {
                        if (left.keys[i] != NULL) {
                            keyValues[keyCounter++].key = left.keys[i];
                            keyValues[valCounter++].value = left.values[i];
@@ -716,7 +714,7 @@ public class OCCABTree implements Set {
                }
 
                if (right.isLeaf()) {
-                   for (int i = 0; i < Constants.DEGREE; i++) {
+                   for (int i = 0; i < b; i++) {
                        if (right.keys[i] != NULL) {
                           keyValues[keyCounter++].key = right.keys[i];
                           keyValues[valCounter++].value = right.values[i];
