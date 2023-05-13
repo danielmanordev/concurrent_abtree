@@ -427,8 +427,6 @@ public class OCCABTree implements Set {
 
     private Result delete(PathInfo pathInfo, int key) {
         Node node = pathInfo.n;
-        Node parent = pathInfo.p;
-        Node grandParent = pathInfo.gp;
 
         node.lock();
 
@@ -510,11 +508,12 @@ public class OCCABTree implements Set {
                rightIndex = pathInfo.nIdx;
 
 
-               sibling.lock();
+
                node.lock();
+               sibling.lock();
                if (sibling.isMarked() || node.isMarked()) {
-                   sibling.unlock();
                    node.unlock();
+                   sibling.unlock();
                    continue;
                } // RETRY
 
@@ -528,23 +527,23 @@ public class OCCABTree implements Set {
                sibling.lock();
                node.lock();
                if (sibling.isMarked() || node.isMarked()) {
-                   sibling.unlock();
                    node.unlock();
+                   sibling.unlock();
                    continue;
                } // RETRY
            }
 
                if(underFullNode.size >= a){
-                   sibling.unlock();
                    node.unlock();
+                   sibling.unlock();
                    return new Result(ReturnCode.UNNECCESSARY);
                }
 
                parent.lock();
                gParent.lock();
                if(gParent.isMarked() || parent.isMarked()){
-                   sibling.unlock();
                    node.unlock();
+                   sibling.unlock();
                    parent.unlock();
                    gParent.unlock();
                    continue;
