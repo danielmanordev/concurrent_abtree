@@ -10,7 +10,7 @@ public class MppRunner {
         int numberOfThreads = 8;
         int a = 2;
         int b = 4;
-        int numberOfTests = 8;
+        int numberOfTests = 3;
         ArrayList<Long> adds = new ArrayList();
         for (int i = 0; i < numberOfTests; i++) {
 
@@ -20,7 +20,7 @@ public class MppRunner {
             //nteger.parseInt(args[1]);
 
             long start = System.currentTimeMillis();
-            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, dataRange, 0, 100, 10000);
+            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, dataRange, 0, 0, 10000);
             long finish = System.currentTimeMillis();
             long timeElapsed = finish - start;
             long timeElapsedMicroseconds = timeElapsed * 1000;
@@ -33,7 +33,7 @@ public class MppRunner {
             System.out.println("Total removes:            " + testResult.TotalRemoves.longValue());
             System.out.println("Total contains:           " + testResult.TotalContains.longValue());
             System.out.println("Adds/\u33B2:                  " + testResult.TotalAdds.longValue() / (timeElapsedMicroseconds));
-            System.out.println("Removes/\u33B2:               " + testResult.TotalRemoves.longValue() / (timeElapsedMicroseconds));
+            System.out.println("Removes/\u33B2:               " + testResult.TotalRemoves.doubleValue() / (timeElapsedMicroseconds));
             System.out.println("Contains/\u33B2:              " + testResult.TotalContains.longValue() / (timeElapsedMicroseconds));
             System.out.println("Threads:                  " + numberOfThreads);
             System.out.println("Total time:               " + timeElapsed + " milliseconds");

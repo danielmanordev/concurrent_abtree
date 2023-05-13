@@ -543,8 +543,10 @@ public class OCCABTree implements Set {
                parent.lock();
                gParent.lock();
                if(gParent.isMarked() || parent.isMarked()){
-                   gParent.unlock();
+                   sibling.unlock();
+                   node.unlock();
                    parent.unlock();
+                   gParent.unlock();
                    continue;
                }
 
