@@ -28,9 +28,10 @@ public class RQProvider {
         return node;
     }
 
-    private void traversalStart(int threadId) {
+    private void traversalStart(int threadId, int low, int high) {
         READ_WRITE_LOCK.writeLock().lock();
-        this.rqThreadData[threadId].rqLinearzationTime = System.currentTimeMillis();
+        TIMESTAMP = System.currentTimeMillis();
+        this.rqThreadData[threadId].rqLinearzationTime = TIMESTAMP;
         READ_WRITE_LOCK.writeLock().unlock();
     }
 
@@ -42,8 +43,51 @@ public class RQProvider {
         this.rqThreadData[threadId].numberOfAnnouncments += i;
     }
 
-    private void tryAdd() {
+    private void tryAdd(int threadId, Node node, Node announcedNode, RQSource rqSource) {
+            int low = rqThreadData[threadId].low;
+            int high = rqThreadData[threadId].high;
+            long rqLinearzationTime = rqThreadData[threadId].rqLinearzationTime;
 
+            while (node.insertionTime == 0){}
+            if(node.insertionTime >= rqLinearzationTime){
+                return; // node inserted after RQ
+            }
+            if(rqSource == RQSource.DataStructure){
+                // do nothing: node was not deleted when RQ was linearized
+            }
+            else if(rqSource == RQSource.LimboList){
+               while (node.deletionTime == 0) {}
+               if(node.deletionTime < rqLinearzationTime){
+                   return; // node deleted before RQ
+               }
+            }
+            else if(rqSource == RQSource.Announcement) {
+                long deletionTime=0;
+                while (deletionTime==0 && announcedNode == node) {
+                    deletionTime=node.deletionTime;
+                }
+
+                if(deletionTime==0){
+                    // loop exited because the process removed this announcement
+                    // if the process deleted node, then it has now set node.dtime
+                    deletionTime = node.deletionTime;
+
+                    if(deletionTime == 0) {
+                        // the process did not delete node,
+                        // but another process might have
+                        return;
+                    }
+
+                }
+                if(deletionTime < rqLinearzationTime){
+                    return; // node deleted before RQ
+                }
+
+                if(node.key >= low && node.key <= high) {
+                    // add (node.key, node.value) to resultp
+                }
+
+            }
     }
 
     private void physicalDeletionSucceeded(int threadId, Node[] deletedNodes) {
@@ -76,8 +120,12 @@ public class RQProvider {
     class RQThreadData {
 
         int numberOfAnnouncments;
+        int low;
+        int high;
+
         Node[] announcements = new Node[32];
         long rqLinearzationTime;
         ArrayList limboList = new ArrayList<Node>();
+
     }
 }

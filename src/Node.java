@@ -27,6 +27,9 @@ public class Node {
     public long insertionTime;
     public long deletionTime;
 
+    public int key;
+    public int value;
+
     public Lock lock = new MCSLock();
 
 
