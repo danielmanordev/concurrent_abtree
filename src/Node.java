@@ -24,6 +24,8 @@ public class Node {
     public int[] values;
     public Node[] nodes;
     public int searchKey;
+    public long insertionTime;
+    public long deletionTime;
 
     public Lock lock = new MCSLock();
 
