@@ -126,6 +126,12 @@ public class RQProvider {
         Node[] announcements = new Node[32];
         long rqLinearzationTime;
         ArrayList limboList = new ArrayList<Node>();
+        ArrayList result = new ArrayList<RQResult>();
 
+    }
+
+    class RQResult {
+        int key;
+        int value;
     }
 }
