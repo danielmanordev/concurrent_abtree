@@ -22,7 +22,6 @@ public class Node {
     public Node(int key, int value){
         this.key = key;
         this.value = value;
-        this.insertionTime = System.currentTimeMillis();
     }
 
     public int size;

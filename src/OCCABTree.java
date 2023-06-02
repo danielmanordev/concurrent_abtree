@@ -97,10 +97,8 @@ public class OCCABTree implements Set {
                 if (node.keys[i] == NULL) {
                     int oldVersion = node.ver.get();
                     node.ver.set(oldVersion+1);
-                    //node.keys[i] = key;
-                    //node.values[i] = value;
                     Node resultNode = new Node(key,value);
-                    node.nodes[i] = resultNode;
+                    this.rqProvider.updateWrite(node,i,resultNode, new Node[]{resultNode}, null);
                     ++node.size;
                     node.ver.set(oldVersion+2);
                     node.unlock();
