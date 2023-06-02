@@ -11,21 +11,21 @@ public class RQProvider {
         this.rqThreadData = new RQThreadData[numberOfThreads];
     }
 
-    public Node updateWrite(Node parent, int nIdx, Node node, Node[] insertedNodes, Node[] deletedNodes) {
+    public Node updateWrite(Node leaf, int nIdx, Node result, Node[] insertedNodes, Node[] deletedNodes) {
 
         int threadId = (int) Thread.currentThread().getId();
         announcePhysicalDeletion(threadId ,deletedNodes);
 
         READ_WRITE_LOCK.readLock().lock();
         long ts = TIMESTAMP;
-        parent.nodes[nIdx] = node;
+        leaf.nodes[nIdx] = result;
         READ_WRITE_LOCK.readLock().unlock();
 
         setInserationTime(ts, insertedNodes);
         setDeletionTime(ts, deletedNodes);
 
         physicalDeletionSucceeded(threadId, deletedNodes);
-        return node;
+        return result;
     }
 
     public void traversalStart(int threadId, int low, int high) {
@@ -56,8 +56,6 @@ public class RQProvider {
         return this.rqThreadData[threadId].result;
 
     }
-
-
 
     public void announcePhysicalDeletion(int threadId, Node[] deletedNodes) {
         int i;
@@ -116,6 +114,10 @@ public class RQProvider {
     }
 
     private void physicalDeletionSucceeded(int threadId, Node[] deletedNodes) {
+        if(deletedNodes == null) {
+            return;
+        }
+
         int i;
         for (i=0;i<deletedNodes.length;++i) {
             retire(threadId,deletedNodes[i]);
@@ -125,7 +127,9 @@ public class RQProvider {
     }
 
     private void setInserationTime(long ts, Node[] insertedNodes){
-
+        if(insertedNodes == null) {
+            return;
+        }
 
         for(int i=0;i<insertedNodes.length;i++) {
             insertedNodes[i].insertionTime = ts;
@@ -133,6 +137,10 @@ public class RQProvider {
     }
 
     private void setDeletionTime(long ts, Node[] deletedNodes){
+        if(deletedNodes == null){
+            return;
+        }
+
         for(int i=0;i<deletedNodes.length;i++) {
             deletedNodes[i].deletionTime = ts;
         }

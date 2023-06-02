@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Node {
@@ -14,14 +15,19 @@ public class Node {
         this.size = size;
         this.searchKey = searchKey;
         this.keys = new int[maxNodeSize];
-        this.values = new int[maxNodeSize];
         this.nodes = new Node[maxNodeSize];
+
+    }
+
+    public Node(int key, int value){
+        this.key = key;
+        this.value = value;
+        this.insertionTime = System.currentTimeMillis();
     }
 
     public int size;
     public int[] keys;
     public AtomicInteger ver = new AtomicInteger(0);
-    public int[] values;
     public Node[] nodes;
     public int searchKey;
     public long insertionTime;

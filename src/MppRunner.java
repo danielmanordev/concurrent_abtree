@@ -7,20 +7,20 @@ public class MppRunner {
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
         int dataRange = 10000;
-        int numberOfThreads = 8;
-        int a = 2;
-        int b = 4;
-        int numberOfTests = 3;
-        ArrayList<Long> adds = new ArrayList();
+        int numberOfThreads = 6;
+        int a = 64;
+        int b = 128;
+        int numberOfTests = 10;
+       // ArrayList<Long> adds = new ArrayList();
         for (int i = 0; i < numberOfTests; i++) {
-
-            Set concurrentSet = new OCCABTree(a, b);
+            numberOfThreads+=2;
+            Set concurrentSet = new OCCABTree(a, b, numberOfThreads);
             TestSet.seed(concurrentSet, dataRange, dataRange / 2);
 
             //nteger.parseInt(args[1]);
 
             long start = System.currentTimeMillis();
-            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, dataRange, 0, 0, 10000);
+            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, dataRange, 0, 80, 10000);
             long finish = System.currentTimeMillis();
             long timeElapsed = finish - start;
             long timeElapsedMicroseconds = timeElapsed * 1000;
@@ -37,12 +37,12 @@ public class MppRunner {
             System.out.println("Contains/\u33B2:              " + testResult.TotalContains.longValue() / (timeElapsedMicroseconds));
             System.out.println("Threads:                  " + numberOfThreads);
             System.out.println("Total time:               " + timeElapsed + " milliseconds");
-            b *=2;
-            if(i >1) {
-                adds.add(testResult.TotalAdds.longValue());
-            }
+           // b *=2;
+          //  if(i >1) {
+          //      adds.add(testResult.TotalAdds.longValue());
+        //    }
         }
-        if(numberOfTests > 2){
+        /*if(numberOfTests > 2){
             double average = adds
                     .stream()
                     .mapToDouble(n -> n)
@@ -50,6 +50,6 @@ public class MppRunner {
             average /= 1000;
             int numberOfCalcTests = adds.size();
             System.out.println("Adds/\u33B2 last " +numberOfCalcTests+ " tests average:  " + average);
-        }
+        }*/
     }
 }
