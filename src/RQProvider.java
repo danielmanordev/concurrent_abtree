@@ -28,14 +28,38 @@ public class RQProvider {
         return node;
     }
 
-    private void traversalStart(int threadId, int low, int high) {
+    public void traversalStart(int threadId, int low, int high) {
         READ_WRITE_LOCK.writeLock().lock();
         TIMESTAMP = System.currentTimeMillis();
         this.rqThreadData[threadId].rqLinearzationTime = TIMESTAMP;
         READ_WRITE_LOCK.writeLock().unlock();
     }
 
-    private void announcePhysicalDeletion(int threadId, Node[] deletedNodes) {
+    public void visit(int threadId, Node node){
+        tryAdd(threadId, node, null, RQSource.DataStructure);
+    }
+
+    public ArrayList<RQResult> traversalEnd(int threadId){
+        // Collect pointers p1, ..., pk to other processes’ announcements
+        for(RQThreadData rqtd : this.rqThreadData) {
+            for(int i=0;i<rqtd.numberOfAnnouncments;i++) {
+                tryAdd(threadId,null, rqtd.announcements[i], RQSource.Announcement);
+            }
+        }
+        // Collect pointers to all limbo lists
+        // Traverse limbo lists
+        for(RQThreadData rqtd : this.rqThreadData) {
+            for(int i=0;i<rqtd.limboList.size();i++) {
+                tryAdd(threadId, rqtd.limboList.get(i), null, RQSource.LimboList);
+            }
+        }
+        return this.rqThreadData[threadId].result;
+
+    }
+
+
+
+    public void announcePhysicalDeletion(int threadId, Node[] deletedNodes) {
         int i;
         for(i=0;i<deletedNodes.length;++i){
             this.rqThreadData[threadId].announcements[this.rqThreadData[threadId].numberOfAnnouncments+i] = deletedNodes[i];
@@ -84,7 +108,8 @@ public class RQProvider {
                 }
 
                 if(node.key >= low && node.key <= high) {
-                    // add (node.key, node.value) to resultp
+                    RQResult rqResult = new RQResult(node.key,node.value);
+                    rqThreadData[threadId].result.add(rqResult);
                 }
 
             }
@@ -125,12 +150,16 @@ public class RQProvider {
 
         Node[] announcements = new Node[32];
         long rqLinearzationTime;
-        ArrayList limboList = new ArrayList<Node>();
-        ArrayList result = new ArrayList<RQResult>();
+        ArrayList<Node> limboList = new ArrayList();
+        ArrayList<RQResult> result = new ArrayList();
 
     }
 
     class RQResult {
+        RQResult(int key, int value) {
+            this.key = key;
+            this.value = value;
+        }
         int key;
         int value;
     }
