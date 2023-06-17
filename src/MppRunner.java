@@ -13,14 +13,14 @@ public class MppRunner {
         int numberOfTests = 10;
        // ArrayList<Long> adds = new ArrayList();
         for (int i = 0; i < numberOfTests; i++) {
-            numberOfThreads=1;
+            numberOfThreads=8;
             Set concurrentSet = new OCCABTree(a, b, numberOfThreads);
             TestSet.seed(concurrentSet, dataRange, dataRange / 2);
 
             //nteger.parseInt(args[1]);
 
             long start = System.currentTimeMillis();
-            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, dataRange, 0, 100, 10000);
+            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, dataRange, 0, 80, 50000);
             long finish = System.currentTimeMillis();
             long timeElapsed = finish - start;
             long timeElapsedMicroseconds = timeElapsed * 1000;
@@ -37,6 +37,7 @@ public class MppRunner {
             System.out.println("Contains/\u33B2:              " + testResult.TotalContains.longValue() / (timeElapsedMicroseconds));
             System.out.println("Threads:                  " + numberOfThreads);
             System.out.println("Total time:               " + timeElapsed + " milliseconds");
+            // concurrentSet.scan(200,250);
            // b *=2;
           //  if(i >1) {
           //      adds.add(testResult.TotalAdds.longValue());
