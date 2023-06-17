@@ -1,12 +1,8 @@
 public class KeyValue {
 
-    public int key, value;
+    public int key;
     public Node node;
 
-    KeyValue(int key, int value){
-        this.key = key;
-        this.value = value;
-    }
 
     KeyValue(int key, Node node){
         this.key = key;
@@ -26,7 +22,7 @@ public class KeyValue {
         return this.key;
     }
 
-    public int getValue(){
-        return this.value;
+    public Node getValue(){
+        return new Node(this.node.key,this.node.value);
     }
 }

@@ -14,17 +14,24 @@ public class Node {
         this.size = size;
         this.searchKey = searchKey;
         this.keys = new int[maxNodeSize];
-        this.values = new int[maxNodeSize];
+        this.valueNodes = new Node[maxNodeSize];
         this.nodes = new Node[maxNodeSize];
+    }
+
+    public Node(int key, int value){
+        this.weight = true;
+        this.key = key;
+        this.value = value;
+
     }
 
     public int size;
     public int[] keys;
     public AtomicInteger ver = new AtomicInteger(0);
-    public int[] values;
+    public Node[] valueNodes;
     public Node[] nodes;
     public int searchKey;
-
+    public int key,value; // for value nodes
     public Lock lock = new MCSLock();
 
 
