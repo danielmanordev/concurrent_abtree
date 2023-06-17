@@ -8,7 +8,10 @@ public class RQProvider {
     private RQThreadData[] rqThreadData;
 
     public RQProvider(int numberOfThreads) {
-        this.rqThreadData = new RQThreadData[numberOfThreads];
+        this.rqThreadData = new RQThreadData[200];
+        for(int i=0;i<200;i++){
+            rqThreadData[i] = new RQThreadData();
+        }
     }
 
     public Node updateWrite(Node leaf, int nIdx, Node result, Node[] insertedNodes, Node[] deletedNodes) {
@@ -18,6 +21,7 @@ public class RQProvider {
 
         READ_WRITE_LOCK.readLock().lock();
         long ts = TIMESTAMP;
+        leaf.keys[nIdx] = result.key;
         leaf.nodes[nIdx] = result;
         READ_WRITE_LOCK.readLock().unlock();
 
@@ -43,7 +47,7 @@ public class RQProvider {
         // Collect pointers p1, ..., pk to other processes’ announcements
         for(RQThreadData rqtd : this.rqThreadData) {
             for(int i=0;i<rqtd.numberOfAnnouncments;i++) {
-                tryAdd(threadId,null, rqtd.announcements[i], RQSource.Announcement);
+                tryAdd(threadId,null, rqtd.announcements.get(i), RQSource.Announcement);
             }
         }
         // Collect pointers to all limbo lists
@@ -58,9 +62,12 @@ public class RQProvider {
     }
 
     public void announcePhysicalDeletion(int threadId, Node[] deletedNodes) {
+        if(deletedNodes == null) {
+            return;
+        }
         int i;
         for(i=0;i<deletedNodes.length;++i){
-            this.rqThreadData[threadId].announcements[this.rqThreadData[threadId].numberOfAnnouncments+i] = deletedNodes[i];
+            this.rqThreadData[threadId].announcements.add(this.rqThreadData[threadId].numberOfAnnouncments+i, deletedNodes[i]);
         }
         this.rqThreadData[threadId].numberOfAnnouncments += i;
     }
@@ -156,7 +163,7 @@ public class RQProvider {
         int low;
         int high;
 
-        Node[] announcements = new Node[32];
+        ArrayList<Node> announcements = new ArrayList();
         long rqLinearzationTime;
         ArrayList<Node> limboList = new ArrayList();
         ArrayList<RQResult> result = new ArrayList();

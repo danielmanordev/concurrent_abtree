@@ -7,20 +7,20 @@ public class MppRunner {
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
         int dataRange = 10000;
-        int numberOfThreads = 6;
+        int numberOfThreads = 1;
         int a = 64;
         int b = 128;
         int numberOfTests = 10;
        // ArrayList<Long> adds = new ArrayList();
         for (int i = 0; i < numberOfTests; i++) {
-            numberOfThreads+=2;
+            numberOfThreads=1;
             Set concurrentSet = new OCCABTree(a, b, numberOfThreads);
             TestSet.seed(concurrentSet, dataRange, dataRange / 2);
 
             //nteger.parseInt(args[1]);
 
             long start = System.currentTimeMillis();
-            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, dataRange, 0, 80, 10000);
+            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, dataRange, 0, 100, 10000);
             long finish = System.currentTimeMillis();
             long timeElapsed = finish - start;
             long timeElapsedMicroseconds = timeElapsed * 1000;
