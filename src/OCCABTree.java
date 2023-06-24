@@ -1,7 +1,4 @@
 import java.util.Arrays;
-import java.util.Comparator;
-
-
 
 
 public class OCCABTree implements Set {
@@ -12,15 +9,19 @@ public class OCCABTree implements Set {
 
     private int a;
     private int b;
+    private static long TIMESTAMP = System.currentTimeMillis();
+    private RQProvider rqProvider;
 
 
-    public OCCABTree(int a, int b) {
+    public OCCABTree(int a, int b, int numberOfThreads) {
         this.a = a;
         this.b = b;
         int anyKey = 26;
         Node entryLeft = createExternalNode(true,0,anyKey);
         entry = createInternalNode(true,1,anyKey);
         entry.nodes[0] = entryLeft;
+
+        this.rqProvider = new RQProvider(numberOfThreads);
     }
 
     private Result searchLeaf(Node leaf, int key) {
@@ -82,6 +83,7 @@ public class OCCABTree implements Set {
                     node.ver.set(oldVersion+1);
                     node.keys[i] = key;
                     node.values[i] = value;
+                    node.insertionTimes[i] = TIMESTAMP;
                     ++node.size;
                     node.ver.set(oldVersion+2);
                     node.unlock();
@@ -441,8 +443,10 @@ public class OCCABTree implements Set {
                deletedValue = node.values[i];
                int oldVersion = node.ver.get();
                node.ver.set(oldVersion);
+               KvInfo deletedKvInfo = new KvInfo(node.keys[i],node.values[i], node.insertionTimes[i], TIMESTAMP);
                node.keys[i] = 0;
                node.values[i] = 0;
+
                node.size = newSize;
                node.ver.set(oldVersion+2);
 

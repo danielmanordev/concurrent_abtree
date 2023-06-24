@@ -14,7 +14,7 @@ public class MppRunner {
         ArrayList<Long> adds = new ArrayList();
         for (int i = 0; i < numberOfTests; i++) {
 
-            Set concurrentSet = new OCCABTree(a, b);
+            Set concurrentSet = new OCCABTree(a, b, numberOfThreads);
             TestSet.seed(concurrentSet, dataRange, dataRange / 2);
 
             //nteger.parseInt(args[1]);

@@ -16,6 +16,8 @@ public class Node {
         this.keys = new int[maxNodeSize];
         this.values = new int[maxNodeSize];
         this.nodes = new Node[maxNodeSize];
+        this.insertionTimes = new long[maxNodeSize];
+        this.deletionTimes = new long[maxNodeSize];
     }
 
     public int size;
@@ -23,6 +25,8 @@ public class Node {
     public AtomicInteger ver = new AtomicInteger(0);
     public int[] values;
     public Node[] nodes;
+    public long[] insertionTimes;
+    public long[] deletionTimes;
     public int searchKey;
 
     public Lock lock = new MCSLock();
