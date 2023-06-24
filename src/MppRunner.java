@@ -9,7 +9,7 @@ public class MppRunner {
         int dataRange = 10000;
         int numberOfThreads = 8;
         int a = 2;
-        int b = 4;
+        int b = 16;
         int numberOfTests = 3;
         ArrayList<Long> adds = new ArrayList();
         for (int i = 0; i < numberOfTests; i++) {
@@ -37,7 +37,7 @@ public class MppRunner {
             System.out.println("Contains/\u33B2:              " + testResult.TotalContains.longValue() / (timeElapsedMicroseconds));
             System.out.println("Threads:                  " + numberOfThreads);
             System.out.println("Total time:               " + timeElapsed + " milliseconds");
-            b *=2;
+           // b *=2;
             if(i >1) {
                 adds.add(testResult.TotalAdds.longValue());
             }
