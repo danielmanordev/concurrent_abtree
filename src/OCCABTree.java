@@ -110,12 +110,12 @@ public class OCCABTree implements Set {
             int k=0;
             for (int i = 0; i < b; i++) {
                 if(node.keys[i] != NULL){
-                    keyValues[k] = new KeyValue(node.keys[i], node.values[i]);
+                    keyValues[k] = new KeyValue(node.keys[i], node.values[i], node.insertionTimes[i], node.deletionTimes[i]);
                     ++k;
                 }
 
             }
-            keyValues[k] = new KeyValue(key, value);
+            keyValues[k] = new KeyValue(key, value,TIMESTAMP,0);
             ++k;
 
             Arrays.sort(keyValues, new SortKeyValues());
@@ -131,6 +131,8 @@ public class OCCABTree implements Set {
             for (int i = 0; i < leftSize; i++) {
                 left.keys[i] = keyValues[i].getKey();
                 left.values[i] = keyValues[i].getValue();
+                left.insertionTimes[i] = keyValues[i].getInsertionTime();
+                left.deletionTimes[i] = keyValues[i].getDeletionTime();
             }
 
             int rightSize = (b+1) - leftSize;
@@ -138,6 +140,8 @@ public class OCCABTree implements Set {
             for (int i = 0; i < rightSize; i++) {
                 right.keys[i] = keyValues[i+leftSize].getKey();
                 right.values[i] = keyValues[i+leftSize].getValue();
+                right.insertionTimes[i] = keyValues[i+leftSize].getInsertionTime();
+                right.deletionTimes[i] = keyValues[i+leftSize].getDeletionTime();
             }
 
 
@@ -444,11 +448,10 @@ public class OCCABTree implements Set {
                deletedValue = node.values[i];
                int oldVersion = node.ver.get();
                node.ver.set(oldVersion);
-               KvInfo deletedKvInfo = new KvInfo(node.keys[i],node.values[i], node.insertionTimes[i], TIMESTAMP);
-               node.keys[i] = 0;
-               node.values[i] = 0;
-
-               node.size = newSize;
+               this.rqProvider.updateDelete(node,i, new KvInfo(node.keys[i],node.values[i], node.insertionTimes[i], TIMESTAMP));
+               //node.keys[i] = 0;
+               //node.values[i] = 0;
+               //node.size = newSize;
                node.ver.set(oldVersion+2);
 
                if(newSize == a-1) {
@@ -596,6 +599,8 @@ public class OCCABTree implements Set {
                        if (left.keys[i] != NULL) {
                            newNodeExt.keys[keyCounter++] = left.keys[i];
                            newNodeExt.values[ptrCounter++] = left.values[i];
+                           newNodeExt.insertionTimes[ptrCounter++] = left.insertionTimes[i];
+                           newNodeExt.deletionTimes[ptrCounter++] = left.deletionTimes[i];
                        }
                    }
                    assert (right.isLeaf());
@@ -603,6 +608,8 @@ public class OCCABTree implements Set {
                        if (right.keys[i] != NULL) {
                            newNodeExt.keys[keyCounter++] = right.keys[i];
                            newNodeExt.values[ptrCounter++] = right.values[i];
+                           newNodeExt.insertionTimes[ptrCounter++] = left.insertionTimes[i];
+                           newNodeExt.deletionTimes[ptrCounter++] = left.deletionTimes[i];
                        }
                    }
                    newNode = newNodeExt;
@@ -704,6 +711,7 @@ public class OCCABTree implements Set {
                        if (left.keys[i] != NULL) {
                            keyValues[keyCounter++].key = left.keys[i];
                            keyValues[valCounter++].value = left.values[i];
+
                        }
                    }
                } else {
