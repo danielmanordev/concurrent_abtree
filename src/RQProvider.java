@@ -16,14 +16,16 @@ public class RQProvider {
 
     public Node updateDelete(Node leaf, int kvIndex, KvInfo deletedKey) {
 
+        deletedKey.deletionTime = TIMESTAMP;
         int threadId = (int) Thread.currentThread().getId();
         announcePhysicalDeletion(threadId ,deletedKey);
 
-        READ_WRITE_LOCK.readLock().lock();
-        deletedKey.deletionTime = TIMESTAMP;
+        // READ_WRITE_LOCK.readLock().lock();
+
         leaf.keys[kvIndex] = 0;
         leaf.values[kvIndex] = 0;
-        READ_WRITE_LOCK.readLock().unlock();
+        leaf.size = leaf.size-1;
+        // READ_WRITE_LOCK.readLock().unlock();
 
         physicalDeletionSucceeded(threadId, deletedKey);
         return leaf;
@@ -54,8 +56,8 @@ public class RQProvider {
 
     public void announcePhysicalDeletion(int threadId, KvInfo deletedKey) {
 
-        this.rqThreadData[threadId].announcements.add(++this.rqThreadData[threadId].numberOfAnnouncments, deletedKey);
-        this.rqThreadData[threadId].numberOfAnnouncments++;
+        this.rqThreadData[threadId].announcement = deletedKey;
+        // this.rqThreadData[threadId].numberOfAnnouncments++;
     }
 
 
@@ -134,11 +136,12 @@ public class RQProvider {
 
         retire(threadId,deletedKey);
         // ensure nodes are placed in the epoch bag BEFORE they are removed from announcements.
-        this.rqThreadData[threadId].numberOfAnnouncments--;
+        this.rqThreadData[threadId].announcement = null;
     }
 
     private void retire(int treadId, KvInfo kvInfo) {
-        this.rqThreadData[treadId].limboList.add(kvInfo);
+        //this.rqThreadData[treadId].limboList[this.rqThreadData[treadId].limboListSize] = kvInfo;
+        //this.rqThreadData[treadId].limboListSize++;
     }
 
     class RQThreadData {
@@ -147,9 +150,10 @@ public class RQProvider {
         int low;
         int high;
 
-        ArrayList<KvInfo> announcements = new ArrayList();
+        KvInfo announcement;
         long rqLinearzationTime;
-        ArrayList<KvInfo> limboList = new ArrayList();
+        int limboListSize = 0;
+        //KvInfo[] limboList = new KvInfo[10000000];
         ArrayList<RQResult> result = new ArrayList();
 
     }
