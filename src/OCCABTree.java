@@ -9,7 +9,7 @@ public class OCCABTree implements Set {
 
     private int a;
     private int b;
-    private static long TIMESTAMP = System.currentTimeMillis();
+    private long TIMESTAMP = System.currentTimeMillis();
     private RQProvider rqProvider;
 
 
@@ -81,10 +81,11 @@ public class OCCABTree implements Set {
                 if (node.keys[i] == NULL) {
                     int oldVersion = node.ver.get();
                     node.ver.set(oldVersion+1);
-                    node.keys[i] = key;
-                    node.values[i] = value;
-                    node.insertionTimes[i] = TIMESTAMP;
-                    ++node.size;
+                    this.rqProvider.updateInsert(node,i,new KvInfo(key,value,0,0));
+                    // node.keys[i] = key;
+                    // node.values[i] = value;
+                    // node.insertionTimes[i] = TIMESTAMP;
+                    // ++node.size;
                     node.ver.set(oldVersion+2);
                     node.unlock();
                     return new Result(value,ReturnCode.SUCCESS);

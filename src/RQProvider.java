@@ -31,12 +31,14 @@ public class RQProvider {
 
     public Node updateInsert(Node leaf, int kvIndex, KvInfo insertedKey) {
 
-        READ_WRITE_LOCK.readLock().lock();
+        // READ_WRITE_LOCK.readLock().lock();
         long ts = TIMESTAMP;
+        // READ_WRITE_LOCK.readLock().unlock();
         leaf.keys[kvIndex] = insertedKey.key;
         leaf.values[kvIndex] = insertedKey.value;
         leaf.insertionTimes[kvIndex] = ts;
-        READ_WRITE_LOCK.readLock().unlock();
+        leaf.size++;
+
 
         return leaf;
     }
