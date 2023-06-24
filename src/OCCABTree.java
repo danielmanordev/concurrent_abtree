@@ -9,7 +9,7 @@ public class OCCABTree implements Set {
 
     private int a;
     private int b;
-    private long TIMESTAMP = System.currentTimeMillis();
+    private long TIMESTAMP;
     private RQProvider rqProvider;
 
 
@@ -20,7 +20,7 @@ public class OCCABTree implements Set {
         Node entryLeft = createExternalNode(true,0,anyKey);
         entry = createInternalNode(true,1,anyKey);
         entry.nodes[0] = entryLeft;
-
+        TIMESTAMP = System.currentTimeMillis();
         this.rqProvider = new RQProvider(numberOfThreads);
     }
 
