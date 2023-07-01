@@ -26,6 +26,8 @@ public class RQProvider {
 
         leaf.keys[kvIndex] = 0;
         leaf.values[kvIndex] = 0;
+        leaf.insertionTimes[kvIndex] = 0;
+        leaf.deletionTimes[kvIndex] = 0;
         leaf.size = leaf.size-1;
         // READ_WRITE_LOCK.readLock().unlock();
 
@@ -38,6 +40,7 @@ public class RQProvider {
         // READ_WRITE_LOCK.readLock().lock();
         long ts = TIMESTAMP;
         // READ_WRITE_LOCK.readLock().unlock();
+        insertedKey.insertionTime = TIMESTAMP;
         leaf.keys[kvIndex] = insertedKey.key;
         leaf.values[kvIndex] = insertedKey.value;
         leaf.insertionTimes[kvIndex] = ts;
@@ -51,33 +54,38 @@ public class RQProvider {
 
     public void traversalStart(int threadId, int low, int high) {
         READ_WRITE_LOCK.writeLock().lock();
-        TIMESTAMP = System.currentTimeMillis();
+        TIMESTAMP = 1688205258479L;//System.currentTimeMillis();
         this.rqThreadData[threadId].rqLinearzationTime = TIMESTAMP;
+        this.rqThreadData[threadId].low = low;
+        this.rqThreadData[threadId].high = high;
         READ_WRITE_LOCK.writeLock().unlock();
+
+        // TODO: implement traversal
     }
 
     public void announcePhysicalDeletion(int threadId, KvInfo deletedKey) {
-        this.rqThreadData[threadId].announcement = deletedKey;
-        this.rqThreadData[threadId].numberOfAnnouncments++;
+        this.rqThreadData[threadId].announcements.add(deletedKey);
+        this.rqThreadData[threadId].numberOfAnnouncements.incrementAndGet();
     }
 
 
     /*public void visit(int threadId, Node node){
         tryAdd(threadId, node, null, RQSource.DataStructure);
     }
-
+    */
     public ArrayList<RQResult> traversalEnd(int threadId){
         // Collect pointers p1, ..., pk to other processes’ announcements
         for(RQThreadData rqtd : this.rqThreadData) {
-            for(int i=0;i<rqtd.numberOfAnnouncments;i++) {
-                tryAdd(threadId,null, rqtd.announcements.get(i), RQSource.Announcement);
+            for(int i=0;i<rqtd.numberOfAnnouncements.get();i++) {
+                KvInfo ann = rqtd.announcements.pollLast();
+                tryAdd(threadId,ann, ann, RQSource.Announcement);
             }
         }
         // Collect pointers to all limbo lists
         // Traverse limbo lists
         for(RQThreadData rqtd : this.rqThreadData) {
             for(int i=0;i<rqtd.limboList.size();i++) {
-                tryAdd(threadId, rqtd.limboList.get(i), null, RQSource.LimboList);
+                tryAdd(threadId, rqtd.limboList.pollLast(), null, RQSource.LimboList);
             }
         }
         return this.rqThreadData[threadId].result;
@@ -85,34 +93,34 @@ public class RQProvider {
     }
 
 
-    /*private void tryAdd(int threadId, Node node, Node announcedNode, RQSource rqSource) {
+    private void tryAdd(int threadId, KvInfo kvInfo, KvInfo announcedKvInfo, RQSource rqSource) {
         int low = rqThreadData[threadId].low;
         int high = rqThreadData[threadId].high;
         long rqLinearzationTime = rqThreadData[threadId].rqLinearzationTime;
 
-        while (node.insertionTime == 0){}
-        if(node.insertionTime >= rqLinearzationTime){
-            return; // node inserted after RQ
+        while (kvInfo.insertionTime == 0){}
+        if(kvInfo.insertionTime >= rqLinearzationTime){
+           return; // node inserted after RQ
         }
         if(rqSource == RQSource.DataStructure){
             // do nothing: node was not deleted when RQ was linearized
         }
         else if(rqSource == RQSource.LimboList){
-            while (node.deletionTime == 0) {}
-            if(node.deletionTime < rqLinearzationTime){
+            while (kvInfo.deletionTime == 0) {}
+            if(kvInfo.deletionTime < rqLinearzationTime){
                 return; // node deleted before RQ
             }
         }
         else if(rqSource == RQSource.Announcement) {
             long deletionTime=0;
-            while (deletionTime==0 && announcedNode == node) {
-                deletionTime=node.deletionTime;
+            while (deletionTime==0 && kvInfo == announcedKvInfo) {
+                deletionTime=kvInfo.deletionTime;
             }
 
             if(deletionTime==0){
                 // loop exited because the process removed this announcement
                 // if the process deleted node, then it has now set node.dtime
-                deletionTime = node.deletionTime;
+                deletionTime = kvInfo.deletionTime;
 
                 if(deletionTime == 0) {
                     // the process did not delete node,
@@ -124,20 +132,19 @@ public class RQProvider {
             if(deletionTime < rqLinearzationTime){
                 return; // node deleted before RQ
             }
-
-            if(node.key >= low && node.key <= high) {
-                RQResult rqResult = new RQResult(node.key,node.value);
-                rqThreadData[threadId].result.add(rqResult);
-            }
-
+        }
+        if(kvInfo.key >= low && kvInfo.key <= high) {
+            RQResult rqResult = new RQResult(kvInfo.key,kvInfo.value);
+            rqThreadData[threadId].result.add(rqResult);
         }
     }
-  */
+
     private void physicalDeletionSucceeded(int threadId, KvInfo deletedKey) {
 
         retire(threadId,deletedKey);
         // ensure nodes are placed in the epoch bag BEFORE they are removed from announcements.
-        this.rqThreadData[threadId].announcement = null;
+        this.rqThreadData[threadId].numberOfAnnouncements.decrementAndGet();
+        //this.rqThreadData[threadId].announcements
     }
 
     private void retire(int treadId, KvInfo kvInfo) {
@@ -149,13 +156,14 @@ public class RQProvider {
 
     class RQThreadData {
 
-        int numberOfAnnouncments;
+
         int low;
         int high;
 
-        KvInfo announcement;
         long rqLinearzationTime;
+        ConcurrentSkipListSet<KvInfo> announcements = new ConcurrentSkipListSet<>();
         ConcurrentSkipListSet<KvInfo> limboList = new ConcurrentSkipListSet<>();
+        AtomicInteger numberOfAnnouncements = new AtomicInteger(0);
         AtomicInteger limboListSize = new AtomicInteger(0);
         ArrayList<RQResult> result = new ArrayList();
 
