@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class RQProvider {
@@ -55,9 +57,8 @@ public class RQProvider {
     }
 
     public void announcePhysicalDeletion(int threadId, KvInfo deletedKey) {
-
         this.rqThreadData[threadId].announcement = deletedKey;
-        // this.rqThreadData[threadId].numberOfAnnouncments++;
+        this.rqThreadData[threadId].numberOfAnnouncments++;
     }
 
 
@@ -140,6 +141,8 @@ public class RQProvider {
     }
 
     private void retire(int treadId, KvInfo kvInfo) {
+        this.rqThreadData[treadId].limboList.add(kvInfo);
+        this.rqThreadData[treadId].limboListSize.incrementAndGet();
         //this.rqThreadData[treadId].limboList[this.rqThreadData[treadId].limboListSize] = kvInfo;
         //this.rqThreadData[treadId].limboListSize++;
     }
@@ -152,8 +155,8 @@ public class RQProvider {
 
         KvInfo announcement;
         long rqLinearzationTime;
-        int limboListSize = 0;
-        //KvInfo[] limboList = new KvInfo[10000000];
+        ConcurrentSkipListSet<KvInfo> limboList = new ConcurrentSkipListSet<>();
+        AtomicInteger limboListSize = new AtomicInteger(0);
         ArrayList<RQResult> result = new ArrayList();
 
     }

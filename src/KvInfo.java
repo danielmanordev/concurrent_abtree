@@ -1,4 +1,4 @@
-public class KvInfo {
+public class KvInfo implements Comparable<KvInfo> {
 
     public KvInfo(int key, int value, long insertionTime, long deletionTime) {
         this.key = key;
@@ -10,4 +10,9 @@ public class KvInfo {
     public int value;
     public long insertionTime;
     public long deletionTime;
+
+    @Override
+    public int compareTo(KvInfo o) {
+        return Integer.compare(this.key, o.key);
+    }
 }
