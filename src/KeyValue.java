@@ -11,16 +11,6 @@ public class KeyValue {
         this.deletionTime = deletionTime;
     }
 
-    KeyValue(int key, Node node){
-        this.key = key;
-        this.node = node;
-
-    }
-
-    KeyValue(int key){
-        this.key = key;
-    }
-
     KeyValue(){
 
     }

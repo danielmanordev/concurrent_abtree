@@ -20,7 +20,7 @@ public class MppRunner {
             //nteger.parseInt(args[1]);
 
             long start = System.currentTimeMillis();
-            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, dataRange, 0, 80, 10000);
+            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, dataRange, 10, 70, 10,10000);
             long finish = System.currentTimeMillis();
             long timeElapsed = finish - start;
             long timeElapsedMicroseconds = timeElapsed * 1000;
@@ -32,16 +32,20 @@ public class MppRunner {
             System.out.println("Total adds:               " + testResult.TotalAdds.longValue());
             System.out.println("Total removes:            " + testResult.TotalRemoves.longValue());
             System.out.println("Total contains:           " + testResult.TotalContains.longValue());
+            System.out.println("Total scans:              " + testResult.TotalScans.longValue());
             System.out.println("Adds/\u33B2:                  " + testResult.TotalAdds.longValue() / (timeElapsedMicroseconds));
             System.out.println("Removes/\u33B2:               " + testResult.TotalRemoves.doubleValue() / (timeElapsedMicroseconds));
             System.out.println("Contains/\u33B2:              " + testResult.TotalContains.longValue() / (timeElapsedMicroseconds));
+            System.out.println("Scans/\u33B2:                 " + testResult.TotalScans.longValue() / (timeElapsedMicroseconds));
             System.out.println("Threads:                  " + numberOfThreads);
             System.out.println("Total time:               " + timeElapsed + " milliseconds");
            // b *=2;
             if(i >1) {
                 adds.add(testResult.TotalAdds.longValue());
             }
+         //   concurrentSet.scan(1,1000);
         }
+
         if(numberOfTests > 2){
             double average = adds
                     .stream()
