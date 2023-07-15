@@ -4,6 +4,9 @@ public class Node {
 
     private boolean marked;
     private boolean isLeaf = false;
+    public Node left;
+    public Node right;
+
     public boolean isTagged = false;
     private boolean isEntry = false;
 

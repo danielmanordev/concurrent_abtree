@@ -8,9 +8,11 @@ public class RQProvider {
     private static final ReentrantReadWriteLock READ_WRITE_LOCK = new ReentrantReadWriteLock(true);
     private static long TIMESTAMP = System.currentTimeMillis();
     private RQThreadData[] rqThreadData;
+    private int maxNodeSize;
 
-    public RQProvider(int numberOfThreads) {
+    public RQProvider(int numberOfThreads, int maxNodeSize) {
         this.rqThreadData = new RQThreadData[200];
+        this.maxNodeSize = maxNodeSize;
         for(int i=0;i<200;i++){
             rqThreadData[i] = new RQThreadData();
         }
@@ -52,16 +54,70 @@ public class RQProvider {
 
 
 
-    public void traversalStart(int threadId, int low, int high) {
+    public void traversalStart(int threadId, int low, int high, Node entry) {
         READ_WRITE_LOCK.writeLock().lock();
-        TIMESTAMP = 1688205258479L;//System.currentTimeMillis();
+        TIMESTAMP = System.currentTimeMillis();
         this.rqThreadData[threadId].rqLinearzationTime = TIMESTAMP;
         this.rqThreadData[threadId].low = low;
         this.rqThreadData[threadId].high = high;
         READ_WRITE_LOCK.writeLock().unlock();
 
-        // TODO: implement traversal
+        PathInfo pathInfo = new PathInfo();
+        pathInfo.gp = null;
+        pathInfo.p = entry;
+        pathInfo.n = entry.nodes[0];
+        pathInfo.nIdx = 0;
+
+        while (!pathInfo.n.isLeaf()) {
+
+            pathInfo.gp = pathInfo.p;
+            pathInfo.p = pathInfo.n;
+            pathInfo.pIdx = pathInfo.nIdx;
+            pathInfo.nIdx = getChildIndex(pathInfo.n, low);
+            pathInfo.n = pathInfo.n.nodes[pathInfo.nIdx];
+
+        }
+        Node lowNode = pathInfo.n;
+        boolean continueToNextNode=true;
+        while(true){
+            for(int i=0;i<this.maxNodeSize;i++) {
+                if(lowNode.keys[i] >= low && lowNode.keys[i] <= high && lowNode.insertionTimes[i] < TIMESTAMP){
+                    visit(threadId,new KvInfo(lowNode.keys[i],lowNode.values[i],lowNode.insertionTimes[i],lowNode.deletionTimes[i]));
+                    // System.out.println("Key: "+lowNode.keys[i]+ " Value: "+lowNode.values[i]);
+
+                }
+                if(lowNode.keys[i]>high) {
+                    continueToNextNode = false;
+                }
+            }
+            if(continueToNextNode && lowNode.right != null) {
+                lowNode = lowNode.right;
+            }
+            else {
+                System.out.println("BREAK");
+                break;
+            }
+        }
+
+
     }
+
+    private int getChildIndex(Node node, int key) {
+        int numberOfKeys = getKeyCount(node);
+        int retval = 0;
+
+        while (retval < numberOfKeys && key >= node.keys[retval]) {
+            ++retval;
+        }
+        return retval;
+
+    }
+
+    private int getKeyCount(Node node) {
+        return node.isLeaf() ? node.size : node.size - 1;
+    }
+
+
 
     public void announcePhysicalDeletion(int threadId, KvInfo deletedKey) {
         this.rqThreadData[threadId].announcements.add(deletedKey);
@@ -69,10 +125,11 @@ public class RQProvider {
     }
 
 
-    /*public void visit(int threadId, Node node){
-        tryAdd(threadId, node, null, RQSource.DataStructure);
+
+    public void visit(int threadId, KvInfo kvInfo){
+        tryAdd(threadId, kvInfo, null, RQSource.DataStructure);
     }
-    */
+
     public ArrayList<RQResult> traversalEnd(int threadId){
         // Collect pointers p1, ..., pk to other processes’ announcements
         for(RQThreadData rqtd : this.rqThreadData) {
