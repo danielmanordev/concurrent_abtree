@@ -1,6 +1,6 @@
 import java.util.ArrayList;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.LinkedList;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class RQProvider {
@@ -77,24 +77,23 @@ public class RQProvider {
             pathInfo.n = pathInfo.n.nodes[pathInfo.nIdx];
 
         }
-        Node lowNode = pathInfo.n;
+        Node leftNode = pathInfo.n;
         boolean continueToNextNode=true;
         while(true){
             for(int i=0;i<this.maxNodeSize;i++) {
-                if(lowNode.keys[i] >= low && lowNode.keys[i] <= high && lowNode.insertionTimes[i] < TIMESTAMP){
-                    visit(threadId,new KvInfo(lowNode.keys[i],lowNode.values[i],lowNode.insertionTimes[i],lowNode.deletionTimes[i]));
-                    // System.out.println("Key: "+lowNode.keys[i]+ " Value: "+lowNode.values[i]);
+                if(leftNode.keys[i] >= low && leftNode.keys[i] <= high && leftNode.insertionTimes[i] < TIMESTAMP){
+                    visit(threadId,new KvInfo(leftNode.keys[i],leftNode.values[i],leftNode.insertionTimes[i],leftNode.deletionTimes[i]));
+                    // System.out.println("Key: "+leftNode.keys[i]+ " Value: "+leftNode.values[i]);
 
                 }
-                if(lowNode.keys[i]>high) {
+                if(leftNode.keys[i]>high) {
                     continueToNextNode = false;
                 }
             }
-            if(continueToNextNode && lowNode.right != null) {
-                lowNode = lowNode.right;
+            if(continueToNextNode && leftNode.right != null) {
+                leftNode = leftNode.right;
             }
             else {
-                System.out.println("BREAK");
                 break;
             }
         }
@@ -121,7 +120,6 @@ public class RQProvider {
 
     public void announcePhysicalDeletion(int threadId, KvInfo deletedKey) {
         this.rqThreadData[threadId].announcements.add(deletedKey);
-        this.rqThreadData[threadId].numberOfAnnouncements.incrementAndGet();
     }
 
 
@@ -133,16 +131,15 @@ public class RQProvider {
     public ArrayList<RQResult> traversalEnd(int threadId){
         // Collect pointers p1, ..., pk to other processes’ announcements
         for(RQThreadData rqtd : this.rqThreadData) {
-            for(int i=0;i<rqtd.numberOfAnnouncements.get();i++) {
-                KvInfo ann = rqtd.announcements.pollLast();
+            for(KvInfo ann : rqtd.announcements) {
                 tryAdd(threadId,ann, ann, RQSource.Announcement);
             }
         }
         // Collect pointers to all limbo lists
         // Traverse limbo lists
         for(RQThreadData rqtd : this.rqThreadData) {
-            for(int i=0;i<rqtd.limboList.size();i++) {
-                tryAdd(threadId, rqtd.limboList.pollLast(), null, RQSource.LimboList);
+            for(KvInfo ann : rqtd.limboList) {
+                tryAdd(threadId, ann, null, RQSource.LimboList);
             }
         }
         return this.rqThreadData[threadId].result;
@@ -192,6 +189,10 @@ public class RQProvider {
         }
         if(kvInfo.key >= low && kvInfo.key <= high) {
             RQResult rqResult = new RQResult(kvInfo.key,kvInfo.value);
+            if(rqSource == RQSource.LimboList) {
+                rqResult.wasDeletedDuringRangeQuery = true;
+            }
+
             rqThreadData[threadId].result.add(rqResult);
         }
     }
@@ -200,15 +201,12 @@ public class RQProvider {
 
         retire(threadId,deletedKey);
         // ensure nodes are placed in the epoch bag BEFORE they are removed from announcements.
-        this.rqThreadData[threadId].numberOfAnnouncements.decrementAndGet();
+        this.rqThreadData[threadId].announcements.remove(deletedKey);
         //this.rqThreadData[threadId].announcements
     }
 
     private void retire(int treadId, KvInfo kvInfo) {
         this.rqThreadData[treadId].limboList.add(kvInfo);
-        this.rqThreadData[treadId].limboListSize.incrementAndGet();
-        //this.rqThreadData[treadId].limboList[this.rqThreadData[treadId].limboListSize] = kvInfo;
-        //this.rqThreadData[treadId].limboListSize++;
     }
 
     class RQThreadData {
@@ -218,10 +216,10 @@ public class RQProvider {
         int high;
 
         long rqLinearzationTime;
-        ConcurrentSkipListSet<KvInfo> announcements = new ConcurrentSkipListSet<>();
-        ConcurrentSkipListSet<KvInfo> limboList = new ConcurrentSkipListSet<>();
-        AtomicInteger numberOfAnnouncements = new AtomicInteger(0);
-        AtomicInteger limboListSize = new AtomicInteger(0);
+        ConcurrentLinkedQueue<KvInfo> announcements = new ConcurrentLinkedQueue<>();
+        ConcurrentLinkedQueue<KvInfo> limboList = new ConcurrentLinkedQueue<>();
+        int numberOfAnnouncements=0;
+        int limboListSize = 0;
         ArrayList<RQResult> result = new ArrayList();
 
     }
@@ -233,5 +231,7 @@ public class RQProvider {
         }
         int key;
         int value;
+
+        public boolean wasDeletedDuringRangeQuery = false;
     }
 }
