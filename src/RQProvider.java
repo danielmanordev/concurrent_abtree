@@ -55,6 +55,7 @@ public class RQProvider {
 
 
     public void traversalStart(int threadId, int low, int high, Node entry) {
+        this.rqThreadData[threadId].result.clear();
         READ_WRITE_LOCK.writeLock().lock();
         TIMESTAMP = System.currentTimeMillis();
         this.rqThreadData[threadId].rqLinearzationTime = TIMESTAMP;
