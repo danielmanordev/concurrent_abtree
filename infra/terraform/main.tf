@@ -29,12 +29,13 @@ resource "azurerm_network_interface" "example" {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.example.id
     private_ip_address_allocation = "Static"
+    private_ip_address = "10.0.2.99"
     public_ip_address_id = azurerm_public_ip.public_ip.id
   }
 }
 
 resource "azurerm_public_ip" "public_ip" {
-  name                = "acceptanceTestPublicIp1"
+  name                = "${var.prefix}-ip"
   resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
   allocation_method   = "Dynamic"
