@@ -2,12 +2,12 @@
 
 # Create a resource group
 resource "azurerm_resource_group" "example" {
-  name     = "range-query-research"
+  name     = "range-query-research-linux"
   location = "West Europe"
 }
 
 resource "azurerm_virtual_network" "example" {
-  name                = "example-network"
+  name                = "${var.prefix}-network"
   address_space       = ["10.0.0.0/16"]
   location            = azurerm_resource_group.example.location
   resource_group_name = azurerm_resource_group.example.name
@@ -21,23 +21,33 @@ resource "azurerm_subnet" "example" {
 }
 
 resource "azurerm_network_interface" "example" {
-  name                = "example-nic"
+  name                = "${var.prefix}-nic"
   location            = azurerm_resource_group.example.location
   resource_group_name = azurerm_resource_group.example.name
 
   ip_configuration {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.example.id
-    private_ip_address_allocation = "Dynamic"
+    private_ip_address_allocation = "Static"
+    public_ip_address_id = azurerm_public_ip.public_ip.id
   }
 }
 
+resource "azurerm_public_ip" "public_ip" {
+  name                = "acceptanceTestPublicIp1"
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+  allocation_method   = "Dynamic"
+}
+
 resource "azurerm_linux_virtual_machine" "example" {
-  name                = "example-machine"
+  name                = "${var.prefix}-machine"
   resource_group_name = azurerm_resource_group.example.name
   location            = azurerm_resource_group.example.location
   size                = "Standard_F2"
   admin_username      = "adminuser"
+  eviction_policy = "Deallocate"
+  priority = "Spot"
   network_interface_ids = [
     azurerm_network_interface.example.id,
   ]
