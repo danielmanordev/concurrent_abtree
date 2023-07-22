@@ -68,4 +68,5 @@ resource "azurerm_linux_virtual_machine" "example" {
     sku       = "20_04-lts"
     version   = "latest"
   }
+  custom_data = base64encode(local.custom_data)
 }
