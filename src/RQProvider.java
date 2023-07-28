@@ -22,7 +22,7 @@ public class RQProvider {
 
         deletedKey.deletionTime = TIMESTAMP;
         int threadId = (int) Thread.currentThread().getId();
-        announcePhysicalDeletion(threadId ,deletedKey);
+        //announcePhysicalDeletion(threadId ,deletedKey);
 
         // READ_WRITE_LOCK.readLock().lock();
 
@@ -33,7 +33,7 @@ public class RQProvider {
         leaf.size = leaf.size-1;
         // READ_WRITE_LOCK.readLock().unlock();
 
-        physicalDeletionSucceeded(threadId, deletedKey);
+        // physicalDeletionSucceeded(threadId, deletedKey);
         return leaf;
     }
 
