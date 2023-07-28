@@ -6,10 +6,12 @@ import java.util.concurrent.ExecutionException;
 public class MppRunner {
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
+        int cores = Runtime.getRuntime().availableProcessors();
+        System.out.println("Number of cores: "+cores);
         int dataRange = 10000;
         int numberOfThreads = 8;
         int a = 2;
-        int b = 4;
+        int b = 16;
         int numberOfTests = 3;
         ArrayList<Long> adds = new ArrayList();
         for (int i = 0; i < numberOfTests; i++) {
