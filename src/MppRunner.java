@@ -14,7 +14,7 @@ public class MppRunner {
         int b = 16;
         int numberOfTests = 96;
         int testDuration=10000;
-        int perAdd=80;
+        int perAdd=100;
         int perContains=0;
         int perRemove=100-perAdd-perContains;
         int perRange=0;
@@ -52,7 +52,7 @@ public class MppRunner {
             System.out.println("Contains/\u33B2:              " + testResult.TotalContains.longValue() / (timeElapsedMicroseconds));
             System.out.println("Threads:                  " + numberOfThreads);
             System.out.println("Total time:               " + timeElapsed + " milliseconds");
-            numberOfThreads++;
+            // numberOfThreads++;
             if(i >1) {
                 adds.add(testResult.TotalAdds.longValue());
             }
