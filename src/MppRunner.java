@@ -16,9 +16,8 @@ public class MppRunner {
         int testDuration=10000;
         int perAdd=80;
         int perContains=0;
-        int perDelete=20;
-        int perRange=0;
-        int perRemove=100-perAdd-perContains-perRange;
+        int perRemove=10;
+        int perRange=100-perAdd-perContains-perRemove;
         ArrayList<Long> adds = new ArrayList();
         System.out.println("Number of cores: "+cores);
         System.out.println("Number of tests: "+numberOfTests);
@@ -36,7 +35,7 @@ public class MppRunner {
             //nteger.parseInt(args[1]);
 
             long start = System.currentTimeMillis();
-            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, dataRange, perContains,perAdd ,perDelete, testDuration);
+            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, dataRange, perContains,perAdd ,perRemove, testDuration);
             long finish = System.currentTimeMillis();
             long timeElapsed = finish - start;
             long timeElapsedMicroseconds = timeElapsed * 1000;
