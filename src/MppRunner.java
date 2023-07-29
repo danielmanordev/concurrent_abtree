@@ -47,9 +47,11 @@ public class MppRunner {
             System.out.println("Total adds:               " + testResult.TotalAdds.longValue());
             System.out.println("Total removes:            " + testResult.TotalRemoves.longValue());
             System.out.println("Total contains:           " + testResult.TotalContains.longValue());
+            System.out.println("Total range/\u33B2:           " + testResult.TotalScans.longValue());
             System.out.println("Adds/\u33B2:                  " + testResult.TotalAdds.longValue() / (timeElapsedMicroseconds));
             System.out.println("Removes/\u33B2:               " + testResult.TotalRemoves.doubleValue() / (timeElapsedMicroseconds));
             System.out.println("Contains/\u33B2:              " + testResult.TotalContains.longValue() / (timeElapsedMicroseconds));
+            System.out.println("range query/\u33B2:           " + testResult.TotalScans.longValue() / (timeElapsedMicroseconds));
             System.out.println("Threads:                  " + numberOfThreads);
             System.out.println("Total time:               " + timeElapsed + " milliseconds");
             // numberOfThreads++;
