@@ -17,8 +17,8 @@ public class MppRunner {
         int perAdd=80;
         int perContains=0;
         int perDelete=20;
-        int perRemove=100-perAdd-perContains;
         int perRange=0;
+        int perRemove=100-perAdd-perContains-perRange;
         ArrayList<Long> adds = new ArrayList();
         System.out.println("Number of cores: "+cores);
         System.out.println("Number of tests: "+numberOfTests);
