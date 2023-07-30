@@ -12,11 +12,11 @@ public class MppRunner {
         int numberOfThreads = 8;
         int a = 2;
         int b = 16;
-        int numberOfTests = 96;
+        int numberOfTests = 5;
         int testDuration=10000;
-        int perAdd=80;
+        int perAdd=100;
         int perContains=0;
-        int perRemove=10;
+        int perRemove=0;
         int perRange=100-perAdd-perContains-perRemove;
         ArrayList<Long> adds = new ArrayList();
         System.out.println("Number of cores: "+cores);
@@ -35,12 +35,12 @@ public class MppRunner {
             //nteger.parseInt(args[1]);
 
             long start = System.currentTimeMillis();
-            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, dataRange, perContains,perAdd ,perRemove, testDuration);
+            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, dataRange, perContains, perAdd, perRemove, testDuration);
             long finish = System.currentTimeMillis();
             long timeElapsed = finish - start;
             long timeElapsedMicroseconds = timeElapsed * 1000;
             System.out.println();
-            System.out.println("TEST "+(i+1)+"/"+numberOfTests+" FINISHED - RESULTS");
+            System.out.println("TEST " + (i + 1) + "/" + numberOfTests + " FINISHED - RESULTS");
             System.out.println("*****************************************");
             System.out.println("a:                        " + a);
             System.out.println("b:                        " + b);
@@ -55,18 +55,9 @@ public class MppRunner {
             System.out.println("Threads:                  " + numberOfThreads);
             System.out.println("Total time:               " + timeElapsed + " milliseconds");
             // numberOfThreads++;
-            if(i >1) {
+            if (i > 1) {
                 adds.add(testResult.TotalAdds.longValue());
             }
-        }
-        if(numberOfTests > 2){
-            double average = adds
-                    .stream()
-                    .mapToDouble(n -> n)
-                    .average().orElse(0.0);
-            average /= 1000;
-            int numberOfCalcTests = adds.size();
-            System.out.println("Adds/\u33B2 last " +numberOfCalcTests+ " tests average:  " + average);
         }
     }
 }

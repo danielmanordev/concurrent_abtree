@@ -9,6 +9,7 @@ public class RQProvider {
     private static long TIMESTAMP = System.currentTimeMillis();
     private RQThreadData[] rqThreadData;
     private int maxNodeSize;
+    private Lock lock = new MCSLock();
 
     public RQProvider(int numberOfThreads, int maxNodeSize) {
         this.rqThreadData = new RQThreadData[200];
@@ -22,26 +23,22 @@ public class RQProvider {
 
         deletedKey.deletionTime = TIMESTAMP;
         int threadId = (int) Thread.currentThread().getId();
-        //announcePhysicalDeletion(threadId ,deletedKey);
-
-        // READ_WRITE_LOCK.readLock().lock();
+        announcePhysicalDeletion(threadId ,deletedKey);
 
         leaf.keys[kvIndex] = 0;
         leaf.values[kvIndex] = 0;
         leaf.insertionTimes[kvIndex] = 0;
         leaf.deletionTimes[kvIndex] = 0;
         leaf.size = leaf.size-1;
-        // READ_WRITE_LOCK.readLock().unlock();
-
-        // physicalDeletionSucceeded(threadId, deletedKey);
+        physicalDeletionSucceeded(threadId, deletedKey);
         return leaf;
     }
 
     public Node updateInsert(Node leaf, int kvIndex, KvInfo insertedKey) {
 
-        // READ_WRITE_LOCK.readLock().lock();
+
         long ts = TIMESTAMP;
-        // READ_WRITE_LOCK.readLock().unlock();
+
         insertedKey.insertionTime = TIMESTAMP;
         leaf.keys[kvIndex] = insertedKey.key;
         leaf.values[kvIndex] = insertedKey.value;
@@ -56,12 +53,16 @@ public class RQProvider {
 
     public void traversalStart(int threadId, int low, int high, Node entry) {
         this.rqThreadData[threadId].result.clear();
-        READ_WRITE_LOCK.writeLock().lock();
+
+        lock.lock();
         TIMESTAMP = System.currentTimeMillis();
-        this.rqThreadData[threadId].rqLinearzationTime = TIMESTAMP;
+        long ts = TIMESTAMP;
+        lock.unlock();
+
+        this.rqThreadData[threadId].rqLinearzationTime = ts;
         this.rqThreadData[threadId].low = low;
         this.rqThreadData[threadId].high = high;
-        READ_WRITE_LOCK.writeLock().unlock();
+
 
         PathInfo pathInfo = new PathInfo();
         pathInfo.gp = null;
@@ -82,6 +83,7 @@ public class RQProvider {
         boolean continueToNextNode=true;
         while(true){
             for(int i=0;i<this.maxNodeSize;i++) {
+
                 if(leftNode.keys[i] >= low && leftNode.keys[i] <= high && leftNode.insertionTimes[i] < TIMESTAMP){
                     visit(threadId,new KvInfo(leftNode.keys[i],leftNode.values[i],leftNode.insertionTimes[i],leftNode.deletionTimes[i]));
                     // System.out.println("Key: "+leftNode.keys[i]+ " Value: "+leftNode.values[i]);
@@ -92,6 +94,8 @@ public class RQProvider {
                 }
             }
             if(continueToNextNode && leftNode.right != null) {
+
+                while ((leftNode.right.ver.get() & 1) != 0) {}
                 leftNode = leftNode.right;
             }
             else {
