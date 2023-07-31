@@ -50,7 +50,7 @@ public class RQProvider {
     }
 
 
-
+    // TODO: continue here
     public void traversalStart(int threadId, int low, int high, Node entry) {
         this.rqThreadData[threadId].result.clear();
 
@@ -63,7 +63,12 @@ public class RQProvider {
         this.rqThreadData[threadId].low = low;
         this.rqThreadData[threadId].high = high;
 
+        traverseLeafs(threadId,low,high,entry);
 
+
+    }
+
+    private void traverseLeafs(int threadId, int low, int high, Node entry) {
         PathInfo pathInfo = new PathInfo();
         pathInfo.gp = null;
         pathInfo.p = entry;
@@ -79,13 +84,14 @@ public class RQProvider {
             pathInfo.n = pathInfo.n.nodes[pathInfo.nIdx];
 
         }
-        Node leftNode = pathInfo.n;
+        Node leftNode = entry;
         boolean continueToNextNode=true;
         while(true){
             for(int i=0;i<this.maxNodeSize;i++) {
 
                 if(leftNode.keys[i] >= low && leftNode.keys[i] <= high && leftNode.insertionTimes[i] < TIMESTAMP){
                     visit(threadId,new KvInfo(leftNode.keys[i],leftNode.values[i],leftNode.insertionTimes[i],leftNode.deletionTimes[i]));
+                    low++;
                     // System.out.println("Key: "+leftNode.keys[i]+ " Value: "+leftNode.values[i]);
 
                 }
@@ -95,7 +101,9 @@ public class RQProvider {
             }
             if(continueToNextNode && leftNode.right != null) {
 
-                while ((leftNode.right.ver.get() & 1) != 0) {}
+                if (leftNode.right.isMarked()) {
+                  traverseLeafs(threadId, low, high, leftNode);
+                }
                 leftNode = leftNode.right;
             }
             else {
@@ -103,8 +111,8 @@ public class RQProvider {
             }
         }
 
-
     }
+
 
     private int getChildIndex(Node node, int key) {
         int numberOfKeys = getKeyCount(node);
