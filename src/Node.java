@@ -33,6 +33,7 @@ public class Node {
     public int searchKey;
 
     public Lock lock = new MCSLock();
+    public Lock leafLock = new MCSLock();
 
 
     public boolean isLeaf() {
@@ -48,6 +49,8 @@ public class Node {
     }
 
 
+
+
     public boolean getWeight(){
         return this.weight;
     }
@@ -59,6 +62,10 @@ public class Node {
     public void lock() {
        lock.lock();
     }
+
+    public void leafLock() {leafLock.lock();}
+
+    public void leafUnlock(){leafLock.unlock();}
 
     public void setAsLeaf(){
         this.isLeaf = true;

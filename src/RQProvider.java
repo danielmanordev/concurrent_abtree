@@ -84,7 +84,7 @@ public class RQProvider {
             pathInfo.n = pathInfo.n.nodes[pathInfo.nIdx];
 
         }
-        Node leftNode = entry;
+        Node leftNode = pathInfo.n;
         boolean continueToNextNode=true;
         while(true){
             for(int i=0;i<this.maxNodeSize;i++) {
@@ -101,9 +101,6 @@ public class RQProvider {
             }
             if(continueToNextNode && leftNode.right != null) {
 
-                if (leftNode.right.isMarked()) {
-                  traverseLeafs(threadId, low, high, leftNode);
-                }
                 leftNode = leftNode.right;
             }
             else {
@@ -138,12 +135,12 @@ public class RQProvider {
 
 
     public void visit(int threadId, KvInfo kvInfo){
-        tryAdd(threadId, kvInfo, null, RQSource.DataStructure);
+        //tryAdd(threadId, kvInfo, null, RQSource.DataStructure);
     }
 
     public ArrayList<RQResult> traversalEnd(int threadId){
         // Collect pointers p1, ..., pk to other processes’ announcements
-        for(RQThreadData rqtd : this.rqThreadData) {
+       /* for(RQThreadData rqtd : this.rqThreadData) {
             for(KvInfo ann : rqtd.announcements) {
                 tryAdd(threadId,ann, ann, RQSource.Announcement);
             }
@@ -154,7 +151,7 @@ public class RQProvider {
             for(KvInfo ann : rqtd.limboList) {
                 tryAdd(threadId, ann, null, RQSource.LimboList);
             }
-        }
+        }*/
         return this.rqThreadData[threadId].result;
 
     }
