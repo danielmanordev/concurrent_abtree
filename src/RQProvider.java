@@ -1,7 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -10,7 +9,7 @@ public class RQProvider {
     private static final ReentrantReadWriteLock READ_WRITE_LOCK = new ReentrantReadWriteLock(true);
     private static final int MAX_NODES_INSERTED_OR_DELETED_ATOMICALLY = 32;
     private static long TIMESTAMP = System.currentTimeMillis();
-    private HashMap<Integer,RQThreadData> rqThreadData;
+    private HashMap<Integer,RQThreadData> rqThreadsData;
     private int maxNodeSize;
     private Lock lock = new MCSLock();
     private Set ds;
@@ -21,7 +20,7 @@ public class RQProvider {
         this.init = new int[(int)Math.pow(numberOfThreads,2)];
 
         // maps a thread to its data
-        this.rqThreadData = new HashMap<>();
+        this.rqThreadsData = new HashMap<>();
 
         this.ds = ds;
 
@@ -33,7 +32,7 @@ public class RQProvider {
         }else {
             init[threadId] =1;
         }
-        RQThreadData threadData = this.rqThreadData.get(threadId);
+        RQThreadData threadData = this.rqThreadsData.get(threadId);
 
         threadData.hashSet = new HashSet<>();
         threadData.numberOfAnnouncements=0;
@@ -44,38 +43,51 @@ public class RQProvider {
 
     }
 
-    public void announcePhysicalDeletion(int threadId, KvInfo[] deletedNodes) {
-        RQThreadData rqThreadData = this.rqThreadData.get(threadId);
-        int i;
-        for (i=0;i<deletedNodes.length;++i) {
+    public void announcePhysicalDeletion(int threadId, KvInfo deletedNode) {
+        RQThreadData rqThreadData = this.rqThreadsData.get(threadId);
 
-            rqThreadData.announcements[rqThreadData.numberOfAnnouncements+i] = deletedNodes[i];
-        }
-        rqThreadData.numberOfAnnouncements += i;
+        rqThreadData.announcements[rqThreadData.numberOfAnnouncements+1] = deletedNode;
+
+        rqThreadData.numberOfAnnouncements++;
     }
 
-    public void physicalDeletionSucceeded(int threadId, KvInfo[] deletedNodes) {
-        RQThreadData rqThreadData = this.rqThreadData.get(threadId);
-        int i;
-        for (i=0;i<deletedNodes.length;++i) {
-            // TODO: place in epoch bag
-        }
-        rqThreadData.numberOfAnnouncements -= i;
+    public void physicalDeletionSucceeded(int threadId, KvInfo deletedNode) {
+        RQThreadData rqThreadData = this.rqThreadsData.get(threadId);
+
+        // TODO: place in epoch bag
+
+        rqThreadData.numberOfAnnouncements--;
 
     }
 
-    KvInfo linearizeUpdateAtWrite(int threadId, Node leaf,int linAddr, KvInfo linNewVal, KvInfo[] insertedNodes, KvInfo[] deletedNodes) {
+    public KvInfo linearizeUpdateAtWrite(int threadId, Node leaf,int linAddr, KvInfo linNewVal, KvInfo inserted, KvInfo deleted) {
 
-        announcePhysicalDeletion(threadId,deletedNodes);
+        if(deleted != null){
+            announcePhysicalDeletion(threadId,deleted);
+        }
 
+
+        /// READ LOCK???
         long ts = TIMESTAMP;
         leaf.keys[linAddr] = linNewVal.key;
+        leaf.values[linAddr] = linNewVal.value;
+        /// READ UNLOCK???
+
+        if(inserted != null) {
+            setInsertionTimestamps(ts,linAddr ,leaf);
+        }
+        if(deleted != null){
+            setDeletionTimestamps(ts,linAddr ,leaf);
+            physicalDeletionSucceeded(threadId,deleted);
+        }
+
+        return linNewVal;
 
     }
 
 
 
-    public Node updateDelete(Node leaf, int kvIndex, KvInfo deletedKey) {
+   /* public Node updateDelete(Node leaf, int kvIndex, KvInfo deletedKey) {
 
         deletedKey.deletionTime = TIMESTAMP;
         int threadId = (int) Thread.currentThread().getId();
@@ -103,21 +115,23 @@ public class RQProvider {
 
 
         return leaf;
-    }
+    }*/
 
 
     // TODO: continue here
     public void traversalStart(int threadId, int low, int high, Node entry) {
-        this.rqThreadData[threadId].result.clear();
+        RQThreadData rqThreadData = this.rqThreadsData.get(threadId);
+        rqThreadData.hashSet.clear();
 
         lock.lock();
         TIMESTAMP = System.currentTimeMillis();
         long ts = TIMESTAMP;
         lock.unlock();
 
-        this.rqThreadData[threadId].rqLinearzationTime = ts;
-        this.rqThreadData[threadId].low = low;
-        this.rqThreadData[threadId].high = high;
+
+        rqThreadData.rqLinearzationTime = ts;
+        rqThreadData.low = low;
+        rqThreadData.high = high;
 
         traverseLeafs(threadId,low,high,entry);
     }
@@ -164,18 +178,12 @@ public class RQProvider {
 
     }
 
-    private void setInsertionTimestamps(long ts, KvInfo[] insertedNodes){
-        for(int i=0;i<insertedNodes.length;i++)
-        {
-            insertedNodes[i].insertionTime = ts;
-        }
+    private void setInsertionTimestamps(long ts, int index, Node leaf){
+        leaf.insertionTimes[index] = ts;
     }
 
-    private void setDeletionTimestamps(long ts, KvInfo[] deletedNodes){
-        for(int i=0;i<deletedNodes.length;i++)
-        {
-            deletedNodes[i].deletionTime = ts;
-        }
+    private void setDeletionTimestamps(long ts, int index, Node leaf){
+        leaf.deletionTimes[index] = ts;
     }
 
 
@@ -214,15 +222,15 @@ public class RQProvider {
                 tryAdd(threadId, ann, null, RQSource.LimboList);
             }
         }*/
-        return this.rqThreadData[threadId].result;
+        return this.rqThreadsData[threadId].result;
 
     }
 
 
     private void tryAdd(int threadId, KvInfo kvInfo, KvInfo announcedKvInfo, RQSource rqSource) {
-        int low = rqThreadData[threadId].low;
-        int high = rqThreadData[threadId].high;
-        long rqLinearzationTime = rqThreadData[threadId].rqLinearzationTime;
+        int low = rqThreadsData[threadId].low;
+        int high = rqThreadsData[threadId].high;
+        long rqLinearzationTime = rqThreadsData[threadId].rqLinearzationTime;
 
         while (kvInfo.insertionTime == 0){}
         if(kvInfo.insertionTime >= rqLinearzationTime){
@@ -265,13 +273,13 @@ public class RQProvider {
                 rqResult.wasDeletedDuringRangeQuery = true;
             }
 
-            rqThreadData[threadId].result.add(rqResult);
+            rqThreadsData[threadId].result.add(rqResult);
         }
     }
 
 
     private void retire(int treadId, KvInfo kvInfo) {
-        this.rqThreadData[treadId].limboList.add(kvInfo);
+        this.rqThreadsData[treadId].limboList.add(kvInfo);
     }
 
     class RQThreadData {
