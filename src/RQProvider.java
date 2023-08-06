@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -6,18 +8,72 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public class RQProvider {
 
     private static final ReentrantReadWriteLock READ_WRITE_LOCK = new ReentrantReadWriteLock(true);
+    private static final int MAX_NODES_INSERTED_OR_DELETED_ATOMICALLY = 32;
     private static long TIMESTAMP = System.currentTimeMillis();
-    private RQThreadData[] rqThreadData;
+    private HashMap<Integer,RQThreadData> rqThreadData;
     private int maxNodeSize;
     private Lock lock = new MCSLock();
+    private Set ds;
 
-    public RQProvider(int numberOfThreads, int maxNodeSize) {
-        this.rqThreadData = new RQThreadData[200];
-        this.maxNodeSize = maxNodeSize;
-        for(int i=0;i<200;i++){
-            rqThreadData[i] = new RQThreadData();
-        }
+    private int[] init;
+
+    public RQProvider(int numberOfThreads, Set ds) {
+        this.init = new int[(int)Math.pow(numberOfThreads,2)];
+
+        // maps a thread to its data
+        this.rqThreadData = new HashMap<>();
+
+        this.ds = ds;
+
     }
+
+    public void initThread(int threadId) {
+        if(init[threadId] == 1){
+            return;
+        }else {
+            init[threadId] =1;
+        }
+        RQThreadData threadData = this.rqThreadData.get(threadId);
+
+        threadData.hashSet = new HashSet<>();
+        threadData.numberOfAnnouncements=0;
+
+        /*for (int i=0;i<MAX_NODES_INSERTED_OR_DELETED_ATOMICALLY+1;++i) {
+            threadData.announcements[i] = new KvInfo();
+        }*/
+
+    }
+
+    public void announcePhysicalDeletion(int threadId, KvInfo[] deletedNodes) {
+        RQThreadData rqThreadData = this.rqThreadData.get(threadId);
+        int i;
+        for (i=0;i<deletedNodes.length;++i) {
+
+            rqThreadData.announcements[rqThreadData.numberOfAnnouncements+i] = deletedNodes[i];
+        }
+        rqThreadData.numberOfAnnouncements += i;
+    }
+
+    public void physicalDeletionSucceeded(int threadId, KvInfo[] deletedNodes) {
+        RQThreadData rqThreadData = this.rqThreadData.get(threadId);
+        int i;
+        for (i=0;i<deletedNodes.length;++i) {
+            // TODO: place in epoch bag
+        }
+        rqThreadData.numberOfAnnouncements -= i;
+
+    }
+
+    KvInfo linearizeUpdateAtWrite(int threadId, Node leaf,int linAddr, KvInfo linNewVal, KvInfo[] insertedNodes, KvInfo[] deletedNodes) {
+
+        announcePhysicalDeletion(threadId,deletedNodes);
+
+        long ts = TIMESTAMP;
+        leaf.keys[linAddr] = linNewVal.key;
+
+    }
+
+
 
     public Node updateDelete(Node leaf, int kvIndex, KvInfo deletedKey) {
 
@@ -64,8 +120,6 @@ public class RQProvider {
         this.rqThreadData[threadId].high = high;
 
         traverseLeafs(threadId,low,high,entry);
-
-
     }
 
     private void traverseLeafs(int threadId, int low, int high, Node entry) {
@@ -110,6 +164,20 @@ public class RQProvider {
 
     }
 
+    private void setInsertionTimestamps(long ts, KvInfo[] insertedNodes){
+        for(int i=0;i<insertedNodes.length;i++)
+        {
+            insertedNodes[i].insertionTime = ts;
+        }
+    }
+
+    private void setDeletionTimestamps(long ts, KvInfo[] deletedNodes){
+        for(int i=0;i<deletedNodes.length;i++)
+        {
+            deletedNodes[i].deletionTime = ts;
+        }
+    }
+
 
     private int getChildIndex(Node node, int key) {
         int numberOfKeys = getKeyCount(node);
@@ -124,12 +192,6 @@ public class RQProvider {
 
     private int getKeyCount(Node node) {
         return node.isLeaf() ? node.size : node.size - 1;
-    }
-
-
-
-    public void announcePhysicalDeletion(int threadId, KvInfo deletedKey) {
-        this.rqThreadData[threadId].announcements.add(deletedKey);
     }
 
 
@@ -207,13 +269,6 @@ public class RQProvider {
         }
     }
 
-    private void physicalDeletionSucceeded(int threadId, KvInfo deletedKey) {
-
-        retire(threadId,deletedKey);
-        // ensure nodes are placed in the epoch bag BEFORE they are removed from announcements.
-        this.rqThreadData[threadId].announcements.remove(deletedKey);
-        //this.rqThreadData[threadId].announcements
-    }
 
     private void retire(int treadId, KvInfo kvInfo) {
         this.rqThreadData[treadId].limboList.add(kvInfo);
@@ -226,10 +281,11 @@ public class RQProvider {
         int high;
 
         long rqLinearzationTime;
-        ConcurrentLinkedQueue<KvInfo> announcements = new ConcurrentLinkedQueue<>();
+        KvInfo[] announcements = new KvInfo[MAX_NODES_INSERTED_OR_DELETED_ATOMICALLY];
         ConcurrentLinkedQueue<KvInfo> limboList = new ConcurrentLinkedQueue<>();
         int numberOfAnnouncements=0;
         int limboListSize = 0;
+        HashSet<KvInfo> hashSet;
         ArrayList<RQResult> result = new ArrayList();
 
     }
