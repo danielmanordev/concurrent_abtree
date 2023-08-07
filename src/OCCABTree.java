@@ -34,10 +34,10 @@ public class OCCABTree implements Set {
                 continue;
             }
 
-            int val = NULL;
+            KvInfo kvInfo=null;
             for (int keyIndex = 0; keyIndex < this.b - 1; keyIndex++) {
                 if (leaf.keys[keyIndex] == key) {
-                    val = leaf.values[keyIndex];
+                    kvInfo = leaf.values[keyIndex];
                     break;
                 }
             }
@@ -45,10 +45,10 @@ public class OCCABTree implements Set {
             if (ver1 != ver2) {
                 continue;
             }
-            if (val == NULL) {
+            if (kvInfo == null) {
                 return new Result(NULL, ReturnCode.FAILURE);
             } else {
-                return new Result(val, ReturnCode.SUCCESS);
+                return new Result(kvInfo.value, ReturnCode.SUCCESS);
             }
         }
     }
@@ -110,12 +110,12 @@ public class OCCABTree implements Set {
             int k=0;
             for (int i = 0; i < b; i++) {
                 if(node.keys[i] != NULL){
-                    keyValues[k] = new KeyValue(node.keys[i], node.values[i], node.insertionTimes[i], node.deletionTimes[i]);
+                    keyValues[k] = new KeyValue(node.keys[i], node.values[i]);
                     ++k;
                 }
 
             }
-            keyValues[k] = new KeyValue(key, value,TIMESTAMP,0);
+            keyValues[k] = new KeyValue(key, new KvInfo(key,value,TIMESTAMP,0));
             ++k;
 
             Arrays.sort(keyValues, new SortKeyValues());
@@ -131,8 +131,7 @@ public class OCCABTree implements Set {
             for (int i = 0; i < leftSize; i++) {
                 left.keys[i] = keyValues[i].getKey();
                 left.values[i] = keyValues[i].getValue();
-                left.insertionTimes[i] = keyValues[i].getInsertionTime();
-                left.deletionTimes[i] = keyValues[i].getDeletionTime();
+
             }
 
             int rightSize = (b+1) - leftSize;
@@ -140,8 +139,7 @@ public class OCCABTree implements Set {
             for (int i = 0; i < rightSize; i++) {
                 right.keys[i] = keyValues[i+leftSize].getKey();
                 right.values[i] = keyValues[i+leftSize].getValue();
-                right.insertionTimes[i] = keyValues[i+leftSize].getInsertionTime();
-                right.deletionTimes[i] = keyValues[i+leftSize].getDeletionTime();
+
             }
 
 
@@ -385,7 +383,7 @@ public class OCCABTree implements Set {
 
     KeyIndexValueVersionResult getKeyIndexValueVersion(Node node, int key) {
         int keyIndex;
-        int value;
+        KvInfo value;
         int version;
 
         do {
@@ -394,9 +392,9 @@ public class OCCABTree implements Set {
             while (keyIndex < b && node.keys[keyIndex] != key) {
                 ++keyIndex;
             }
-            value = keyIndex < b ? node.values[keyIndex] : NULL;
+            value = keyIndex < b ? node.values[keyIndex] : null;
         } while (node.ver.get() != version);
-        return value == NULL ? new KeyIndexValueVersionResult(NULL,NULL,NULL,ReturnCode.FAILURE) : new KeyIndexValueVersionResult(value,keyIndex,version,ReturnCode.SUCCESS);
+        return value == null ? new KeyIndexValueVersionResult(NULL,NULL,NULL,ReturnCode.FAILURE) : new KeyIndexValueVersionResult(value.value,keyIndex,version,ReturnCode.SUCCESS);
 
     }
 
@@ -461,10 +459,10 @@ public class OCCABTree implements Set {
         int deletedValue = NULL;
         for (int i = 0; i < b; ++i) {
            if(node.keys[i] == key) {
-               deletedValue = node.values[i];
+               deletedValue = node.values[i].value;
                int oldVersion = node.ver.get();
                node.ver.set(oldVersion);
-               this.rqProvider.updateDelete(node,i, new KvInfo(node.keys[i],node.values[i], node.insertionTimes[i], TIMESTAMP));
+               this.rqProvider.updateDelete(node,i, node.values[i]);
                //node.keys[i] = 0;
                //node.values[i] = 0;
                //node.size = newSize;
@@ -615,8 +613,7 @@ public class OCCABTree implements Set {
                        if (left.keys[i] != NULL) {
                            newNodeExt.keys[keyCounter++] = left.keys[i];
                            newNodeExt.values[ptrCounter++] = left.values[i];
-                           newNodeExt.insertionTimes[keyCounter-1] = left.insertionTimes[i];
-                           newNodeExt.deletionTimes[keyCounter-1] = left.deletionTimes[i];
+
                        }
                    }
                    assert (right.isLeaf());
@@ -624,8 +621,7 @@ public class OCCABTree implements Set {
                        if (right.keys[i] != NULL) {
                            newNodeExt.keys[keyCounter++] = right.keys[i];
                            newNodeExt.values[ptrCounter++] = right.values[i];
-                           newNodeExt.insertionTimes[keyCounter-1] = right.insertionTimes[i];
-                           newNodeExt.deletionTimes[keyCounter-1] = right.deletionTimes[i];
+
                        }
                    }
                    newNodeExt.left = left.left;
@@ -737,8 +733,6 @@ public class OCCABTree implements Set {
                        if (left.keys[i] != NULL) {
                            keyValues[keyCounter++].key = left.keys[i];
                            keyValues[valCounter++].value = left.values[i];
-                           keyValues[keyCounter-1].insertionTime = left.insertionTimes[i];
-                           keyValues[keyCounter-1].deletionTime = left.deletionTimes[i];
 
                        }
                    }
@@ -760,8 +754,7 @@ public class OCCABTree implements Set {
                        if (right.keys[i] != NULL) {
                           keyValues[keyCounter++].key = right.keys[i];
                           keyValues[valCounter++].value = right.values[i];
-                          keyValues[keyCounter-1].insertionTime = right.insertionTimes[i];
-                          keyValues[keyCounter-1].deletionTime = right.deletionTimes[i];
+
                        }
                    }
                } else {
@@ -798,8 +791,7 @@ public class OCCABTree implements Set {
                    for (int i = 0; i < leftSize; i++) {
                        newLeftExt.keys[i] = keyValues[keyCounter++].key;
                        newLeftExt.values[i] = keyValues[valCounter++].value;
-                       newLeftExt.insertionTimes[i] = keyValues[keyCounter-1].insertionTime;
-                       newLeftExt.deletionTimes[i] =  keyValues[keyCounter-1].deletionTime;
+
                    }
 
 
@@ -839,8 +831,6 @@ public class OCCABTree implements Set {
 
                    for (int i = 0; i < rightSize - index; i++) {
                        newRightExt.keys[i] = keyValues[keyCounter++].key;
-                       newRightExt.insertionTimes[i] = keyValues[keyCounter-1].insertionTime;
-                       newRightExt.deletionTimes[i] = keyValues[keyCounter-1].deletionTime;
                    }
                    newRight = newRightExt;
                    newRight.searchKey = newRightExt.keys[0]; // TODO: verify searchKey setting is same as llx/scx based version

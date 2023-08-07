@@ -26,23 +26,22 @@ public class RQProvider {
         announcePhysicalDeletion(threadId ,deletedKey);
 
         leaf.keys[kvIndex] = 0;
-        leaf.values[kvIndex] = 0;
-        leaf.insertionTimes[kvIndex] = 0;
-        leaf.deletionTimes[kvIndex] = 0;
+        leaf.values[kvIndex] = null;
+
         leaf.size = leaf.size-1;
         physicalDeletionSucceeded(threadId, deletedKey);
         return leaf;
     }
 
-    public Node updateInsert(Node leaf, int kvIndex, KvInfo insertedKey) {
+    public Node updateInsert(Node leaf, int kvIndex, KvInfo instertedKv) {
 
 
         long ts = TIMESTAMP;
 
-        insertedKey.insertionTime = TIMESTAMP;
-        leaf.keys[kvIndex] = insertedKey.key;
-        leaf.values[kvIndex] = insertedKey.value;
-        leaf.insertionTimes[kvIndex] = ts;
+        instertedKv.insertionTime = TIMESTAMP;
+        leaf.keys[kvIndex] = instertedKv.key;
+        leaf.values[kvIndex] = instertedKv;
+
         leaf.size++;
 
 
@@ -89,8 +88,8 @@ public class RQProvider {
         while(true){
             for(int i=0;i<this.maxNodeSize;i++) {
 
-                if(leftNode.keys[i] >= low && leftNode.keys[i] <= high && leftNode.insertionTimes[i] < TIMESTAMP){
-                    visit(threadId,new KvInfo(leftNode.keys[i],leftNode.values[i],leftNode.insertionTimes[i],leftNode.deletionTimes[i]));
+                if(leftNode.keys[i] >= low && leftNode.keys[i] <= high && leftNode.values[i].insertionTime < TIMESTAMP){
+                    visit(threadId,leftNode.values[i]);
                     low++;
                     // System.out.println("Key: "+leftNode.keys[i]+ " Value: "+leftNode.values[i]);
 

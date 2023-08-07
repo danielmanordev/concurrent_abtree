@@ -1,14 +1,14 @@
 public class KeyValue {
 
-    public int key, value;
-    public long insertionTime, deletionTime;
+    public int key;
+    public KvInfo value;
+
     public Node node;
 
-    KeyValue(int key, int value, long insertionTime, long deletionTime){
+    KeyValue(int key, KvInfo value){
         this.key = key;
         this.value = value;
-        this.insertionTime = insertionTime;
-        this.deletionTime = deletionTime;
+
     }
 
     KeyValue(){
@@ -20,11 +20,8 @@ public class KeyValue {
         return this.key;
     }
 
-    public int getValue(){
+    public KvInfo getValue(){
         return this.value;
     }
 
-    public long getInsertionTime() { return this.insertionTime; }
-
-    public long getDeletionTime() { return this.deletionTime; }
 }
