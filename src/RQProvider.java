@@ -8,6 +8,7 @@ public class RQProvider {
 
     private static final ReentrantReadWriteLock READ_WRITE_LOCK = new ReentrantReadWriteLock(true);
     private static final int MAX_NODES_INSERTED_OR_DELETED_ATOMICALLY = 32;
+    private final int initArraySize;
     private static long TIMESTAMP = System.currentTimeMillis();
     private HashMap<Integer,RQThreadData> rqThreadsData;
     private int maxNodeSize;
@@ -17,7 +18,8 @@ public class RQProvider {
     private int[] init;
 
     public RQProvider(int numberOfThreads, Set ds) {
-        this.init = new int[(int)Math.pow(numberOfThreads,2)];
+        this.initArraySize = (int)Math.pow(numberOfThreads,2);
+        this.init = new int[this.initArraySize];
 
         // maps a thread to its data
         this.rqThreadsData = new HashMap<>();
@@ -32,7 +34,7 @@ public class RQProvider {
         }else {
             init[threadId] =1;
         }
-        RQThreadData threadData = this.rqThreadsData.get(threadId);
+        RQThreadData threadData = this.rqThreadsData.put(threadId, new RQThreadData());
 
         threadData.hashSet = new HashSet<>();
         threadData.numberOfAnnouncements=0;
@@ -77,12 +79,10 @@ public class RQProvider {
             setInsertionTimestamps(ts,linAddr ,leaf);
         }
         if(deleted != null){
-            setDeletionTimestamps(ts,linAddr ,leaf);
+            setDeletionTimestamps(ts,deleted);
             physicalDeletionSucceeded(threadId,deleted);
         }
-
         return linNewVal;
-
     }
 
 
@@ -154,12 +154,12 @@ public class RQProvider {
         }
         Node leftNode = pathInfo.n;
         boolean continueToNextNode=true;
+
         while(true){
             for(int i=0;i<this.maxNodeSize;i++) {
 
                 if(leftNode.keys[i] >= low && leftNode.keys[i] <= high && leftNode.insertionTimes[i] < TIMESTAMP){
-                    visit(threadId,new KvInfo(leftNode.keys[i],leftNode.values[i],leftNode.insertionTimes[i],leftNode.deletionTimes[i]));
-                    low++;
+                    visit(threadId,leftNode,i);
                     // System.out.println("Key: "+leftNode.keys[i]+ " Value: "+leftNode.values[i]);
 
                 }
@@ -180,10 +180,11 @@ public class RQProvider {
 
     private void setInsertionTimestamps(long ts, int index, Node leaf){
         leaf.insertionTimes[index] = ts;
+        leaf.deletionTimes[index] = 0;
     }
 
-    private void setDeletionTimestamps(long ts, int index, Node leaf){
-        leaf.deletionTimes[index] = ts;
+    private void setDeletionTimestamps(long ts, KvInfo kvInfo){
+        kvInfo.deletionTime = ts;
     }
 
 
@@ -204,57 +205,81 @@ public class RQProvider {
 
 
 
-    public void visit(int threadId, KvInfo kvInfo){
-        //tryAdd(threadId, kvInfo, null, RQSource.DataStructure);
+    public void visit(int threadId, Node leaf, int index){
+
+        tryAdd(threadId, leaf,  index, null ,RQSource.DataStructure);
     }
 
-    public ArrayList<RQResult> traversalEnd(int threadId){
+    public HashSet<RQResult> traversalEnd(int threadId){
         // Collect pointers p1, ..., pk to other processes’ announcements
-       /* for(RQThreadData rqtd : this.rqThreadData) {
-            for(KvInfo ann : rqtd.announcements) {
-                tryAdd(threadId,ann, ann, RQSource.Announcement);
+        for(int i=0;i<this.initArraySize;i++)
+        {
+            if(i == threadId){
+                continue;
+            }
+            if(init[i] == 1) {
+                RQThreadData rqtd = this.rqThreadsData.get(init[i]);
+                for (int j=0;j<rqtd.numberOfAnnouncements;i++) {
+                    KvInfo announcement = rqtd.announcements[j];
+                    tryAdd(threadId,announcement.leaf,announcement.index,announcement,RQSource.Announcement);
+                }
             }
         }
+
         // Collect pointers to all limbo lists
         // Traverse limbo lists
-        for(RQThreadData rqtd : this.rqThreadData) {
-            for(KvInfo ann : rqtd.limboList) {
-                tryAdd(threadId, ann, null, RQSource.LimboList);
+        for(int i=0;i<this.initArraySize;i++)
+        {
+            if(i == threadId){
+                continue;
             }
-        }*/
-        return this.rqThreadsData[threadId].result;
+            if(init[i] == 1) {
+                RQThreadData rqtd = this.rqThreadsData.get(init[i]);
+                for (KvInfo item : rqtd.limboList) {
 
+                    tryAdd(threadId,null,0,item,RQSource.LimboList);
+                }
+            }
+        }
+        return this.rqThreadsData.get(threadId).hashSet;
     }
 
 
-    private void tryAdd(int threadId, KvInfo kvInfo, KvInfo announcedKvInfo, RQSource rqSource) {
-        int low = rqThreadsData[threadId].low;
-        int high = rqThreadsData[threadId].high;
-        long rqLinearzationTime = rqThreadsData[threadId].rqLinearzationTime;
+    private void tryAdd(int threadId, Node leaf, int index, KvInfo kvInfo, RQSource rqSource) {
+        RQThreadData rqThreadData = this.rqThreadsData.get(threadId);
+        int low = rqThreadData.low;
+        int high = rqThreadData.high;
+        long rqLinearzationTime = rqThreadData.rqLinearzationTime;
 
-        while (kvInfo.insertionTime == 0){}
-        if(kvInfo.insertionTime >= rqLinearzationTime){
+        long insertionTime = leaf.insertionTimes[index];
+        while (insertionTime == 0){
+            insertionTime = leaf.insertionTimes[index];
+        }
+        if(insertionTime >= rqLinearzationTime){
            return; // node inserted after RQ
         }
         if(rqSource == RQSource.DataStructure){
             // do nothing: node was not deleted when RQ was linearized
         }
         else if(rqSource == RQSource.LimboList){
-            while (kvInfo.deletionTime == 0) {}
-            if(kvInfo.deletionTime < rqLinearzationTime){
+            long deletionTime = kvInfo.deletionTime;
+            //while (deletionTime == 0) {
+            //    deletionTime = leaf.deletionTimes[index];
+            // }
+            if(deletionTime < rqLinearzationTime){
                 return; // node deleted before RQ
             }
         }
         else if(rqSource == RQSource.Announcement) {
             long deletionTime=0;
-            while (deletionTime==0 && kvInfo == announcedKvInfo) {
-                deletionTime=kvInfo.deletionTime;
+            while (deletionTime==0 && leaf.keys[index] == kvInfo.key && leaf.values[index] == kvInfo.value && leaf.insertionTimes[index] == kvInfo.insertionTime) {
+                deletionTime=leaf.deletionTimes[index];
             }
 
             if(deletionTime==0){
                 // loop exited because the process removed this announcement
                 // if the process deleted node, then it has now set node.dtime
-                deletionTime = kvInfo.deletionTime;
+                deletionTime = leaf.deletionTimes[index];
 
                 if(deletionTime == 0) {
                     // the process did not delete node,
@@ -267,19 +292,19 @@ public class RQProvider {
                 return; // node deleted before RQ
             }
         }
-        if(kvInfo.key >= low && kvInfo.key <= high) {
-            RQResult rqResult = new RQResult(kvInfo.key,kvInfo.value);
+        if(leaf.keys[index] >= low && leaf.keys[index] <= high) {
+            RQResult rqResult = new RQResult(leaf.keys[index],leaf.values[index]);
             if(rqSource == RQSource.LimboList) {
                 rqResult.wasDeletedDuringRangeQuery = true;
             }
-
-            rqThreadsData[threadId].result.add(rqResult);
+            rqThreadData.hashSet.add(rqResult);
         }
     }
 
 
-    private void retire(int treadId, KvInfo kvInfo) {
-        this.rqThreadsData[treadId].limboList.add(kvInfo);
+    private void retire(int threadId, KvInfo kvInfo) {
+        this.rqThreadsData.get(threadId).limboList.add(kvInfo);
+
     }
 
     class RQThreadData {
@@ -293,8 +318,7 @@ public class RQProvider {
         ConcurrentLinkedQueue<KvInfo> limboList = new ConcurrentLinkedQueue<>();
         int numberOfAnnouncements=0;
         int limboListSize = 0;
-        HashSet<KvInfo> hashSet;
-        ArrayList<RQResult> result = new ArrayList();
+        HashSet<RQResult> hashSet;
 
     }
 

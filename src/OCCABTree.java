@@ -21,7 +21,7 @@ public class OCCABTree implements Set {
         entry = createInternalNode(true,1,anyKey);
         entry.nodes[0] = entryLeft;
         TIMESTAMP = System.currentTimeMillis();
-        this.rqProvider = new RQProvider(numberOfThreads,b);
+        this.rqProvider = new RQProvider(numberOfThreads,null);
     }
 
     private Result searchLeaf(Node leaf, int key) {
@@ -81,7 +81,9 @@ public class OCCABTree implements Set {
                 if (node.keys[i] == NULL) {
                     int oldVersion = node.ver.get();
                     node.ver.set(oldVersion+1);
-                    this.rqProvider.updateInsert(node,i,new KvInfo(key,value,TIMESTAMP,0));
+                    int theradId = (int)Thread.currentThread().getId();
+                    KvInfo kvInfo = new KvInfo(node,i,key,value,TIMESTAMP,0);
+                    this.rqProvider.linearizeUpdateAtWrite(theradId,node,i,kvInfo,kvInfo,null);
                     // node.keys[i] = key;
                     // node.values[i] = value;
                     // node.insertionTimes[i] = TIMESTAMP;
@@ -464,7 +466,10 @@ public class OCCABTree implements Set {
                deletedValue = node.values[i];
                int oldVersion = node.ver.get();
                node.ver.set(oldVersion);
-               this.rqProvider.updateDelete(node,i, new KvInfo(node.keys[i],node.values[i], node.insertionTimes[i], TIMESTAMP));
+               KvInfo newKvInfo = new KvInfo(node,i,NULL,NULL,NULL,0);
+               KvInfo kvInfoToDelete = new KvInfo(node,i,key,NULL,TIMESTAMP,0);
+               int threadId = (int)Thread.currentThread().getId();
+               this.rqProvider.linearizeUpdateAtWrite(threadId, node,i,newKvInfo, null, kvInfoToDelete);
                //node.keys[i] = 0;
                //node.values[i] = 0;
                //node.size = newSize;
