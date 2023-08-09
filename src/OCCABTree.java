@@ -146,18 +146,20 @@ public class OCCABTree implements Set {
 
 
             left.left = node.left;
+            right.right = node.right;
             left.right = right;
             right.left = left;
-            right.right = node.right;
 
-            if(node.left != null){
-                node.left.right = left;
-            }
 
+
+            // dangerous
             if(node.right != null){
                 node.right.left = right;
             }
 
+            if(node.left != null){
+                node.left.right = left;
+            }
 
 
             Node replacementNode = createInternalNode(parent == entry, 2,  keyValues[leftSize].getKey());
@@ -629,11 +631,12 @@ public class OCCABTree implements Set {
                        }
                    }
                    newNodeExt.left = left.left;
+                   newNodeExt.right = right.right;
+
+                   // can be dangerous, need to think about this carefully
                    if(left.left != null) {
                        left.left.right = newNodeExt;
                    }
-
-                   newNodeExt.right = right.right;
                    if(right.right != null) {
                        right.right.left = newNodeExt;
                    }
@@ -785,11 +788,12 @@ public class OCCABTree implements Set {
                    Node newLeftExt = createExternalNode(true, leftSize, 0);
 
                    newLeftExt.right = left.right;
+                   newLeftExt.left = left.left;
+
+                   // can be dangerous, need to think about this carefully
                    if(left.right!=null) {
                        left.right.left = newLeftExt;
                    }
-
-                   newLeftExt.left = left.left;
                    if(left.left!=null) {
                        left.left.right = newLeftExt;
                    }
@@ -828,11 +832,12 @@ public class OCCABTree implements Set {
                    Node newRightExt = createExternalNode( true, rightSize, 0);
 
                    newRightExt.right = right.right;
+                   newRightExt.left = right.left;
+
+                   // can be dangerous
                    if(right.right!=null) {
                        right.right.left = newRightExt;
                    }
-
-                   newRightExt.left = right.left;
                    if(right.left!=null) {
                        right.left.right = newRightExt;
                    }
