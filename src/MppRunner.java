@@ -12,11 +12,11 @@ public class MppRunner {
         int numberOfThreads = 8;
         int a = 2;
         int b = 16;
-        int numberOfTests = 5;
+        int numberOfTests = 20;
         int testDuration=10000;
         int perAdd=80;
         int perContains=0;
-        int perRemove=20;
+        int perRemove=10;
         int perRange=100-perAdd-perContains-perRemove;
         ArrayList<Long> adds = new ArrayList();
         System.out.println("Number of cores: "+cores);
@@ -31,7 +31,7 @@ public class MppRunner {
 
             Set concurrentSet = new OCCABTree(a, b, numberOfThreads);
             TestSet.seed(concurrentSet, dataRange, dataRange / 2);
-
+             concurrentSet.scan(1,500);
             //nteger.parseInt(args[1]);
 
             long start = System.currentTimeMillis();

@@ -87,10 +87,13 @@ public class RQProvider {
         boolean continueToNextNode=true;
         while(true){
             for(int i=0;i<this.maxNodeSize;i++) {
+                 KvInfo kvInfo = leftNode.values[i];
+                 if(kvInfo == null){
+                     continue;
+                 }
+                if(kvInfo.key >= low && kvInfo.key <= high && kvInfo.insertionTime < TIMESTAMP){
+                    visit(threadId,kvInfo);
 
-                if(leftNode.keys[i] >= low && leftNode.keys[i] <= high && leftNode.values[i].insertionTime < TIMESTAMP){
-                    visit(threadId,leftNode.values[i]);
-                    low++;
                     // System.out.println("Key: "+leftNode.keys[i]+ " Value: "+leftNode.values[i]);
 
                 }
@@ -134,12 +137,12 @@ public class RQProvider {
 
 
     public void visit(int threadId, KvInfo kvInfo){
-        //tryAdd(threadId, kvInfo, null, RQSource.DataStructure);
+        tryAdd(threadId, kvInfo, null, RQSource.DataStructure);
     }
 
     public ArrayList<RQResult> traversalEnd(int threadId){
         // Collect pointers p1, ..., pk to other processes’ announcements
-       /* for(RQThreadData rqtd : this.rqThreadData) {
+       for(RQThreadData rqtd : this.rqThreadData) {
             for(KvInfo ann : rqtd.announcements) {
                 tryAdd(threadId,ann, ann, RQSource.Announcement);
             }
@@ -150,9 +153,8 @@ public class RQProvider {
             for(KvInfo ann : rqtd.limboList) {
                 tryAdd(threadId, ann, null, RQSource.LimboList);
             }
-        }*/
+        }
         return this.rqThreadData[threadId].result;
-
     }
 
 
