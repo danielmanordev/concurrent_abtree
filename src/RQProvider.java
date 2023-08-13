@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -10,6 +11,8 @@ public class RQProvider {
     private RQThreadData[] rqThreadData;
     private int maxNodeSize;
     private Lock lock = new MCSLock();
+
+    private LimboListManager limboListManager = new LimboListManager();
 
     public RQProvider(int numberOfThreads, int maxNodeSize) {
         this.rqThreadData = new RQThreadData[200];
@@ -149,11 +152,15 @@ public class RQProvider {
         }
         // Collect pointers to all limbo lists
         // Traverse limbo lists
-        for(RQThreadData rqtd : this.rqThreadData) {
-            for(KvInfo ann : rqtd.limboList) {
-                tryAdd(threadId, ann, null, RQSource.LimboList);
-            }
+        Set<Integer> threadsIds = this.limboListManager.getThreadsIds();
+        for(Integer id : threadsIds) {
+           KvInfo[] limboList=this.limboListManager.getLimboList(id);
+           int limboListSize=this.limboListManager.getLimboListSize();
+           for(int i=0;i<limboListSize;i++){
+               tryAdd(threadId, limboList[i], null, RQSource.LimboList);
+           }
         }
+
         return this.rqThreadData[threadId].result;
     }
 
@@ -216,8 +223,8 @@ public class RQProvider {
         //this.rqThreadData[threadId].announcements
     }
 
-    private void retire(int treadId, KvInfo kvInfo) {
-        this.rqThreadData[treadId].limboList.add(kvInfo);
+    private void retire(int threadId, KvInfo kvInfo) {
+       this.limboListManager.retire(threadId, kvInfo);
     }
 
     class RQThreadData {
