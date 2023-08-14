@@ -8,8 +8,8 @@ public class MppRunner {
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
         int cores = Runtime.getRuntime().availableProcessors();
 
-        int dataRange = 10000;
-        int numberOfThreads = 8;
+        int dataRange = 100000;
+        int numberOfThreads = 12;
         int a = 2;
         int b = 16;
         int numberOfTests = 20;
@@ -31,7 +31,12 @@ public class MppRunner {
 
             Set concurrentSet = new OCCABTree(a, b, numberOfThreads);
             TestSet.seed(concurrentSet, dataRange, dataRange / 2);
-             concurrentSet.scan(1,500);
+            concurrentSet.remove(10);
+            concurrentSet.add(10,666);
+            concurrentSet.remove(10);
+            concurrentSet.scan(1,200);
+
+            // concurrentSet.scan(1,500);
             //nteger.parseInt(args[1]);
 
             long start = System.currentTimeMillis();

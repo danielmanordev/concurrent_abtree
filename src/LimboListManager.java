@@ -1,17 +1,20 @@
 import java.util.HashMap;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class LimboListManager {
 
-    private final int LIMBOLIST_SIZE=Integer.MAX_VALUE/2;
-    public HashMap<Integer, ThreadData> threadsData = new HashMap<>();
+    private final int LIMBOLIST_SIZE=1000000;
+    private final int NUMBER_OF_THREAD_IDS=10000;
 
+    // public int[] init = new int[NUMBER_OF_THREAD_IDS];
+    public ThreadData[] threadsData = new ThreadData[NUMBER_OF_THREAD_IDS];
 
     public void retire(int threadId, KvInfo kvInfo){
 
         initThreadData(threadId);
-        ThreadData currentThreadData = this.threadsData.get(threadId);
+        ThreadData currentThreadData = threadsData[threadId];
 
         currentThreadData.limboListArray[currentThreadData.index] = kvInfo;
         int nextIndex = currentThreadData.index+1;
@@ -23,7 +26,7 @@ public class LimboListManager {
     }
 
     public KvInfo[] getLimboList(int threadId) {
-        return this.threadsData.get(threadId).limboListArray;
+        return this.threadsData[threadId].limboListArray;
     }
 
     public int getLimboListSize(){
@@ -31,7 +34,9 @@ public class LimboListManager {
     }
 
     private void initThreadData(int threadId){
-       this.threadsData.putIfAbsent(threadId, new ThreadData());
+        if(threadsData[threadId] == null){
+            threadsData[threadId] = new ThreadData();
+        }
     }
 
     class ThreadData {

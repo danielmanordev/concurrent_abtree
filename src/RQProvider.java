@@ -157,6 +157,9 @@ public class RQProvider {
            KvInfo[] limboList=this.limboListManager.getLimboList(id);
            int limboListSize=this.limboListManager.getLimboListSize();
            for(int i=0;i<limboListSize;i++){
+               if(limboList[i] == null){
+                   break;
+               }
                tryAdd(threadId, limboList[i], null, RQSource.LimboList);
            }
         }
