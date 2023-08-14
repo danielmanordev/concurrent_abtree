@@ -38,15 +38,11 @@ public class RQProvider {
 
     public Node updateInsert(Node leaf, int kvIndex, KvInfo instertedKv) {
 
-
-        long ts = TIMESTAMP;
-
         instertedKv.insertionTime = TIMESTAMP;
         leaf.keys[kvIndex] = instertedKv.key;
         leaf.values[kvIndex] = instertedKv;
 
         leaf.size++;
-
 
         return leaf;
     }
@@ -54,7 +50,8 @@ public class RQProvider {
 
     // TODO: continue here
     public void traversalStart(int threadId, int low, int high, Node entry) {
-        this.rqThreadData[threadId].result.clear();
+        rqThreadData[threadId].resultSize=0;
+        this.rqThreadData[threadId].result = new RQResult[high-low];
 
         lock.lock();
         TIMESTAMP = System.currentTimeMillis();
@@ -134,7 +131,8 @@ public class RQProvider {
 
 
     public void announcePhysicalDeletion(int threadId, KvInfo deletedKey) {
-        this.rqThreadData[threadId].announcements.add(deletedKey);
+        this.rqThreadData[threadId].announcements[rqThreadData[threadId].announcementsSize] = deletedKey;
+        rqThreadData[threadId].announcementsSize++;
     }
 
 
@@ -143,7 +141,8 @@ public class RQProvider {
         tryAdd(threadId, kvInfo, null, RQSource.DataStructure);
     }
 
-    public ArrayList<RQResult> traversalEnd(int threadId){
+    // TODO: continue here - work with arrays and counters
+    public RQResult[] traversalEnd(int threadId){
         // Collect pointers p1, ..., pk to other processes’ announcements
        for(RQThreadData rqtd : this.rqThreadData) {
             for(KvInfo ann : rqtd.announcements) {
@@ -218,7 +217,8 @@ public class RQProvider {
                 rqResult.wasDeletedDuringRangeQuery = true;
             }
 
-            rqThreadData[threadId].result.add(rqResult);
+            rqThreadData[threadId].result[rqThreadData[threadId].resultSize] = rqResult;
+            rqThreadData[threadId].resultSize++;
         }
     }
 
@@ -226,8 +226,7 @@ public class RQProvider {
 
         retire(threadId,deletedKey);
         // ensure nodes are placed in the epoch bag BEFORE they are removed from announcements.
-        this.rqThreadData[threadId].announcements.remove(deletedKey);
-        //this.rqThreadData[threadId].announcements
+        this.rqThreadData[threadId].announcementsSize--;
     }
 
     private void retire(int threadId, KvInfo kvInfo) {
@@ -236,16 +235,16 @@ public class RQProvider {
 
     class RQThreadData {
 
-
         int low;
         int high;
 
         long rqLinearzationTime;
-        ConcurrentLinkedQueue<KvInfo> announcements = new ConcurrentLinkedQueue<>();
-        ConcurrentLinkedQueue<KvInfo> limboList = new ConcurrentLinkedQueue<>();
-        int numberOfAnnouncements=0;
-        int limboListSize = 0;
-        ArrayList<RQResult> result = new ArrayList();
+
+        KvInfo[] announcements = new KvInfo[100];
+        int announcementsSize=0;
+
+        RQResult[] result;
+        int resultSize=0;
 
     }
 

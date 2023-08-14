@@ -1,7 +1,7 @@
 
 public class LimboListManager {
 
-    private final int LIMBOLIST_SIZE=1000000;
+    private final int LIMBOLIST_SIZE=10000;
     private final int NUMBER_OF_THREAD_IDS=10000;
 
     public int[] init = new int[NUMBER_OF_THREAD_IDS];

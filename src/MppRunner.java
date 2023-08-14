@@ -8,15 +8,15 @@ public class MppRunner {
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
         int cores = Runtime.getRuntime().availableProcessors();
 
-        int dataRange = 100000;
-        int numberOfThreads = 12;
+        int dataRange = 10000;
+        int numberOfThreads = 8;
         int a = 2;
         int b = 16;
         int numberOfTests = 20;
         int testDuration=10000;
         int perAdd=80;
         int perContains=0;
-        int perRemove=10;
+        int perRemove=20;
         int perRange=100-perAdd-perContains-perRemove;
         ArrayList<Long> adds = new ArrayList();
         System.out.println("Number of cores: "+cores);
@@ -34,7 +34,7 @@ public class MppRunner {
             concurrentSet.remove(10);
             concurrentSet.add(10,666);
             concurrentSet.remove(10);
-            concurrentSet.scan(1,200);
+         //   concurrentSet.scan(1,200);
 
             // concurrentSet.scan(1,500);
             //nteger.parseInt(args[1]);
@@ -56,7 +56,7 @@ public class MppRunner {
             System.out.println("Adds/\u33B2:                  " + testResult.TotalAdds.longValue() / (timeElapsedMicroseconds));
             System.out.println("Removes/\u33B2:               " + testResult.TotalRemoves.doubleValue() / (timeElapsedMicroseconds));
             System.out.println("Contains/\u33B2:              " + testResult.TotalContains.longValue() / (timeElapsedMicroseconds));
-            System.out.println("range query/\u33B2:           " + testResult.TotalScans.longValue() / (timeElapsedMicroseconds));
+            System.out.println("range query/\u33B2:           " + testResult.TotalScans.doubleValue() / (timeElapsedMicroseconds));
             System.out.println("Threads:                  " + numberOfThreads);
             System.out.println("Total time:               " + timeElapsed + " milliseconds");
             // numberOfThreads++;
