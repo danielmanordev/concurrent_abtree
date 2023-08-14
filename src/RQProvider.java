@@ -152,9 +152,13 @@ public class RQProvider {
         }
         // Collect pointers to all limbo lists
         // Traverse limbo lists
-        Set<Integer> threadsIds = this.limboListManager.getThreadsIds();
-        for(Integer id : threadsIds) {
-           KvInfo[] limboList=this.limboListManager.getLimboList(id);
+        int[] threadsIds = this.limboListManager.getThreadsIds();
+        int numberOfThreadIds = this.limboListManager.getNumberOfThreadsIds();
+        for(int j=0;j<numberOfThreadIds;j++) {
+            if(threadsIds[j] == 0){
+                continue;
+            }
+           KvInfo[] limboList=this.limboListManager.getLimboList(threadsIds[j]);
            int limboListSize=this.limboListManager.getLimboListSize();
            for(int i=0;i<limboListSize;i++){
                if(limboList[i] == null){
