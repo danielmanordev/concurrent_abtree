@@ -9,23 +9,26 @@ public class RQProvider {
     private static final ReentrantReadWriteLock READ_WRITE_LOCK = new ReentrantReadWriteLock(true);
     private static long TIMESTAMP = System.currentTimeMillis();
     private RQThreadData[] rqThreadData;
+    private int rqThreadDataSize;
+    private int[] init;
     private int maxNodeSize;
     private Lock lock = new MCSLock();
 
     private LimboListManager limboListManager = new LimboListManager();
 
     public RQProvider(int numberOfThreads, int maxNodeSize) {
-        this.rqThreadData = new RQThreadData[200];
+        this.rqThreadDataSize = (int)Math.pow(numberOfThreads,2);
+        this.init = new int[rqThreadDataSize];
+        this.rqThreadData = new RQThreadData[rqThreadDataSize];
         this.maxNodeSize = maxNodeSize;
-        for(int i=0;i<200;i++){
-            rqThreadData[i] = new RQThreadData();
-        }
+
     }
 
     public Node updateDelete(Node leaf, int kvIndex, KvInfo deletedKey) {
 
         deletedKey.deletionTime = TIMESTAMP;
         int threadId = (int) Thread.currentThread().getId();
+
         announcePhysicalDeletion(threadId ,deletedKey);
 
         leaf.keys[kvIndex] = 0;
@@ -50,6 +53,7 @@ public class RQProvider {
 
     // TODO: continue here
     public void traversalStart(int threadId, int low, int high, Node entry) {
+        initThread(threadId);
         rqThreadData[threadId].resultSize=0;
         this.rqThreadData[threadId].result = new RQResult[high-low];
 
@@ -128,9 +132,17 @@ public class RQProvider {
         return node.isLeaf() ? node.size : node.size - 1;
     }
 
+    private void initThread(int threadId) {
+        if(this.init[threadId] == 0){
+            this.rqThreadData[threadId] = new RQThreadData();
+            this.init[threadId] = 1;
+        }
+    }
+
 
 
     public void announcePhysicalDeletion(int threadId, KvInfo deletedKey) {
+        initThread(threadId);
         this.rqThreadData[threadId].announcements[rqThreadData[threadId].announcementsSize] = deletedKey;
         rqThreadData[threadId].announcementsSize++;
     }
@@ -143,12 +155,19 @@ public class RQProvider {
 
     // TODO: continue here - work with arrays and counters
     public RQResult[] traversalEnd(int threadId){
-        // Collect pointers p1, ..., pk to other processes’ announcements
-       for(RQThreadData rqtd : this.rqThreadData) {
-            for(KvInfo ann : rqtd.announcements) {
-                tryAdd(threadId,ann, ann, RQSource.Announcement);
-            }
-        }
+
+       for(int i=0;i<this.rqThreadDataSize;i++) {
+           if(init[i]==0){
+               continue;
+           }
+           for(int j=0;j<this.rqThreadData[i].announcementsSize;j++)
+           {
+               KvInfo announcement = rqThreadData[i].announcements[j];
+               tryAdd(threadId,announcement, announcement, RQSource.Announcement);
+           }
+
+       }
+
         // Collect pointers to all limbo lists
         // Traverse limbo lists
         int[] threadsIds = this.limboListManager.getThreadsIds();

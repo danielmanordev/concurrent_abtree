@@ -9,14 +9,14 @@ public class MppRunner {
         int cores = Runtime.getRuntime().availableProcessors();
 
         int dataRange = 10000;
-        int numberOfThreads = 8;
+        int numberOfThreads = 14;
         int a = 2;
         int b = 16;
         int numberOfTests = 20;
         int testDuration=10000;
         int perAdd=80;
         int perContains=0;
-        int perRemove=20;
+        int perRemove=15;
         int perRange=100-perAdd-perContains-perRemove;
         ArrayList<Long> adds = new ArrayList();
         System.out.println("Number of cores: "+cores);
