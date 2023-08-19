@@ -1,9 +1,12 @@
-import javax.xml.namespace.QName;
+package Locks;
+;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Condition;
 
 public class MCSLock implements Lock {
     AtomicReference<QNode> tail;
     ThreadLocal<QNode> myNode;
+
 
     public MCSLock() {
         tail = new AtomicReference<QNode>(null);
@@ -38,6 +41,12 @@ public class MCSLock implements Lock {
        qnode.next.locked = false;
        qnode.next = null;
     }
+
+    @Override
+    public Condition newCondition() {
+        return null;
+    }
+
 
     class QNode {
         volatile boolean locked = false;

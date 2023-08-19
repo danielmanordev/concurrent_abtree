@@ -1,3 +1,6 @@
+import Locks.Lock;
+import Locks.MCSLock;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Node {

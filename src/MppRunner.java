@@ -6,20 +6,20 @@ import java.util.concurrent.ExecutionException;
 public class MppRunner {
 
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
-        int cores = Runtime.getRuntime().availableProcessors();
+        int availableProcessors = Runtime.getRuntime().availableProcessors();
 
         int dataRange = 10000;
-        int numberOfThreads = 14;
+        int numberOfThreads = 8;
         int a = 2;
         int b = 16;
         int numberOfTests = 20;
         int testDuration=10000;
         int perAdd=80;
         int perContains=0;
-        int perRemove=15;
+        int perRemove=20;
         int perRange=100-perAdd-perContains-perRemove;
         ArrayList<Long> adds = new ArrayList();
-        System.out.println("Number of cores: "+cores);
+        System.out.println("Number of available processors: "+availableProcessors);
         System.out.println("Number of tests: "+numberOfTests);
         System.out.println("Single test duration: "+testDuration+ " ms");
         System.out.println("insert: "+perAdd+"%");

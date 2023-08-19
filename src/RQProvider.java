@@ -1,12 +1,11 @@
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import Locks.Lock;
+import Locks.MCSLock;
+
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class RQProvider {
 
-    private static final ReentrantReadWriteLock READ_WRITE_LOCK = new ReentrantReadWriteLock(true);
+    private static final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock(false);
     private static long TIMESTAMP = System.currentTimeMillis();
     private RQThreadData[] rqThreadData;
     private int rqThreadDataSize;
@@ -26,7 +25,8 @@ public class RQProvider {
 
     public Node updateDelete(Node leaf, int kvIndex, KvInfo deletedKey) {
 
-        deletedKey.deletionTime = TIMESTAMP;
+        // deletedKey.deletionTime = TIMESTAMP;
+        deletedKey.deletionTime = readTs();
         int threadId = (int) Thread.currentThread().getId();
 
         announcePhysicalDeletion(threadId ,deletedKey);
@@ -41,13 +41,37 @@ public class RQProvider {
 
     public Node updateInsert(Node leaf, int kvIndex, KvInfo instertedKv) {
 
-        instertedKv.insertionTime = TIMESTAMP;
+        // instertedKv.insertionTime = TIMESTAMP;
+
+        instertedKv.insertionTime = readTs();
         leaf.keys[kvIndex] = instertedKv.key;
         leaf.values[kvIndex] = instertedKv;
 
         leaf.size++;
 
         return leaf;
+    }
+
+    private long writeTs(){
+        try {
+            readWriteLock.writeLock().lock();
+            TIMESTAMP = System.currentTimeMillis();
+            return TIMESTAMP;
+
+        } finally {
+            readWriteLock.writeLock().unlock();
+        }
+
+    }
+
+    private long readTs(){
+        try {
+            //readWriteLock.readLock().lock();
+            return TIMESTAMP;
+        } finally {
+           // readWriteLock.readLock().unlock();
+        }
+
     }
 
 
@@ -57,12 +81,12 @@ public class RQProvider {
         rqThreadData[threadId].resultSize=0;
         this.rqThreadData[threadId].result = new RQResult[high-low];
 
-        lock.lock();
+        /*lock.lock();
         TIMESTAMP = System.currentTimeMillis();
         long ts = TIMESTAMP;
-        lock.unlock();
+        lock.unlock();*/
 
-        this.rqThreadData[threadId].rqLinearzationTime = ts;
+        this.rqThreadData[threadId].rqLinearzationTime = writeTs();
         this.rqThreadData[threadId].low = low;
         this.rqThreadData[threadId].high = high;
 
