@@ -15,13 +15,16 @@ public class Node {
 
     private boolean weight = false;
 
-    public Node(boolean weight, int size, int searchKey, int maxNodeSize){
+    public KvInfo[] pendingInsertArray;
+
+    public Node(boolean weight, int size, int searchKey, int maxNodeSize, int maxNumberOfThreads){
         this.weight = weight;
         this.size = size;
         this.searchKey = searchKey;
         this.keys = new int[maxNodeSize];
         this.values = new KvInfo[maxNodeSize];
         this.nodes = new Node[maxNodeSize];
+        this.pendingInsertArray = new KvInfo[maxNumberOfThreads];
 
     }
 
@@ -71,6 +74,10 @@ public class Node {
 
     public void setAsLeaf(){
         this.isLeaf = true;
+    }
+
+    public void publishInsert(int idx, int key, int value){
+        this.pendingInsertArray[idx] = new KvInfo(key,value,0,0);
     }
 
 }

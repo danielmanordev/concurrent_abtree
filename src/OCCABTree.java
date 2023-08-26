@@ -12,16 +12,19 @@ public class OCCABTree implements Set {
     private long TIMESTAMP;
     private RQProvider rqProvider;
 
+    private int maxNumberOfThreads;
 
-    public OCCABTree(int a, int b, int numberOfThreads) {
+
+    public OCCABTree(int a, int b, int maxNumberOfThreads) {
         this.a = a;
         this.b = b;
         int anyKey = 26;
-        Node entryLeft = createExternalNode(true,0,anyKey);
-        entry = createInternalNode(true,1,anyKey);
+        Node entryLeft = createExternalNode(true,0,anyKey,maxNumberOfThreads);
+        entry = createInternalNode(true,1,anyKey,maxNumberOfThreads);
         entry.nodes[0] = entryLeft;
         TIMESTAMP = System.currentTimeMillis();
-        this.rqProvider = new RQProvider(numberOfThreads,b);
+        this.rqProvider = new RQProvider(maxNumberOfThreads,b);
+        this.maxNumberOfThreads = maxNumberOfThreads;
     }
 
     private Result searchLeaf(Node leaf, int key) {
@@ -74,6 +77,8 @@ public class OCCABTree implements Set {
             }
         }
 
+       // scan pending insert array
+
         // At this point, we are guaranteed key is not in node
         int currSize = node.size;
         if(currSize < b) {
@@ -81,6 +86,8 @@ public class OCCABTree implements Set {
                 if (node.keys[i] == NULL) {
                     int oldVersion = node.ver.get();
                     node.ver.set(oldVersion+1);
+                    int idx = (int) (Thread.currentThread().getId() % this.maxNumberOfThreads);
+                    node.publishInsert(idx,key,value);
                     this.rqProvider.updateInsert(node,i,new KvInfo(key,value,TIMESTAMP,0));
                     // node.keys[i] = key;
                     // node.values[i] = value;
@@ -127,7 +134,7 @@ public class OCCABTree implements Set {
             // the array contents are then split between the two new leaves
 
             int leftSize = k / 2;
-            Node left = createExternalNode(true,leftSize, keyValues[0].getKey());
+            Node left = createExternalNode(true,leftSize, keyValues[0].getKey(),maxNumberOfThreads);
             for (int i = 0; i < leftSize; i++) {
                 left.keys[i] = keyValues[i].getKey();
                 left.values[i] = keyValues[i].getValue();
@@ -135,7 +142,7 @@ public class OCCABTree implements Set {
             }
 
             int rightSize = (b+1) - leftSize;
-            Node right = createExternalNode(true,rightSize, keyValues[leftSize].getKey());
+            Node right = createExternalNode(true,rightSize, keyValues[leftSize].getKey(),this.maxNumberOfThreads);
             for (int i = 0; i < rightSize; i++) {
                 right.keys[i] = keyValues[i+leftSize].getKey();
                 right.values[i] = keyValues[i+leftSize].getValue();
@@ -158,7 +165,7 @@ public class OCCABTree implements Set {
 
 
 
-            Node replacementNode = createInternalNode(parent == entry, 2,  keyValues[leftSize].getKey());
+            Node replacementNode = createInternalNode(parent == entry, 2,  keyValues[leftSize].getKey(),maxNumberOfThreads);
             replacementNode.keys[0] = keyValues[leftSize].getKey();
             replacementNode.nodes[0] = left;
             replacementNode.nodes[1] = right;
@@ -179,14 +186,14 @@ public class OCCABTree implements Set {
 
     }
 
-    private Node createExternalNode(boolean weight, int size, int searchKey){
-        Node node = createInternalNode(weight, size, searchKey);
+    private Node createExternalNode(boolean weight, int size, int searchKey, int maxNumberOfThreads){
+        Node node = createInternalNode(weight, size, searchKey, maxNumberOfThreads);
         node.setAsLeaf();
         return node;
     }
 
-    private Node createInternalNode(boolean weight, int size, int searchKey){
-       return new Node(weight,size,searchKey,this.b);
+    private Node createInternalNode(boolean weight, int size, int searchKey, int maxNumberOfThreads){
+       return new Node(weight,size,searchKey,this.b, maxNumberOfThreads);
     }
 
     private Result tryInsert(int key, int value) {
@@ -279,7 +286,7 @@ public class OCCABTree implements Set {
 
 
             if (size <= b) {
-                Node newNode = createInternalNode(true,size,0);
+                Node newNode = createInternalNode(true,size,0,maxNumberOfThreads);
                 System.arraycopy(p.nodes, 0, newNode.nodes, 0, pathInfo.nIdx);
                 System.arraycopy(n.nodes, 0, newNode.nodes, pathInfo.nIdx, n.size);
                 System.arraycopy(p.nodes, pathInfo.nIdx + 1, newNode.nodes, pathInfo.nIdx + n.size, p.size - (pathInfo.nIdx + 1));
@@ -319,17 +326,17 @@ public class OCCABTree implements Set {
 
                 // create new node(s)
                 int leftSize = size / 2;
-                Node left = createInternalNode(true,leftSize, keys[0]);
+                Node left = createInternalNode(true,leftSize, keys[0],maxNumberOfThreads);
                 System.arraycopy(keys, 0, left.keys, 0, leftSize - 1);
                 System.arraycopy(nodes, 0, left.nodes, 0, leftSize);
 
                 int rightSize = size - leftSize;
-                Node right = createInternalNode(true,rightSize, keys[leftSize]);
+                Node right = createInternalNode(true,rightSize, keys[leftSize],maxNumberOfThreads);
                 System.arraycopy(keys, leftSize, right.keys, 0, rightSize - 1);
                 System.arraycopy(nodes, leftSize, right.nodes, 0, rightSize);
 
                 // note: keys[Node - 1] should be the same as n->keys[0]
-                Node newNode = createInternalNode(gp == entry, 2, keys[leftSize - 1]);
+                Node newNode = createInternalNode(gp == entry, 2, keys[leftSize - 1],maxNumberOfThreads);
                 newNode.isTagged = true;
                 newNode.keys[0] = keys[leftSize-1];
                 newNode.nodes[0] = left;
@@ -608,7 +615,7 @@ public class OCCABTree implements Set {
                int keyCounter = 0, ptrCounter = 0;
                if (left.isLeaf()) {
                    //duplicate code can be cleaned up, but it would make it far less readable...
-                   Node newNodeExt = createExternalNode(true, size, node.searchKey);
+                   Node newNodeExt = createExternalNode(true, size, node.searchKey,maxNumberOfThreads);
                    for (int i = 0; i < b; i++) {
                        if (left.keys[i] != NULL) {
                            newNodeExt.keys[keyCounter++] = left.keys[i];
@@ -635,7 +642,7 @@ public class OCCABTree implements Set {
                    }
                    newNode = newNodeExt;
                } else {
-                   Node newNodeInt = createInternalNode(true, size, node.searchKey);
+                   Node newNodeInt = createInternalNode(true, size, node.searchKey,maxNumberOfThreads);
                    for (int i = 0; i < getKeyCount(left); i++) {
                        newNodeInt.keys[keyCounter++] = left.keys[i];
                    }
@@ -670,7 +677,7 @@ public class OCCABTree implements Set {
                    return new Result(ReturnCode.SUCCESS);
                } else {
 
-                   Node newParent = createInternalNode(true, psize - 1, parent.searchKey);
+                   Node newParent = createInternalNode(true, psize - 1, parent.searchKey,maxNumberOfThreads);
                    for (int i = 0; i < leftIndex; i++) {
                        newParent.keys[i] = parent.keys[i];
                    }
@@ -775,7 +782,7 @@ public class OCCABTree implements Set {
                int pivot;
 
                if (left.isLeaf()) {
-                   Node newLeftExt = createExternalNode(true, leftSize, 0);
+                   Node newLeftExt = createExternalNode(true, leftSize, 0,maxNumberOfThreads);
 
                    newLeftExt.right = left.right;
                    if(left.right!=null) {
@@ -800,7 +807,7 @@ public class OCCABTree implements Set {
                    pivot = keyValues[keyCounter].key;
 
                } else {
-                   Node newLeftInt = createInternalNode(true, leftSize, 0);
+                   Node newLeftInt = createInternalNode(true, leftSize, 0,this.maxNumberOfThreads);
                    for (int i = 0; i < leftSize - 1; i++) {
                        newLeftInt.keys[i] = keyValues[keyCounter++].key;
                    }
@@ -817,7 +824,7 @@ public class OCCABTree implements Set {
                int index = left.isLeaf() ? 0 : 1;
                if (right.isLeaf()) {
 
-                   Node newRightExt = createExternalNode( true, rightSize, 0);
+                   Node newRightExt = createExternalNode( true, rightSize, 0,this.maxNumberOfThreads);
 
                    newRightExt.right = right.right;
                    if(right.right!=null) {
@@ -838,7 +845,7 @@ public class OCCABTree implements Set {
                        newRight.values[i] = keyValues[valCounter++].value;
                    }
                } else {
-                   Node newRightInt = createInternalNode(true, rightSize, 0);
+                   Node newRightInt = createInternalNode(true, rightSize, 0,maxNumberOfThreads);
                    for (int i = 0; i < rightSize - index; i++) {
                        newRightInt.keys[i] = keyValues[keyCounter++].key;
                    }
@@ -851,7 +858,7 @@ public class OCCABTree implements Set {
 
                // in this case we replace the parent, despite not having to in the llx/scx version...
                // this is a holdover from kcas. experiments show this case almost never occurs, though, so perf impact is negligible.
-               Node newParent = createInternalNode(parent.getWeight(), psize, parent.searchKey);
+               Node newParent = createInternalNode(parent.getWeight(), psize, parent.searchKey,maxNumberOfThreads);
                System.arraycopy(parent.keys, 0, newParent.keys, 0, getKeyCount(parent));
                System.arraycopy(parent.nodes, 0, newParent.nodes, 0, psize);
                newParent.nodes[leftIndex] = newLeft;
