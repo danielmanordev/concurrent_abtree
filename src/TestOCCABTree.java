@@ -78,7 +78,7 @@ class TestSet extends Thread
                     else {
                         //prints.add(randomInt +  " was NOT removed");
                     }*/
-                    set.scan(1,randomInt);
+                    set.scan(1,32000);
                     numberOfScans=numberOfScans.add(BigInteger.ONE);
 
                 }

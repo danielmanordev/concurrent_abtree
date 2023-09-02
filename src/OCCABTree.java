@@ -900,7 +900,6 @@ public class OCCABTree implements Set {
 
     @Override
     public int[] scan(int low, int high) {
-        high=200;
         int threadId=((int) Thread.currentThread().getId());
         this.rqProvider.traversalStart(threadId,low,high,entry);
         var result=this.rqProvider.traversalEnd(threadId);

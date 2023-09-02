@@ -8,15 +8,15 @@ public class MppRunner {
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
 
-        int dataRange = 10000;
+        int dataRange = 1000000;
         int numberOfThreads = 12;
         int a = 2;
         int b = 16;
         int numberOfTests = 5;
         int testDuration=10000;
-        int perAdd=80;
+        int perAdd=50;
         int perContains=0;
-        int perRemove=15;
+        int perRemove=0;
         int perRange=100-perAdd-perContains-perRemove;
         ArrayList<Long> adds = new ArrayList();
         System.out.println("Number of available processors: "+availableProcessors);
@@ -52,10 +52,10 @@ public class MppRunner {
             System.out.println("Total adds:               " + testResult.TotalAdds.longValue());
             System.out.println("Total removes:            " + testResult.TotalRemoves.longValue());
             System.out.println("Total contains:           " + testResult.TotalContains.longValue());
-            System.out.println("Total range/\u33B2:           " + testResult.TotalScans.longValue());
-            System.out.println("Adds/\u33B2:                  " + testResult.TotalAdds.longValue() / (timeElapsedMicroseconds));
+            System.out.println("Total range query:           " + testResult.TotalScans.longValue());
+            System.out.println("Adds/\u33B2:                  " + testResult.TotalAdds.doubleValue() / (timeElapsedMicroseconds));
             System.out.println("Removes/\u33B2:               " + testResult.TotalRemoves.doubleValue() / (timeElapsedMicroseconds));
-            System.out.println("Contains/\u33B2:              " + testResult.TotalContains.longValue() / (timeElapsedMicroseconds));
+            System.out.println("Contains/\u33B2:              " + testResult.TotalContains.doubleValue() / (timeElapsedMicroseconds));
             System.out.println("range query/\u33B2:           " + testResult.TotalScans.doubleValue() / (timeElapsedMicroseconds));
             System.out.println("Threads:                  " + numberOfThreads);
             System.out.println("Total time:               " + timeElapsed + " milliseconds");

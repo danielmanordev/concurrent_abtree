@@ -60,7 +60,7 @@ public class RQProvider {
     public void traversalStart(int threadId, int low, int high, Node entry) {
         initThread(threadId);
         rqThreadData[threadId].resultSize=0;
-        this.rqThreadData[threadId].result = new RQResult[high-low];
+        this.rqThreadData[threadId].result = new RQResult[(high-low)+1];
 
         /*lock.lock();
         TIMESTAMP = System.currentTimeMillis();
