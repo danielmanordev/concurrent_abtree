@@ -9,10 +9,10 @@ public class MppRunner {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
 
         int dataRange = 10000;
-        int numberOfThreads = 8;
+        int numberOfThreads = 12;
         int a = 2;
         int b = 16;
-        int numberOfTests = 20;
+        int numberOfTests = 5;
         int testDuration=10000;
         int perAdd=80;
         int perContains=0;
