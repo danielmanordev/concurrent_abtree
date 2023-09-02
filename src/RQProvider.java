@@ -6,7 +6,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class RQProvider {
 
-    private static AtomicInteger TIMESTAMP = new AtomicInteger(1);
+
     private RQThreadData[] rqThreadData;
     private int rqThreadDataSize;
     private int[] init;
@@ -14,7 +14,7 @@ public class RQProvider {
     private Lock lock = new MCSLock();
 
     private LimboListManager limboListManager = new LimboListManager();
-
+    public static AtomicInteger TIMESTAMP = new AtomicInteger(1);
     public RQProvider(int numberOfThreads, int maxNodeSize) {
         this.rqThreadDataSize = (int)Math.pow(numberOfThreads+20,2);
         this.init = new int[rqThreadDataSize];
@@ -72,7 +72,6 @@ public class RQProvider {
         this.rqThreadData[threadId].high = high;
 
         traverseLeafs(threadId,low,high,entry);
-
 
     }
 

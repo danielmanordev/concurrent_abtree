@@ -50,9 +50,6 @@ public class Node {
         return this.marked;
     }
 
-
-
-
     public boolean getWeight(){
         return this.weight;
     }
@@ -64,10 +61,6 @@ public class Node {
     public void lock() {
        lock.lock();
     }
-
-    public void leafLock() {leafLock.lock();}
-
-    public void leafUnlock(){leafLock.unlock();}
 
     public void setAsLeaf(){
         this.isLeaf = true;

@@ -9,7 +9,6 @@ public class OCCABTree implements Set {
 
     private int a;
     private int b;
-    private long TIMESTAMP;
     private RQProvider rqProvider;
 
 
@@ -20,7 +19,6 @@ public class OCCABTree implements Set {
         Node entryLeft = createExternalNode(true,0,anyKey);
         entry = createInternalNode(true,1,anyKey);
         entry.nodes[0] = entryLeft;
-        TIMESTAMP = System.currentTimeMillis();
         this.rqProvider = new RQProvider(numberOfThreads,b);
     }
 
@@ -81,7 +79,7 @@ public class OCCABTree implements Set {
                 if (node.keys[i] == NULL) {
                     int oldVersion = node.ver.get();
                     node.ver.set(oldVersion+1);
-                    this.rqProvider.updateInsert(node,i,new KvInfo(key,value,TIMESTAMP,0));
+                    this.rqProvider.updateInsert(node,i,new KvInfo(key,value,0,0));
                     // node.keys[i] = key;
                     // node.values[i] = value;
                     // node.insertionTimes[i] = TIMESTAMP;
@@ -115,7 +113,7 @@ public class OCCABTree implements Set {
                 }
 
             }
-            keyValues[k] = new KeyValue(key, new KvInfo(key,value,TIMESTAMP,0));
+            keyValues[k] = new KeyValue(key, new KvInfo(key,value,RQProvider.TIMESTAMP.get(),0));
             ++k;
 
             Arrays.sort(keyValues, new SortKeyValues());
