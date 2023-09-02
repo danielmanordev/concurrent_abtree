@@ -1,12 +1,12 @@
 import Locks.Lock;
 import Locks.MCSLock;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class RQProvider {
 
-    private static final ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock(false);
-    private static long TIMESTAMP = System.currentTimeMillis();
+    private static AtomicInteger TIMESTAMP = new AtomicInteger(1);
     private RQThreadData[] rqThreadData;
     private int rqThreadDataSize;
     private int[] init;
@@ -26,7 +26,7 @@ public class RQProvider {
     public Node updateDelete(Node leaf, int kvIndex, KvInfo deletedKey) {
 
         // deletedKey.deletionTime = TIMESTAMP;
-        deletedKey.deletionTime = readTs();
+        deletedKey.deletionTime = TIMESTAMP.get();
         int threadId = (int) Thread.currentThread().getId();
 
         announcePhysicalDeletion(threadId ,deletedKey);
@@ -39,11 +39,15 @@ public class RQProvider {
         return leaf;
     }
 
+
+
     public Node updateInsert(Node leaf, int kvIndex, KvInfo instertedKv) {
 
         // instertedKv.insertionTime = TIMESTAMP;
 
-        instertedKv.insertionTime = readTs();
+        instertedKv.insertionTime = TIMESTAMP.get();
+
+
         leaf.keys[kvIndex] = instertedKv.key;
         leaf.values[kvIndex] = instertedKv;
 
@@ -51,29 +55,6 @@ public class RQProvider {
 
         return leaf;
     }
-
-    private long writeTs(){
-        try {
-            readWriteLock.writeLock().lock();
-            TIMESTAMP = System.currentTimeMillis();
-            return TIMESTAMP;
-
-        } finally {
-            readWriteLock.writeLock().unlock();
-        }
-
-    }
-
-    private long readTs(){
-        try {
-            //readWriteLock.readLock().lock();
-            return TIMESTAMP;
-        } finally {
-           // readWriteLock.readLock().unlock();
-        }
-
-    }
-
 
     // TODO: continue here
     public void traversalStart(int threadId, int low, int high, Node entry) {
@@ -86,7 +67,7 @@ public class RQProvider {
         long ts = TIMESTAMP;
         lock.unlock();*/
 
-        this.rqThreadData[threadId].rqLinearzationTime = writeTs();
+        this.rqThreadData[threadId].rqLinearzationTime = TIMESTAMP.incrementAndGet();
         this.rqThreadData[threadId].low = low;
         this.rqThreadData[threadId].high = high;
 
@@ -119,7 +100,7 @@ public class RQProvider {
                  if(kvInfo == null){
                      continue;
                  }
-                if(kvInfo.key >= low && kvInfo.key <= high && kvInfo.insertionTime < TIMESTAMP){
+                if(kvInfo.key >= low && kvInfo.key <= high && kvInfo.insertionTime < TIMESTAMP.get()){
                     visit(threadId,kvInfo);
 
                     // System.out.println("Key: "+leftNode.keys[i]+ " Value: "+leftNode.values[i]);
