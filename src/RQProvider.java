@@ -16,7 +16,7 @@ public class RQProvider {
     private LimboListManager limboListManager = new LimboListManager();
 
     public RQProvider(int numberOfThreads, int maxNodeSize) {
-        this.rqThreadDataSize = (int)Math.pow(numberOfThreads,2);
+        this.rqThreadDataSize = (int)Math.pow(numberOfThreads+20,2);
         this.init = new int[rqThreadDataSize];
         this.rqThreadData = new RQThreadData[rqThreadDataSize];
         this.maxNodeSize = maxNodeSize;
