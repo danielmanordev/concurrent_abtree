@@ -8,22 +8,32 @@ import java.util.concurrent.ThreadLocalRandom;
 class TestSet extends Thread
 {
     private final Set set;
-    private final int	dataRange;
-    private final int	perCon;
-    private final int	perAdd;
-    private final int	perDelete;
+    private  int	dataRange;
+    private  int	perCon;
+    private  int	perAdd;
+    private  int	low;
+    private  int	high;
+    private  boolean	scanOnly = false;
     private BigInteger numberOfAdds = BigInteger.ZERO;
     private BigInteger numberOfContains = BigInteger.ZERO;
     private BigInteger numberOfRemoves = BigInteger.ZERO;
     private BigInteger numberOfScans = BigInteger.ZERO;
     private List<String> prints;
-    public TestSet(Set set, int dataRange, int perCon, int perAdd, int perDelete)
+    public TestSet(Set set, int dataRange, int perCon, int perAdd)
     {
         this.set = set;
         this.dataRange = dataRange;
         this.perCon = perCon;
         this.perAdd = perAdd;
-        this.perDelete = perDelete;
+        this.prints = new ArrayList<>();
+    }
+
+    public TestSet(Set set, int low, int high)
+    {
+        this.set = set;
+        this.low = low;
+        this.high = high;
+        this.scanOnly =true;
         this.prints = new ArrayList<>();
     }
 
@@ -32,12 +42,25 @@ class TestSet extends Thread
         try {
             while (true) {
 
-                var randomInt = ThreadLocalRandom.current().nextInt(1,this.dataRange);
+              
+                 if(this.scanOnly) {
+                    /*if(set.remove(randomInt)){
+                        //prints.add(randomInt +  " was removed");
+                    }
+                    else {
+                        //prints.add(randomInt +  " was NOT removed");
+                    }*/
+                    set.scan(this.low,this.high);
+                    numberOfScans=numberOfScans.add(BigInteger.ONE);
 
-                var opValue = ThreadLocalRandom.current().nextInt(0,100); // uniformly distributed
+                } else {
 
-                // contains
-                if(opValue >= 0 && opValue < this.perCon) {
+                     var randomInt = ThreadLocalRandom.current().nextInt(1,this.dataRange);
+
+                     var opValue = ThreadLocalRandom.current().nextInt(0,100); // uniformly distributed
+
+
+                     if(opValue >= 0 && opValue < this.perCon) {
 
                    /* if(set.contains(randomInt)){
                         prints.add(randomInt + " exists");
@@ -45,44 +68,35 @@ class TestSet extends Thread
                     else {
                         prints.add(randomInt + " not found");
                     }*/
-                    set.contains(randomInt);
-                    numberOfContains=numberOfContains.add(BigInteger.ONE);
-                }
+                         set.contains(randomInt);
+                         numberOfContains=numberOfContains.add(BigInteger.ONE);
+                     }
 
-                // add
-                else if (opValue >= this.perCon && opValue < this.perAdd+this.perCon){
+                     // add
+                     else if (opValue >= this.perCon && opValue < this.perAdd+this.perCon){
                    /*if(){
 
                     }
                     else {
                         prints.add(randomInt + " exists and was not added") ;
                     }*/
-                    set.add(randomInt, randomInt);
-                    numberOfAdds=numberOfAdds.add(BigInteger.ONE);
-                }
-                else if (opValue >= this.perCon+this.perAdd && opValue < this.perCon+this.perAdd+this.perDelete){
+                         set.add(randomInt, randomInt);
+                         numberOfAdds=numberOfAdds.add(BigInteger.ONE);
+                     }
+                     else {
                    /*if(){
 
                     }
                     else {
                         prints.add(randomInt + " exists and was not added") ;
                     }*/
-                    set.remove(randomInt);
-                    numberOfRemoves=numberOfRemoves.add(BigInteger.ONE);
-                }
-                // range
-                else {
-                    /*if(set.remove(randomInt)){
-                        //prints.add(randomInt +  " was removed");
-                    }
-                    else {
-                        //prints.add(randomInt +  " was NOT removed");
-                    }*/
-                    set.scan(1,32000);
-                    numberOfScans=numberOfScans.add(BigInteger.ONE);
+                         set.remove(randomInt);
+                         numberOfRemoves=numberOfRemoves.add(BigInteger.ONE);
+                     }
+                     
+                 }
 
-                }
-
+                 
                 if (Thread.interrupted()) {// Clears interrupted status!}
                    // System.out.println("Thread Id: "+Thread.currentThread().getId()+"   interrupted");
                     throw new InterruptedException();
@@ -111,14 +125,20 @@ class TestSet extends Thread
      * @param perAdd percentage of add(x) operations
      * @param ms length of test (in milliseconds)
      */
-    public static TestResult runTest(Set set, int numThreads, int dataRange, int perCon, int perAdd, int perDelete, int ms)
+    public static TestResult runTest(Set set, int numThreads, int numberOfScanThreads ,int dataRange, int perCon, int perAdd, int scanLow, int scanHigh ,int ms)
     {
+        int numberOfNonScanThreads = numThreads - numberOfScanThreads;
+        
 
-
-        // create all threads for the test
+        // create non scan threads for the test
         TestSet[] threads = new TestSet[numThreads];
-        for (int i = 0; i < numThreads; ++i)
-            threads[i] = new TestSet(set, dataRange, perCon, perAdd, perDelete);
+        
+        for (int i=0;i < numberOfNonScanThreads; ++i)
+            threads[i] = new TestSet(set, dataRange, perCon, perAdd);
+
+        // create scan threads for the test
+        for (int i = numberOfNonScanThreads; i < numThreads; ++i)
+            threads[i] = new TestSet(set, scanLow, scanHigh);
 
         // start threads
         for (int i = 0; i < numThreads; ++i) {

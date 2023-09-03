@@ -8,16 +8,17 @@ public class MppRunner {
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
 
-        int dataRange = 1000000;
+        int dataRange = 10000;
         int numberOfThreads = 12;
+        int numberOfScanThreads = 8;
         int a = 2;
         int b = 16;
         int numberOfTests = 5;
         int testDuration=10000;
-        int perAdd=50;
+        int perAdd=80;
         int perContains=0;
-        int perRemove=0;
-        int perRange=100-perAdd-perContains-perRemove;
+        int perRemove=20;
+        /// int perRange=100-perAdd-perContains-perRemove;
         ArrayList<Long> adds = new ArrayList();
         System.out.println("Number of available processors: "+availableProcessors);
         System.out.println("Number of tests: "+numberOfTests);
@@ -25,7 +26,6 @@ public class MppRunner {
         System.out.println("insert: "+perAdd+"%");
         System.out.println("remove: "+perRemove+"%");
         System.out.println("contains: "+perContains+"%");
-        System.out.println("range: "+perRange+"%");
         System.out.println("Starting....");
         for (int i = 0; i < numberOfTests; i++) {
 
@@ -40,7 +40,7 @@ public class MppRunner {
             //nteger.parseInt(args[1]);
 
             long start = System.currentTimeMillis();
-            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, dataRange, perContains, perAdd, perRemove, testDuration);
+            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, numberOfScanThreads ,dataRange, perContains, perAdd,1,200,testDuration);
             long finish = System.currentTimeMillis();
             long timeElapsed = finish - start;
             long timeElapsedMicroseconds = timeElapsed * 1000;
@@ -52,12 +52,14 @@ public class MppRunner {
             System.out.println("Total adds:               " + testResult.TotalAdds.longValue());
             System.out.println("Total removes:            " + testResult.TotalRemoves.longValue());
             System.out.println("Total contains:           " + testResult.TotalContains.longValue());
-            System.out.println("Total range query:           " + testResult.TotalScans.longValue());
+            System.out.println("Total range query:        " + testResult.TotalScans.longValue());
             System.out.println("Adds/\u33B2:                  " + testResult.TotalAdds.doubleValue() / (timeElapsedMicroseconds));
             System.out.println("Removes/\u33B2:               " + testResult.TotalRemoves.doubleValue() / (timeElapsedMicroseconds));
             System.out.println("Contains/\u33B2:              " + testResult.TotalContains.doubleValue() / (timeElapsedMicroseconds));
             System.out.println("range query/\u33B2:           " + testResult.TotalScans.doubleValue() / (timeElapsedMicroseconds));
-            System.out.println("Threads:                  " + numberOfThreads);
+            System.out.println("All Threads:                  " + numberOfThreads);
+            System.out.println("Scan Threads:                  " + numberOfScanThreads);
+            System.out.println("Non Scan Threads:              " + (numberOfThreads-numberOfScanThreads));
             System.out.println("Total time:               " + timeElapsed + " milliseconds");
             // numberOfThreads++;
             if (i > 1) {
