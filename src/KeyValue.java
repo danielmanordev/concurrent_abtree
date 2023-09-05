@@ -1,11 +1,11 @@
 public class KeyValue {
 
     public int key;
-    public KvInfo value;
+    public KeyValuePair value;
 
     public Node node;
 
-    KeyValue(int key, KvInfo value){
+    KeyValue(int key, KeyValuePair value){
         this.key = key;
         this.value = value;
 
@@ -20,7 +20,7 @@ public class KeyValue {
         return this.key;
     }
 
-    public KvInfo getValue(){
+    public KeyValuePair getValue(){
         return this.value;
     }
 

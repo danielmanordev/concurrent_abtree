@@ -1,5 +1,7 @@
 // the entry-point for the testbed is the static runTest() method
 
+import abstractions.Set;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +19,7 @@ class TestSet extends Thread
     private BigInteger numberOfAdds = BigInteger.ZERO;
     private BigInteger numberOfContains = BigInteger.ZERO;
     private BigInteger numberOfRemoves = BigInteger.ZERO;
-    private BigInteger numberOfScans = BigInteger.ZERO;
+    private BigInteger numberOfScannedKeys = BigInteger.ZERO;
     private List<String> prints;
     public TestSet(Set set, int dataRange, int perCon, int perAdd)
     {
@@ -50,8 +52,9 @@ class TestSet extends Thread
                     else {
                         //prints.add(randomInt +  " was NOT removed");
                     }*/
-                    set.scan(this.low,this.high);
-                    numberOfScans=numberOfScans.add(BigInteger.ONE);
+
+                     int scannedKeys = set.getRange(this.low,this.high);
+                     numberOfScannedKeys=numberOfScannedKeys.add(BigInteger.valueOf(scannedKeys));
 
                 } else {
 
@@ -163,7 +166,7 @@ class TestSet extends Thread
             testResult.TotalRemoves = testResult.TotalRemoves.add(threads[i].numberOfRemoves);
             testResult.TotalAdds = testResult.TotalAdds.add(threads[i].numberOfAdds);
             testResult.TotalContains = testResult.TotalContains.add(threads[i].numberOfContains);
-            testResult.TotalScans = testResult.TotalScans.add(threads[i].numberOfScans);
+            testResult.numberOfScannedKeys = testResult.numberOfScannedKeys.add(threads[i].numberOfScannedKeys);
         }
 
         //System.out.println("Total add invocations: "+ testResult.TotalAdds );
@@ -172,7 +175,7 @@ class TestSet extends Thread
         testResult.Total = testResult.Total.add(testResult.TotalAdds);
         testResult.Total = testResult.Total.add(testResult.TotalRemoves);
         testResult.Total = testResult.Total.add(testResult.TotalContains);
-        testResult.Total = testResult.Total.add(testResult.TotalScans);
+        testResult.Total = testResult.Total.add(testResult.numberOfScannedKeys);
         //System.out.println("Total invocations: "+ testResult.Total );
         return testResult;
 

@@ -1,5 +1,7 @@
-package Locks;
+package locks;
 ;
+import abstractions.Lock;
+
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
 

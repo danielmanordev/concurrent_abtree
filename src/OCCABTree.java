@@ -1,54 +1,37 @@
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
 
 
-public class OCCABTree implements Set {
+public class OCCABTree {
 
- 
-    private int NULL = 0;
+    /* Constants */
+    private final int NULL = 0;
+    private final int LIMBOLIST_SIZE = 10000;
+
     private Node entry;
 
-    private int a;
-    private int b;
-    private RQProvider rqProvider;
+    private final int minNodeSize;
+    private final int maxNodeSize;
 
+    private final ThreadData[] threadsData;
+    private final int threadsDataSize;
+    private final int[] threadsInit;
+    private int threadsInitSize=0;
+
+    public  AtomicInteger TIMESTAMP = new AtomicInteger(1);
 
     public OCCABTree(int a, int b, int numberOfThreads) {
-        this.a = a;
-        this.b = b;
+        this.minNodeSize = a;
+        this.maxNodeSize = b;
         int anyKey = 26;
         Node entryLeft = createExternalNode(true,0,anyKey);
         entry = createInternalNode(true,1,anyKey);
         entry.nodes[0] = entryLeft;
-        this.rqProvider = new RQProvider(numberOfThreads,b);
-    }
 
-    private Result searchLeaf(Node leaf, int key) {
-        if(!leaf.isLeaf()) {
-            return new Result(NULL, ReturnCode.FAILURE);
-        }
-        while (true) {
-            int ver1 = leaf.ver.get();
-            if (ver1 % 2 != 0) {
-                continue;
-            }
+        this.threadsDataSize = (int)Math.pow(numberOfThreads+20,2);
+        this.threadsInit = new int[threadsDataSize];
+        this.threadsData = new ThreadData[threadsDataSize];
 
-            KvInfo kvInfo=null;
-            for (int keyIndex = 0; keyIndex < this.b - 1; keyIndex++) {
-                if (leaf.keys[keyIndex] == key) {
-                    kvInfo = leaf.values[keyIndex];
-                    break;
-                }
-            }
-            int ver2 = leaf.ver.get();
-            if (ver1 != ver2) {
-                continue;
-            }
-            if (kvInfo == null) {
-                return new Result(NULL, ReturnCode.FAILURE);
-            } else {
-                return new Result(kvInfo.value, ReturnCode.SUCCESS);
-            }
-        }
     }
 
     private Result insert(PathInfo pathInfo, int key, int value) {
@@ -65,7 +48,7 @@ public class OCCABTree implements Set {
             return new Result(ReturnCode.RETRY);
         }
 
-       for (int i = 0; i < b; ++i) {
+       for (int i = 0; i < this.maxNodeSize; ++i) {
             if (node.keys[i] == key) {
                 node.unlock();
                 return new Result(ReturnCode.FAILURE);
@@ -74,12 +57,12 @@ public class OCCABTree implements Set {
 
         // At this point, we are guaranteed key is not in node
         int currSize = node.size;
-        if(currSize < b) {
-            for (int i = 0; i < b; ++i) {
+        if(currSize < this.maxNodeSize) {
+            for (int i = 0; i < this.maxNodeSize; ++i) {
                 if (node.keys[i] == NULL) {
                     int oldVersion = node.ver.get();
                     node.ver.set(oldVersion+1);
-                    this.rqProvider.updateInsert(node,i,new KvInfo(key,value,0,0));
+                    updateInsert(node,i,new KeyValuePair(key,value,0,0));
                     // node.keys[i] = key;
                     // node.values[i] = value;
                     // node.insertionTimes[i] = TIMESTAMP;
@@ -102,18 +85,18 @@ public class OCCABTree implements Set {
             // We do not have room for this key, we need to make new nodes so it fits
             // first, we create a std::pair of large arrays
             // containing too many keys and pointers to fit in a single node
-            int keyValuesSize = b + 1;
+            int keyValuesSize = this.maxNodeSize + 1;
             KeyValue[] keyValues = new KeyValue[keyValuesSize];
 
             int k=0;
-            for (int i = 0; i < b; i++) {
+            for (int i = 0; i < this.maxNodeSize; i++) {
                 if(node.keys[i] != NULL){
                     keyValues[k] = new KeyValue(node.keys[i], node.values[i]);
                     ++k;
                 }
 
             }
-            keyValues[k] = new KeyValue(key, new KvInfo(key,value,RQProvider.TIMESTAMP.get(),0));
+            keyValues[k] = new KeyValue(key, new KeyValuePair(key,value,TIMESTAMP.get(),0));
             ++k;
 
             Arrays.sort(keyValues, new SortKeyValues());
@@ -132,7 +115,7 @@ public class OCCABTree implements Set {
 
             }
 
-            int rightSize = (b+1) - leftSize;
+            int rightSize = (this.maxNodeSize+1) - leftSize;
             Node right = createExternalNode(true,rightSize, keyValues[leftSize].getKey());
             for (int i = 0; i < rightSize; i++) {
                 right.keys[i] = keyValues[i+leftSize].getKey();
@@ -184,25 +167,10 @@ public class OCCABTree implements Set {
     }
 
     private Node createInternalNode(boolean weight, int size, int searchKey){
-       return new Node(weight,size,searchKey,this.b);
+       return new Node(weight,size,searchKey,this.maxNodeSize);
     }
 
-    private Result tryInsert(int key, int value) {
-        PathInfo pathInfo = new PathInfo();
-        while (true) {
-            Result searchResult = search(key,null,pathInfo);
-            if(searchResult.getReturnCode() == ReturnCode.SUCCESS){
-                return searchResult;
-            }
 
-            Result insertResult = insert(pathInfo,key,value);
-            ReturnCode insertRetCode = insertResult.getReturnCode();
-            if (insertRetCode == ReturnCode.SUCCESS || insertRetCode == ReturnCode.FAILURE) {
-                return insertResult;
-            }
-
-        }
-        }
 
     private void unlockAllNodes(PathInfo pathInfo) {
         pathInfo.n.unlock();
@@ -276,7 +244,7 @@ public class OCCABTree implements Set {
 
 
 
-            if (size <= b) {
+            if (size <= this.maxNodeSize) {
                 Node newNode = createInternalNode(true,size,0);
                 System.arraycopy(p.nodes, 0, newNode.nodes, 0, pathInfo.nIdx);
                 System.arraycopy(n.nodes, 0, newNode.nodes, pathInfo.nIdx, n.size);
@@ -297,8 +265,8 @@ public class OCCABTree implements Set {
                  * Split
                  */
 
-                int keys[] = new int[b * 2];
-                Node nodes[] = new Node[b * 2];
+                int keys[] = new int[this.maxNodeSize * 2];
+                Node nodes[] = new Node[this.maxNodeSize * 2];
 
                 System.arraycopy(p.nodes, 0, nodes, 0, pathInfo.nIdx);
                 System.arraycopy(n.nodes, 0, nodes, pathInfo.nIdx, n.size);
@@ -381,16 +349,16 @@ public class OCCABTree implements Set {
 
     KeyIndexValueVersionResult getKeyIndexValueVersion(Node node, int key) {
         int keyIndex;
-        KvInfo value;
+        KeyValuePair value;
         int version;
 
         do {
             while (((version = node.ver.get()) & 1) != 0) {}
             keyIndex = 0;
-            while (keyIndex < b && node.keys[keyIndex] != key) {
+            while (keyIndex < this.maxNodeSize && node.keys[keyIndex] != key) {
                 ++keyIndex;
             }
-            value = keyIndex < b ? node.values[keyIndex] : null;
+            value = keyIndex < this.maxNodeSize ? node.values[keyIndex] : null;
         } while (node.ver.get() != version);
         return value == null ? new KeyIndexValueVersionResult(NULL,NULL,NULL,ReturnCode.FAILURE) : new KeyIndexValueVersionResult(value.value,keyIndex,version,ReturnCode.SUCCESS);
 
@@ -408,41 +376,7 @@ public class OCCABTree implements Set {
 
     }
 
-    private Result find(int key) {
 
-        PathInfo pathInfo = new PathInfo();
-        Result searchResult = search(key, null, pathInfo);
-
-        if(searchResult.getReturnCode() != ReturnCode.SUCCESS){
-            return new Result(ReturnCode.FAILURE);
-        }
-        Node leaf = pathInfo.n;
-        Result searchLeafResult = searchLeaf(leaf, key);
-
-        return searchLeafResult;
-    }
-
-    private Result tryDelete(int key) {
-        PathInfo pathInfo = new PathInfo();
-        while (true) {
-            Result result = search(key, null, pathInfo);
-
-            if(result.getReturnCode() == ReturnCode.FAILURE){
-                return new Result(ReturnCode.NO_VALUE);
-            }
-
-            Result deleteResult = delete(pathInfo, key);
-
-            if(deleteResult.getReturnCode() == ReturnCode.SUCCESS){
-                return deleteResult;
-            }
-
-            if (deleteResult.getReturnCode() == ReturnCode.FAILURE) {
-                return deleteResult;
-            }
-
-        }
-    }
 
     private Result delete(PathInfo pathInfo, int key) {
         Node node = pathInfo.n;
@@ -455,18 +389,18 @@ public class OCCABTree implements Set {
         }
         int newSize = node.size - 1;
         int deletedValue = NULL;
-        for (int i = 0; i < b; ++i) {
+        for (int i = 0; i < this.maxNodeSize; ++i) {
            if(node.keys[i] == key) {
                deletedValue = node.values[i].value;
                int oldVersion = node.ver.get();
                node.ver.set(oldVersion);
-               this.rqProvider.updateDelete(node,i, node.values[i]);
+               updateDelete(node,i, node.values[i]);
                //node.keys[i] = 0;
                //node.values[i] = 0;
                //node.size = newSize;
                node.ver.set(oldVersion+2);
 
-               if(newSize == a-1) {
+               if(newSize == this.minNodeSize-1) {
                    node.unlock();
                    fixUnderfull(node);
                    return new Result(deletedValue, ReturnCode.SUCCESS);
@@ -486,7 +420,7 @@ public class OCCABTree implements Set {
            // We do not need a lock for the viol == entry->ptrs[0] check since since we cannot
            // "be turned into" the root. The root is only created by the root absorb
            // operation below, so a node that is not the root will never become the root.
-           if(underFullNode.size >= a || underFullNode == entry || underFullNode == entry.nodes[0]) {
+           if(underFullNode.size >= this.minNodeSize || underFullNode == entry || underFullNode == entry.nodes[0]) {
                return new Result(ReturnCode.UNNECCESSARY);
            }
 
@@ -501,7 +435,7 @@ public class OCCABTree implements Set {
 
            // Technically this only matters if the parent has fewer than 2 pointers.
            // Maybe should change the check to that?
-           if (parent.size < a && parent != entry && parent != entry.nodes[0]) {
+           if (parent.size < this.minNodeSize && parent != entry && parent != entry.nodes[0]) {
                fixUnderfull(parent);
                continue;
            }
@@ -553,7 +487,7 @@ public class OCCABTree implements Set {
                } // RETRY
            }
 
-               if(underFullNode.size >= a){
+               if(underFullNode.size >= this.minNodeSize){
                    node.unlock();
                    sibling.unlock();
                    return new Result(ReturnCode.UNNECCESSARY);
@@ -596,7 +530,7 @@ public class OCCABTree implements Set {
            int psize = parent.size;
            int size = lsize+rsize;
 
-           if (size < 2 * a) {
+           if (size < 2 * this.minNodeSize) {
                /**
                 * AbsorbSibling
                 */
@@ -607,7 +541,7 @@ public class OCCABTree implements Set {
                if (left.isLeaf()) {
                    //duplicate code can be cleaned up, but it would make it far less readable...
                    Node newNodeExt = createExternalNode(true, size, node.searchKey);
-                   for (int i = 0; i < b; i++) {
+                   for (int i = 0; i < this.maxNodeSize; i++) {
                        if (left.keys[i] != NULL) {
                            newNodeExt.keys[keyCounter++] = left.keys[i];
                            newNodeExt.values[ptrCounter++] = left.values[i];
@@ -615,7 +549,7 @@ public class OCCABTree implements Set {
                        }
                    }
                    assert (right.isLeaf());
-                   for (int i = 0; i < b; i++) {
+                   for (int i = 0; i < this.maxNodeSize; i++) {
                        if (right.keys[i] != NULL) {
                            newNodeExt.keys[keyCounter++] = right.keys[i];
                            newNodeExt.values[ptrCounter++] = right.values[i];
@@ -716,9 +650,9 @@ public class OCCABTree implements Set {
                Node newRight;
 
 
-               KeyValue[] keyValues = new KeyValue[2*b];
+               KeyValue[] keyValues = new KeyValue[2*this.maxNodeSize];
 
-               for (int i=0;i<2*b;i++){
+               for (int i=0;i<2*this.maxNodeSize;i++){
                    keyValues[i] = new KeyValue();
                }
                // combine the contents of l and s (and one key from p if l and s are internal)
@@ -727,7 +661,7 @@ public class OCCABTree implements Set {
                int valCounter = 0;
                if (left.isLeaf()) {
                    assert(right.isLeaf());
-                   for (int i = 0; i < b; i++) {
+                   for (int i = 0; i < this.maxNodeSize; i++) {
                        if (left.keys[i] != NULL) {
                            keyValues[keyCounter++].key = left.keys[i];
                            keyValues[valCounter++].value = left.values[i];
@@ -748,7 +682,7 @@ public class OCCABTree implements Set {
                }
 
                if (right.isLeaf()) {
-                   for (int i = 0; i < b; i++) {
+                   for (int i = 0; i < this.maxNodeSize; i++) {
                        if (right.keys[i] != NULL) {
                           keyValues[keyCounter++].key = right.keys[i];
                           keyValues[valCounter++].value = right.values[i];
@@ -873,36 +807,322 @@ public class OCCABTree implements Set {
        }
     }
 
-
     private int getKeyCount(Node node) {
         return node.isLeaf() ? node.size : node.size - 1;
     }
 
-    @Override
-    public boolean add(int key, int value) {
-        Result result = tryInsert(key, value);
-        return result.getReturnCode() == ReturnCode.SUCCESS;
+    private Result searchLeaf(Node leaf, int key) {
+        if(!leaf.isLeaf()) {
+            return new Result(NULL, ReturnCode.FAILURE);
+        }
+        while (true) {
+            int ver1 = leaf.ver.get();
+            if (ver1 % 2 != 0) {
+                continue;
+            }
 
+            KeyValuePair value =null;
+            for (int keyIndex = 0; keyIndex < this.maxNodeSize - 1; keyIndex++) {
+                if (leaf.keys[keyIndex] == key) {
+                    value = leaf.values[keyIndex];
+                    break;
+                }
+            }
+            int ver2 = leaf.ver.get();
+            if (ver1 != ver2) {
+                continue;
+            }
+            if (value == null) {
+                return new Result(NULL, ReturnCode.FAILURE);
+            } else {
+                return new Result(value.value, ReturnCode.SUCCESS);
+            }
+        }
     }
 
-    @Override
-    public boolean contains(int key) {
 
-        Result result = find(key);
-        return result.getReturnCode() == ReturnCode.SUCCESS;
+       /* Range query */
+
+        public Node updateDelete(Node leaf, int kvIndex, KeyValuePair deletedKey) {
+
+            // deletedKey.deletionTime = TIMESTAMP;
+            deletedKey.deletionTime = TIMESTAMP.get();
+            int threadId = (int) Thread.currentThread().getId();
+
+            announcePhysicalDeletion(threadId ,deletedKey);
+
+            leaf.keys[kvIndex] = 0;
+            leaf.values[kvIndex] = null;
+
+            leaf.size = leaf.size-1;
+            physicalDeletionSucceeded(threadId, deletedKey);
+            return leaf;
+        }
+
+
+
+        public Node updateInsert(Node leaf, int kvIndex, KeyValuePair instertedKv) {
+
+            // instertedKv.insertionTime = TIMESTAMP;
+
+            instertedKv.insertionTime = TIMESTAMP.get();
+
+
+            leaf.keys[kvIndex] = instertedKv.key;
+            leaf.values[kvIndex] = instertedKv;
+
+            leaf.size++;
+
+            return leaf;
+        }
+
+        // TODO: continue here
+        public void traversalStart(int threadId, int low, int high, Node entry) {
+            initThread(threadId);
+            this.threadsData[threadId].resultSize=0;
+            this.threadsData[threadId].result = new RQResult[(high-low)+1];
+            this.threadsData[threadId].rqLinearzationTime = TIMESTAMP.incrementAndGet();
+            this.threadsData[threadId].rqLow = low;
+            this.threadsData[threadId].rqHigh = high;
+
+            traverseLeafs(threadId,low,high,entry);
+
+        }
+
+        private void traverseLeafs(int threadId, int low, int high, Node entry) {
+            PathInfo pathInfo = new PathInfo();
+            pathInfo.gp = null;
+            pathInfo.p = entry;
+            pathInfo.n = entry.nodes[0];
+            pathInfo.nIdx = 0;
+
+            while (!pathInfo.n.isLeaf()) {
+
+                pathInfo.gp = pathInfo.p;
+                pathInfo.p = pathInfo.n;
+                pathInfo.pIdx = pathInfo.nIdx;
+                pathInfo.nIdx = getChildIndex(pathInfo.n, low);
+                pathInfo.n = pathInfo.n.nodes[pathInfo.nIdx];
+
+            }
+            Node leftNode = pathInfo.n;
+            boolean continueToNextNode=true;
+            while(true){
+                for(int i=0;i<this.maxNodeSize;i++) {
+                    KeyValuePair value = leftNode.values[i];
+                    if(value == null){
+                        continue;
+                    }
+                    if(value.key >= low && value.key <= high && value.insertionTime < TIMESTAMP.get()){
+                        visit(threadId, value);
+
+                        // System.out.println("Key: "+leftNode.keys[i]+ " Value: "+leftNode.values[i]);
+
+                    }
+                    if(leftNode.keys[i]>high) {
+                        continueToNextNode = false;
+                    }
+                }
+                if(continueToNextNode && leftNode.right != null) {
+
+                    leftNode = leftNode.right;
+                }
+                else {
+                    break;
+                }
+            }
+
+        }
+
+        private void initThread(int threadId) {
+            if(this.threadsInit[threadId] == 0){
+                this.threadsData[threadId] = new ThreadData(LIMBOLIST_SIZE);
+                this.threadsInit[threadId] = 1;
+            }
+        }
+
+        public void announcePhysicalDeletion(int threadId, KeyValuePair deletedKey) {
+            initThread(threadId);
+            this.threadsData[threadId].rqAnnouncements[threadsData[threadId].rqAnnouncementsSize] = deletedKey;
+            threadsData[threadId].rqAnnouncementsSize++;
+        }
+
+
+
+        public void visit(int threadId, KeyValuePair value){
+            tryAdd(threadId, value, null, RQSource.DataStructure);
+        }
+
+        public int traversalEnd(int threadId, RQResult result[]){
+
+            for(int i = 0; i<this.threadsDataSize; i++) {
+                if(threadsInit[i]==0){
+                    continue;
+                }
+                for(int j=0;j<this.threadsData[i].rqAnnouncementsSize;j++)
+                {
+                    KeyValuePair announcement = threadsData[i].rqAnnouncements[j];
+                    tryAdd(threadId,announcement, announcement, RQSource.Announcement);
+                }
+
+            }
+
+            // Collect pointers to all limbo lists
+            // Traverse limbo lists
+
+            int numberOfThreadIds = this.threadsInitSize;
+            for(int j=0;j<numberOfThreadIds;j++) {
+                if(threadsInit[j] == 0){
+                    continue;
+                }
+                KeyValuePair[] limboList=threadsData[j].limboList;
+                for(int i=0;i<LIMBOLIST_SIZE;i++){
+                    if(limboList[i] == null){
+                        break;
+                    }
+                    tryAdd(threadId, limboList[i], null, RQSource.LimboList);
+                }
+            }
+            result = new RQResult[2];//this.rqThreadData[threadId].result;
+            return this.threadsData[threadId].resultSize;
+        }
+
+
+        private void tryAdd(int threadId, KeyValuePair value, KeyValuePair announcedValue, RQSource rqSource) {
+            int low = threadsData[threadId].rqLow;
+            int high = threadsData[threadId].rqHigh;
+            long rqLinearzationTime = threadsData[threadId].rqLinearzationTime;
+
+            while (value.insertionTime == 0){}
+            if(value.insertionTime >= rqLinearzationTime){
+                return; // node inserted after RQ
+            }
+            if(rqSource == RQSource.DataStructure){
+                // do nothing: node was not deleted when RQ was linearized
+            }
+            else if(rqSource == RQSource.LimboList){
+                while (value.deletionTime == 0) {}
+                if(value.deletionTime < rqLinearzationTime){
+                    return; // node deleted before RQ
+                }
+            }
+            else if(rqSource == RQSource.Announcement) {
+                long deletionTime=0;
+                while (deletionTime==0 && value == announcedValue) {
+                    deletionTime= value.deletionTime;
+                }
+
+                if(deletionTime==0){
+                    // loop exited because the process removed this announcement
+                    // if the process deleted node, then it has now set node.dtime
+                    deletionTime = value.deletionTime;
+
+                    if(deletionTime == 0) {
+                        // the process did not delete node,
+                        // but another process might have
+                        return;
+                    }
+
+                }
+                if(deletionTime < rqLinearzationTime){
+                    return; // node deleted before RQ
+                }
+            }
+            if(value.key >= low && value.key <= high) {
+                RQResult rqResult = new RQResult(value.key, value.value);
+                if(rqSource == RQSource.LimboList) {
+                    rqResult.wasDeletedDuringRangeQuery = true;
+                }
+
+                threadsData[threadId].result[threadsData[threadId].resultSize] = rqResult;
+                threadsData[threadId].resultSize++;
+            }
+        }
+
+        private void physicalDeletionSucceeded(int threadId, KeyValuePair deletedKey) {
+
+            retire(threadId,deletedKey);
+            // ensure nodes are placed in the epoch bag BEFORE they are removed from announcements.
+            this.threadsData[threadId].rqAnnouncementsSize--;
+        }
+
+        private void retire(int threadId, KeyValuePair value) {
+            ThreadData currentThreadData = this.threadsData[threadId];
+
+            currentThreadData.limboList[currentThreadData.limboListCurrentIndex] = value;
+            int nextIndex = currentThreadData.limboListCurrentIndex+1;
+            currentThreadData.limboListCurrentIndex = nextIndex%LIMBOLIST_SIZE;
+
+            retire(threadId, value);
+        }
+
+        class RQResult {
+            RQResult(int key, int value) {
+                this.key = key;
+                this.value = value;
+            }
+            int key;
+            int value;
+
+            public boolean wasDeletedDuringRangeQuery = false;
+        }
+
+    public int find(int key) {
+
+        PathInfo pathInfo = new PathInfo();
+        Result searchResult = search(key, null, pathInfo);
+
+        if(searchResult.getReturnCode() != ReturnCode.SUCCESS){
+            return NULL;
+        }
+
+        Node leaf = pathInfo.n;
+        Result searchLeafResult = searchLeaf(leaf, key);
+
+        return searchLeafResult.getValue();
     }
 
-    @Override
-    public boolean remove(int data) {
-        tryDelete(data);
-        return false;
+
+    public int tryInsert(int key, int value) {
+        PathInfo pathInfo = new PathInfo();
+        while (true) {
+            Result searchResult = search(key,null,pathInfo);
+            if(searchResult.getReturnCode() == ReturnCode.SUCCESS){
+                return searchResult.getValue();
+            }
+
+            Result insertResult = insert(pathInfo,key,value);
+
+            ReturnCode insertReturnCode = insertResult.getReturnCode();
+            if (insertReturnCode == ReturnCode.SUCCESS || insertReturnCode == ReturnCode.FAILURE) {
+                return insertResult.getValue();
+            }
+
+        }
     }
 
-    @Override
-    public int[] scan(int low, int high) {
+    public int tryDelete(int key) {
+        PathInfo pathInfo = new PathInfo();
+        while (true) {
+            Result searchResult = search(key, null, pathInfo);
+
+            if(searchResult.getReturnCode() == ReturnCode.FAILURE){
+                return NULL;
+            }
+
+            Result deleteResult = delete(pathInfo, key);
+
+            if(deleteResult.getReturnCode() == ReturnCode.SUCCESS || deleteResult.getReturnCode() == ReturnCode.FAILURE){
+                return deleteResult.getValue();
+            }
+        }
+    }
+
+    public int scan(int[] result, int low, int high) {
         int threadId=((int) Thread.currentThread().getId());
-        this.rqProvider.traversalStart(threadId,low,high,entry);
-        var result=this.rqProvider.traversalEnd(threadId);
-        return new int[0];
+        this.traversalStart(threadId,low,high,entry);
+        RQResult[] rqResult = null;
+        var numberOfScannedKeys=traversalEnd(threadId,rqResult);
+        return numberOfScannedKeys;
     }
 }

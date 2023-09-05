@@ -1,3 +1,5 @@
+import abstractions.Set;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.OptionalDouble;
@@ -10,7 +12,7 @@ public class MppRunner {
 
         int dataRange = 10000;
         int numberOfThreads = 12;
-        int numberOfScanThreads = 5;
+        int numberOfScanThreads = 3;
         int a = 2;
         int b = 16;
         int numberOfTests = 5;
@@ -29,7 +31,7 @@ public class MppRunner {
         System.out.println("Starting....");
         for (int i = 0; i < numberOfTests; i++) {
 
-            Set concurrentSet = new OCCABTree(a, b, numberOfThreads);
+            Set concurrentSet = new MTASet();
             TestSet.seed(concurrentSet, dataRange, dataRange / 2);
             concurrentSet.remove(10);
             concurrentSet.add(10,666);
@@ -52,14 +54,13 @@ public class MppRunner {
             System.out.println("Total adds:               " + testResult.TotalAdds.longValue());
             System.out.println("Total removes:            " + testResult.TotalRemoves.longValue());
             System.out.println("Total contains:           " + testResult.TotalContains.longValue());
-            System.out.println("Total range query:        " + testResult.TotalScans.longValue());
+            System.out.println("Number of scanned keys:   " + testResult.numberOfScannedKeys.longValue());
             System.out.println("Adds/\u33B2:                  " + testResult.TotalAdds.doubleValue() / (timeElapsedMicroseconds));
             System.out.println("Removes/\u33B2:               " + testResult.TotalRemoves.doubleValue() / (timeElapsedMicroseconds));
             System.out.println("Contains/\u33B2:              " + testResult.TotalContains.doubleValue() / (timeElapsedMicroseconds));
-            System.out.println("range query/\u33B2:           " + testResult.TotalScans.doubleValue() / (timeElapsedMicroseconds));
-            System.out.println("All Threads:                  " + numberOfThreads);
-            System.out.println("Scan Threads:                  " + numberOfScanThreads);
-            System.out.println("Non Scan Threads:              " + (numberOfThreads-numberOfScanThreads));
+            System.out.println("Total Threads:            " + numberOfThreads);
+            System.out.println("Scan Threads:             " + numberOfScanThreads);
+            System.out.println("Non Scan Threads:         " + (numberOfThreads-numberOfScanThreads));
             System.out.println("Total time:               " + timeElapsed + " milliseconds");
             // numberOfThreads++;
             if (i > 1) {

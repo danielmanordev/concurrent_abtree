@@ -1,6 +1,6 @@
-public class KvInfo implements Comparable<KvInfo> {
+public class KeyValuePair implements Comparable<KeyValuePair> {
 
-    public KvInfo(int key, int value, long insertionTime, long deletionTime) {
+    public KeyValuePair(int key, int value, long insertionTime, long deletionTime) {
         this.key = key;
         this.value = value;
         this.insertionTime = insertionTime;
@@ -12,7 +12,7 @@ public class KvInfo implements Comparable<KvInfo> {
     public long deletionTime;
 
     @Override
-    public int compareTo(KvInfo o) {
+    public int compareTo(KeyValuePair o) {
         return Integer.compare(this.key, o.key);
     }
 }

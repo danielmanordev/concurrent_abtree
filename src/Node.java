@@ -1,5 +1,5 @@
-import Locks.Lock;
-import Locks.MCSLock;
+import abstractions.Lock;
+import locks.MCSLock;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -20,7 +20,7 @@ public class Node {
         this.size = size;
         this.searchKey = searchKey;
         this.keys = new int[maxNodeSize];
-        this.values = new KvInfo[maxNodeSize];
+        this.values = new KeyValuePair[maxNodeSize];
         this.nodes = new Node[maxNodeSize];
 
     }
@@ -28,10 +28,8 @@ public class Node {
     public int size;
     public int[] keys;
     public AtomicInteger ver = new AtomicInteger(0);
-    public KvInfo[] values;
+    public KeyValuePair[] values;
     public Node[] nodes;
-    //public long[] insertionTimes;
-    //public long[] deletionTimes;
     public int searchKey;
 
     public Lock lock = new MCSLock();
