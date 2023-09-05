@@ -848,7 +848,7 @@ public class OCCABTree {
             // deletedKey.deletionTime = TIMESTAMP;
             deletedKey.deletionTime = TIMESTAMP.get();
             int threadId = (int) Thread.currentThread().getId();
-
+            initThread(threadId);
             announcePhysicalDeletion(threadId ,deletedKey);
 
             leaf.keys[kvIndex] = 0;
@@ -1053,7 +1053,6 @@ public class OCCABTree {
             int nextIndex = currentThreadData.limboListCurrentIndex+1;
             currentThreadData.limboListCurrentIndex = nextIndex%LIMBOLIST_SIZE;
 
-            retire(threadId, value);
         }
 
         class RQResult {

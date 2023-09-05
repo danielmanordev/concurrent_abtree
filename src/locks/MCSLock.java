@@ -44,10 +44,6 @@ public class MCSLock implements Lock {
        qnode.next = null;
     }
 
-    @Override
-    public Condition newCondition() {
-        return null;
-    }
 
 
     class QNode {

@@ -1,8 +1,8 @@
 public class ThreadData {
-    private int limboListSize;
 
     public ThreadData(int limboListSize) {
-        this.limboListSize = limboListSize;
+
+        this.limboList = new KeyValuePair[limboListSize];
     }
 
     int rqLow;
@@ -16,6 +16,6 @@ public class ThreadData {
     OCCABTree.RQResult[] result;
     int resultSize=0;
 
-    public KeyValuePair[] limboList = new KeyValuePair[limboListSize];
+    public KeyValuePair[] limboList;
     public int limboListCurrentIndex;
 }
