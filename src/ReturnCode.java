@@ -1,5 +1,3 @@
-
-
 enum ReturnCode {
     SUCCESS,
     FAILURE,
@@ -7,7 +5,3 @@ enum ReturnCode {
     UNNECCESSARY,
     NO_VALUE
 }
-
-
-
-

@@ -11,7 +11,7 @@ public class Node {
     public Node right;
 
     public boolean isTagged = false;
-    private boolean isEntry = false;
+    private final boolean isEntry = false;
 
     private boolean weight = false;
 
