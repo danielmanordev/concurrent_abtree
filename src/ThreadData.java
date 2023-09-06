@@ -2,7 +2,7 @@ public class ThreadData {
 
     public ThreadData(int limboListSize) {
 
-        this.limboList = new KeyValuePair[limboListSize];
+        this.limboList = new ValueCell[limboListSize];
     }
 
     int rqLow;
@@ -10,12 +10,12 @@ public class ThreadData {
 
     long rqLinearzationTime;
 
-    KeyValuePair[] rqAnnouncements = new KeyValuePair[100];
+    ValueCell[] rqAnnouncements = new ValueCell[100];
     int rqAnnouncementsSize=0;
 
-    OCCABTree.RQResult[] result;
+    KeyValue[] result;
     int resultSize=0;
 
-    public KeyValuePair[] limboList;
+    public ValueCell[] limboList;
     public int limboListCurrentIndex;
 }

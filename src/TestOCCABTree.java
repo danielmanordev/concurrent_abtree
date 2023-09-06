@@ -52,8 +52,7 @@ class TestSet extends Thread
                     else {
                         //prints.add(randomInt +  " was NOT removed");
                     }*/
-                     int[] result=null;
-                     int scannedKeys = set.getRange(result,this.low,this.high);
+                     int scannedKeys = set.getRange(new int[this.high-this.low+1],this.low,this.high);
                      numberOfScannedKeys=numberOfScannedKeys.add(BigInteger.valueOf(scannedKeys));
 
                 } else {

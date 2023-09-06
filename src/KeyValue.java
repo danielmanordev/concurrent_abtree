@@ -1,11 +1,11 @@
 public class KeyValue {
 
     public int key;
-    public KeyValuePair value;
+    public ValueCell value;
 
     public Node node;
 
-    KeyValue(int key, KeyValuePair value){
+    KeyValue(int key, ValueCell value){
         this.key = key;
         this.value = value;
 
@@ -20,7 +20,7 @@ public class KeyValue {
         return this.key;
     }
 
-    public KeyValuePair getValue(){
+    public ValueCell getValue(){
         return this.value;
     }
 

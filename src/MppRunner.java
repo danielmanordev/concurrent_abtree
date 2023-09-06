@@ -11,8 +11,8 @@ public class MppRunner {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
 
         int dataRange = 10000;
-        int numberOfThreads = 6;
-        int numberOfScanThreads = 0;
+        int numberOfThreads = 12;
+        int numberOfScanThreads = 4;
         int a = 2;
         int b = 16;
         int numberOfTests = 5;
@@ -38,7 +38,8 @@ public class MppRunner {
             concurrentSet.remove(10);
          //   concurrentSet.scan(1,200);
 
-            // concurrentSet.scan(1,500);
+            int[] res = new int[500];
+            concurrentSet.getRange(res,1,500);
             //nteger.parseInt(args[1]);
 
             long start = System.currentTimeMillis();

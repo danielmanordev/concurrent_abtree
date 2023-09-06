@@ -62,7 +62,7 @@ public class OCCABTree {
                 if (node.keys[i] == NULL) {
                     int oldVersion = node.ver.get();
                     node.ver.set(oldVersion+1);
-                    updateInsert(node,i,new KeyValuePair(key,value,0,0));
+                    updateInsert(node,i,new ValueCell(key,value,0,0));
                     // node.keys[i] = key;
                     // node.values[i] = value;
                     // node.insertionTimes[i] = TIMESTAMP;
@@ -96,7 +96,7 @@ public class OCCABTree {
                 }
 
             }
-            keyValues[k] = new KeyValue(key, new KeyValuePair(key,value,TIMESTAMP.get(),0));
+            keyValues[k] = new KeyValue(key, new ValueCell(key,value,TIMESTAMP.get(),0));
             ++k;
 
             Arrays.sort(keyValues, new SortKeyValues());
@@ -349,7 +349,7 @@ public class OCCABTree {
 
     KeyIndexValueVersionResult getKeyIndexValueVersion(Node node, int key) {
         int keyIndex;
-        KeyValuePair value;
+        ValueCell value;
         int version;
 
         do {
@@ -821,7 +821,7 @@ public class OCCABTree {
                 continue;
             }
 
-            KeyValuePair value =null;
+            ValueCell value =null;
             for (int keyIndex = 0; keyIndex < this.maxNodeSize - 1; keyIndex++) {
                 if (leaf.keys[keyIndex] == key) {
                     value = leaf.values[keyIndex];
@@ -843,7 +843,7 @@ public class OCCABTree {
 
        /* Range query */
 
-        public Node updateDelete(Node leaf, int kvIndex, KeyValuePair deletedKey) {
+        public Node updateDelete(Node leaf, int kvIndex, ValueCell deletedKey) {
 
             // deletedKey.deletionTime = TIMESTAMP;
             deletedKey.deletionTime = TIMESTAMP.get();
@@ -861,7 +861,7 @@ public class OCCABTree {
 
 
 
-        public Node updateInsert(Node leaf, int kvIndex, KeyValuePair instertedKv) {
+        public Node updateInsert(Node leaf, int kvIndex, ValueCell instertedKv) {
 
             // instertedKv.insertionTime = TIMESTAMP;
 
@@ -880,7 +880,7 @@ public class OCCABTree {
         public void traversalStart(int threadId, int low, int high, Node entry) {
             initThread(threadId);
             this.threadsData[threadId].resultSize=0;
-            this.threadsData[threadId].result = new RQResult[(high-low)+1];
+            this.threadsData[threadId].result = new KeyValue[(high-low)+1];
             this.threadsData[threadId].rqLinearzationTime = TIMESTAMP.incrementAndGet();
             this.threadsData[threadId].rqLow = low;
             this.threadsData[threadId].rqHigh = high;
@@ -909,7 +909,7 @@ public class OCCABTree {
             boolean continueToNextNode=true;
             while(true){
                 for(int i=0;i<this.maxNodeSize;i++) {
-                    KeyValuePair value = leftNode.values[i];
+                    ValueCell value = leftNode.values[i];
                     if(value == null){
                         continue;
                     }
@@ -941,7 +941,7 @@ public class OCCABTree {
             }
         }
 
-        public void announcePhysicalDeletion(int threadId, KeyValuePair deletedKey) {
+        public void announcePhysicalDeletion(int threadId, ValueCell deletedKey) {
             initThread(threadId);
             this.threadsData[threadId].rqAnnouncements[threadsData[threadId].rqAnnouncementsSize] = deletedKey;
             threadsData[threadId].rqAnnouncementsSize++;
@@ -949,11 +949,11 @@ public class OCCABTree {
 
 
 
-        public void visit(int threadId, KeyValuePair value){
+        public void visit(int threadId, ValueCell value){
             tryAdd(threadId, value, null, RQSource.DataStructure);
         }
 
-        public int traversalEnd(int threadId, RQResult result[]){
+        public int traversalEnd(int threadId, int[] result){
 
             for(int i = 0; i<this.threadsDataSize; i++) {
                 if(threadsInit[i]==0){
@@ -961,7 +961,7 @@ public class OCCABTree {
                 }
                 for(int j=0;j<this.threadsData[i].rqAnnouncementsSize;j++)
                 {
-                    KeyValuePair announcement = threadsData[i].rqAnnouncements[j];
+                    ValueCell announcement = threadsData[i].rqAnnouncements[j];
                     tryAdd(threadId,announcement, announcement, RQSource.Announcement);
                 }
 
@@ -975,7 +975,7 @@ public class OCCABTree {
                 if(threadsInit[j] == 0){
                     continue;
                 }
-                KeyValuePair[] limboList=threadsData[j].limboList;
+                ValueCell[] limboList=threadsData[j].limboList;
                 for(int i=0;i<LIMBOLIST_SIZE;i++){
                     if(limboList[i] == null){
                         break;
@@ -983,12 +983,24 @@ public class OCCABTree {
                     tryAdd(threadId, limboList[i], null, RQSource.LimboList);
                 }
             }
-            result = new RQResult[2];//this.rqThreadData[threadId].result;
+            Arrays.sort(this.threadsData[threadId].result, new SortKeyValues());
+
+            int rangeSize=this.threadsData[threadId].rqHigh-this.threadsData[threadId].rqLow;
+            for(int i=0;i<rangeSize;i++)
+            {
+                if(this.threadsData[threadId].result[i] == null)
+                {
+                    result[i] = 0;
+                    continue;
+                }
+                result[i] = this.threadsData[threadId].result[i].getValue().value;
+            }
+
             return this.threadsData[threadId].resultSize;
         }
 
 
-        private void tryAdd(int threadId, KeyValuePair value, KeyValuePair announcedValue, RQSource rqSource) {
+        private void tryAdd(int threadId, ValueCell value, ValueCell announcedValue, RQSource rqSource) {
             int low = threadsData[threadId].rqLow;
             int high = threadsData[threadId].rqHigh;
             long rqLinearzationTime = threadsData[threadId].rqLinearzationTime;
@@ -1029,24 +1041,27 @@ public class OCCABTree {
                 }
             }
             if(value.key >= low && value.key <= high) {
-                RQResult rqResult = new RQResult(value.key, value.value);
-                if(rqSource == RQSource.LimboList) {
-                    rqResult.wasDeletedDuringRangeQuery = true;
-                }
+                KeyValue result = new KeyValue(value.key, value);
 
-                threadsData[threadId].result[threadsData[threadId].resultSize] = rqResult;
+                /*if(rqSource == RQSource.LimboList) {
+                    rqResult.wasDeletedDuringRangeQuery = true;
+                }*/
+
+                threadsData[threadId].result[threadsData[threadId].resultSize] = result;
                 threadsData[threadId].resultSize++;
             }
         }
 
-        private void physicalDeletionSucceeded(int threadId, KeyValuePair deletedKey) {
+
+
+        private void physicalDeletionSucceeded(int threadId, ValueCell deletedKey) {
 
             retire(threadId,deletedKey);
             // ensure nodes are placed in the epoch bag BEFORE they are removed from announcements.
             this.threadsData[threadId].rqAnnouncementsSize--;
         }
 
-        private void retire(int threadId, KeyValuePair value) {
+        private void retire(int threadId, ValueCell value) {
             ThreadData currentThreadData = this.threadsData[threadId];
 
             currentThreadData.limboList[currentThreadData.limboListCurrentIndex] = value;
@@ -1120,8 +1135,8 @@ public class OCCABTree {
     public int scan(int[] result, int low, int high) {
         int threadId=((int) Thread.currentThread().getId());
         this.traversalStart(threadId,low,high,entry);
-        RQResult[] rqResult = null;
-        var numberOfScannedKeys=traversalEnd(threadId,rqResult);
+
+        var numberOfScannedKeys=traversalEnd(threadId,result);
         return numberOfScannedKeys;
     }
 }

@@ -20,7 +20,7 @@ public class Node {
         this.size = size;
         this.searchKey = searchKey;
         this.keys = new int[maxNodeSize];
-        this.values = new KeyValuePair[maxNodeSize];
+        this.values = new ValueCell[maxNodeSize];
         this.nodes = new Node[maxNodeSize];
 
     }
@@ -28,7 +28,7 @@ public class Node {
     public int size;
     public int[] keys;
     public AtomicInteger ver = new AtomicInteger(0);
-    public KeyValuePair[] values;
+    public ValueCell[] values;
     public Node[] nodes;
     public int searchKey;
 

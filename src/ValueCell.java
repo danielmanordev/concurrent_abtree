@@ -1,6 +1,6 @@
-public class KeyValuePair implements Comparable<KeyValuePair> {
+public class ValueCell implements Comparable<ValueCell> {
 
-    public KeyValuePair(int key, int value, long insertionTime, long deletionTime) {
+    public ValueCell(int key, int value, long insertionTime, long deletionTime) {
         this.key = key;
         this.value = value;
         this.insertionTime = insertionTime;
@@ -12,7 +12,7 @@ public class KeyValuePair implements Comparable<KeyValuePair> {
     public long deletionTime;
 
     @Override
-    public int compareTo(KeyValuePair o) {
+    public int compareTo(ValueCell o) {
         return Integer.compare(this.key, o.key);
     }
 }
