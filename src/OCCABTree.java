@@ -1,3 +1,4 @@
+
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -1041,6 +1042,11 @@ public class OCCABTree {
 
                 /*if(rqSource == RQSource.LimboList) {
                     rqResult.wasDeletedDuringRangeQuery = true;
+                }*/
+
+                /*if(threadsData[threadId].resultSize == 200){
+                    System.out.println("trouble");
+                    Arrays.sort(threadsData[threadId].result,new SortKeyValues());
                 }*/
 
                 threadsData[threadId].result[threadsData[threadId].resultSize] = result;
