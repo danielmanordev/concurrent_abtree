@@ -7,7 +7,7 @@ public class OCCABTree {
 
     /* Constants */
     private final int NULL = 0;
-    private final int LIMBOLIST_SIZE = 10000;
+    private final int LIMBOLIST_SIZE = 1000;
 
     private Node entry;
 
@@ -392,7 +392,7 @@ public class OCCABTree {
            if(node.keys[i] == key) {
                deletedValue = node.values[i].value;
                int oldVersion = node.ver.get();
-               node.ver.set(oldVersion);
+               node.ver.set(oldVersion+1);
                updateDelete(node,i, node.values[i]);
                //node.keys[i] = 0;
                //node.values[i] = 0;
@@ -879,7 +879,8 @@ public class OCCABTree {
         public void traversalStart(int threadId, int low, int high, Node entry) {
             initThread(threadId);
             this.threadsData[threadId].resultSize=0;
-            this.threadsData[threadId].result = new KeyValue[(high-low)+1];
+            this.threadsData[threadId].result = new ValueCell[(high-low)+1];
+            this.threadsData[threadId].vc_hashset.clear();
             this.threadsData[threadId].rqLinearzationTime = TIMESTAMP.incrementAndGet();
             this.threadsData[threadId].rqLow = low;
             this.threadsData[threadId].rqHigh = high;
@@ -980,7 +981,7 @@ public class OCCABTree {
                     tryAdd(threadId, limboList[i], null, RQSource.LimboList);
                 }
             }
-            Arrays.sort(this.threadsData[threadId].result, new SortKeyValues());
+            Arrays.sort(this.threadsData[threadId].result, new SortValueCells());
 
             int rangeSize=this.threadsData[threadId].rqHigh-this.threadsData[threadId].rqLow;
             for(int i=0;i<rangeSize;i++)
@@ -990,7 +991,7 @@ public class OCCABTree {
                     result[i] = 0;
                     continue;
                 }
-                result[i] = this.threadsData[threadId].result[i].getValue().value;
+                result[i] = this.threadsData[threadId].result[i].value;
             }
 
             return this.threadsData[threadId].resultSize;
@@ -1014,6 +1015,7 @@ public class OCCABTree {
                 if(value.deletionTime < rqLinearzationTime){
                     return; // node deleted before RQ
                 }
+
             }
             else if(rqSource == RQSource.Announcement) {
                 long deletionTime=0;
@@ -1038,19 +1040,24 @@ public class OCCABTree {
                 }
             }
             if(value.key >= low && value.key <= high) {
-                KeyValue result = new KeyValue(value.key, value);
 
                 /*if(rqSource == RQSource.LimboList) {
                     rqResult.wasDeletedDuringRangeQuery = true;
                 }*/
 
                 /*if(threadsData[threadId].resultSize == 200){
-                    System.out.println("trouble");
-                    Arrays.sort(threadsData[threadId].result,new SortKeyValues());
-                }*/
 
-                threadsData[threadId].result[threadsData[threadId].resultSize] = result;
-                threadsData[threadId].resultSize++;
+                    Arrays.sort(threadsData[threadId].result,new SortKeyValues());
+                    System.out.println("trouble");
+                }*/
+                if(rqSource == RQSource.LimboList){
+                    if(threadsData[threadId].vc_hashset.contains(value))
+                    {
+                        return;
+                    }
+                }
+                threadsData[threadId].vc_hashset.add(value);
+                threadsData[threadId].result[threadsData[threadId].resultSize++] = value;
             }
         }
 

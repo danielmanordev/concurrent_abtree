@@ -1,3 +1,5 @@
+import java.util.HashSet;
+
 public class ThreadData {
 
     public ThreadData(int limboListSize) {
@@ -5,17 +7,19 @@ public class ThreadData {
         this.limboList = new ValueCell[limboListSize];
     }
 
-    int rqLow;
-    int rqHigh;
+    public int rqLow;
+    public int rqHigh;
 
-    long rqLinearzationTime;
+    public long rqLinearzationTime;
 
-    ValueCell[] rqAnnouncements = new ValueCell[100];
-    int rqAnnouncementsSize=0;
+    public ValueCell[] rqAnnouncements = new ValueCell[100];
+    public int rqAnnouncementsSize=0;
 
-    KeyValue[] result;
-    int resultSize=0;
+    public ValueCell[] result;
+    public int resultSize=0;
 
     public ValueCell[] limboList;
     public int limboListCurrentIndex;
+    public HashSet<ValueCell> vc_hashset = new HashSet<>();
+
 }

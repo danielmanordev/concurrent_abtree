@@ -36,11 +36,7 @@ public class MppRunner {
             concurrentSet.remove(10);
             concurrentSet.add(10,666);
             concurrentSet.remove(10);
-         //   concurrentSet.scan(1,200);
 
-            int[] res = new int[500];
-            concurrentSet.getRange(res,1,500);
-            //nteger.parseInt(args[1]);
 
             long start = System.currentTimeMillis();
             TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, numberOfScanThreads ,dataRange, perContains, perAdd,1,200,testDuration);
