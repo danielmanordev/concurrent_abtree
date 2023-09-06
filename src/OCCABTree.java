@@ -15,8 +15,7 @@ public class OCCABTree {
 
     private final ThreadData[] threadsData;
     private final int threadsDataSize;
-    private final int[] threadsInit;
-    private int threadsInitSize=0;
+
 
     public  AtomicInteger TIMESTAMP = new AtomicInteger(1);
 
@@ -29,7 +28,6 @@ public class OCCABTree {
         entry.nodes[0] = entryLeft;
 
         this.threadsDataSize = (int)Math.pow(numberOfThreads+20,2);
-        this.threadsInit = new int[threadsDataSize];
         this.threadsData = new ThreadData[threadsDataSize];
 
     }
@@ -935,9 +933,8 @@ public class OCCABTree {
         }
 
         private void initThread(int threadId) {
-            if(this.threadsInit[threadId] == 0){
+            if(this.threadsData[threadId] == null){
                 this.threadsData[threadId] = new ThreadData(LIMBOLIST_SIZE);
-                this.threadsInit[threadId] = 1;
             }
         }
 
@@ -956,7 +953,7 @@ public class OCCABTree {
         public int traversalEnd(int threadId, int[] result){
 
             for(int i = 0; i<this.threadsDataSize; i++) {
-                if(threadsInit[i]==0){
+                if(threadsData[i]==null){
                     continue;
                 }
                 for(int j=0;j<this.threadsData[i].rqAnnouncementsSize;j++)
@@ -970,9 +967,8 @@ public class OCCABTree {
             // Collect pointers to all limbo lists
             // Traverse limbo lists
 
-            int numberOfThreadIds = this.threadsInitSize;
-            for(int j=0;j<numberOfThreadIds;j++) {
-                if(threadsInit[j] == 0){
+            for(int j=0;j<this.threadsDataSize;j++) {
+                if(threadsData[j] == null){
                     continue;
                 }
                 ValueCell[] limboList=threadsData[j].limboList;
