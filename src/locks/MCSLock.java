@@ -3,7 +3,6 @@ package locks;
 import abstractions.Lock;
 
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Condition;
 
 public class MCSLock implements Lock {
     AtomicReference<QNode> tail;

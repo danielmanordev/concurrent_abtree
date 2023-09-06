@@ -11,14 +11,14 @@ public class MppRunner {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
 
         int dataRange = 10000;
-        int numberOfThreads = 12;
+        int numberOfThreads = 8;
         int numberOfScanThreads = 4;
         int a = 2;
         int b = 16;
-        int numberOfTests = 5;
+        int numberOfTests = 20;
         int testDuration=10000;
-        int perAdd=80;
-        int perContains=0;
+        int perAdd=70;
+        int perContains=10;
         int perRemove=20;
         /// int perRange=100-perAdd-perContains-perRemove;
         ArrayList<Long> adds = new ArrayList();

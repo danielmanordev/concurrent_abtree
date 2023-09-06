@@ -360,7 +360,7 @@ public class OCCABTree {
             }
             value = keyIndex < this.maxNodeSize ? node.values[keyIndex] : null;
         } while (node.ver.get() != version);
-        return value == null ? new KeyIndexValueVersionResult(NULL,NULL,NULL,ReturnCode.FAILURE) : new KeyIndexValueVersionResult(value.value,keyIndex,version,ReturnCode.SUCCESS);
+        return value == null ? new KeyIndexValueVersionResult(NULL,NULL,ReturnCode.FAILURE) : new KeyIndexValueVersionResult(value.value,version,ReturnCode.SUCCESS);
 
     }
 
