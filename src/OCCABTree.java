@@ -1050,12 +1050,13 @@ public class OCCABTree {
                     Arrays.sort(threadsData[threadId].result,new SortKeyValues());
                     System.out.println("trouble");
                 }*/
-                if(rqSource == RQSource.LimboList){
+                if(rqSource == RQSource.LimboList || rqSource == RQSource.Announcement){
                     if(threadsData[threadId].vc_hashset.contains(value))
                     {
                         return;
                     }
                 }
+
                 threadsData[threadId].vc_hashset.add(value);
                 threadsData[threadId].result[threadsData[threadId].resultSize++] = value;
             }
