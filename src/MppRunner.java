@@ -11,8 +11,8 @@ public class MppRunner {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
 
         int dataRange = 1000000;
-        int numberOfThreads = 12;
-        int numberOfScanThreads = 1;
+        int numberOfThreads = 40;
+        int numberOfScanThreads = Integer.parseInt(args[0]);
         int a = 2;
         int b = 16;
         int numberOfTests = 20;
