@@ -10,9 +10,9 @@ public class MppRunner {
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
 
-        int dataRange = 10000;
+        int dataRange = 1000000;
         int numberOfThreads = 12;
-        int numberOfScanThreads = 6;
+        int numberOfScanThreads = 1;
         int a = 2;
         int b = 16;
         int numberOfTests = 20;
@@ -24,6 +24,7 @@ public class MppRunner {
         ArrayList<Long> adds = new ArrayList();
         System.out.println("Number of available processors: "+availableProcessors);
         System.out.println("Number of tests: "+numberOfTests);
+        System.out.println("Dataset Size: "+dataRange+" keys");
         System.out.println("Single test duration: "+testDuration+ " ms");
         System.out.println("insert: "+perAdd+"%");
         System.out.println("remove: "+perRemove+"%");
