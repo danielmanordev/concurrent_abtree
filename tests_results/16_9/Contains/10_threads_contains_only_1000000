@@ -1,0 +1,72 @@
+Number of available processors: 96
+Number of tests: 4
+Dataset Size: 1000000 keys
+Single test duration: 10000 ms
+insert: 0%
+remove: 0%
+contains: 100%
+Starting....
+
+TEST 1/4 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               0
+Total removes:            0
+Total contains:           518287355
+Number of scanned keys:   0
+Adds/㎲:                  0.0
+Removes/㎲:               0.0
+Contains/㎲:              51.80283408295852
+Total Threads:            10
+Scan Threads:             0
+Non Scan Threads:         10
+Total time:               10005 milliseconds
+
+TEST 2/4 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               0
+Total removes:            0
+Total contains:           477903644
+Number of scanned keys:   0
+Adds/㎲:                  0.0
+Removes/㎲:               0.0
+Contains/㎲:              47.78558584141586
+Total Threads:            10
+Scan Threads:             0
+Non Scan Threads:         10
+Total time:               10001 milliseconds
+
+TEST 3/4 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               0
+Total removes:            0
+Total contains:           445403162
+Number of scanned keys:   0
+Adds/㎲:                  0.0
+Removes/㎲:               0.0
+Contains/㎲:              44.53586261373863
+Total Threads:            10
+Scan Threads:             0
+Non Scan Threads:         10
+Total time:               10001 milliseconds
+
+TEST 4/4 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               0
+Total removes:            0
+Total contains:           387627667
+Number of scanned keys:   0
+Adds/㎲:                  0.0
+Removes/㎲:               0.0
+Contains/㎲:              38.74339500249875
+Total Threads:            10
+Scan Threads:             0
+Non Scan Threads:         10
+Total time:               10005 milliseconds

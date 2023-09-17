@@ -15,7 +15,7 @@ public class MppRunner {
         int numberOfScanThreads = 0;//Integer.parseInt(args[0]);
         int a = 2;
         int b = 16;
-        int numberOfTests = 12;
+        int numberOfTests = 4;
         int testDuration=10000;
         int perAdd=0;
         int perContains=100;

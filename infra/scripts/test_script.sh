@@ -1,8 +1,8 @@
 #!/bin/bash
-for i in {1..16}
+for i in {1..40}
 do
    echo "Starting test #${i}"
-   let numOfNonScanThreads=40-$i
-   fileName=${numOfNonScanThreads}_${i}_80_20_1000000
+
+   fileName=${i}_threads_contains_only_1000000
    java MppRunner "$i" > $fileName
 done

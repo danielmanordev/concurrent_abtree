@@ -1,0 +1,328 @@
+Number of available processors: 96
+Number of tests: 20
+Dataset Size: 1000000 keys
+Single test duration: 10000 ms
+insert: 80%
+remove: 20%
+contains: 0%
+Starting....
+
+TEST 1/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               250802449
+Total removes:            62685065
+Total contains:           0
+Number of scanned keys:   885632000
+Adds/㎲:                  24.97534843656642
+Removes/㎲:               6.242288886675961
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10042 milliseconds
+
+TEST 2/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               342745206
+Total removes:            85679159
+Total contains:           0
+Number of scanned keys:   887584000
+Adds/㎲:                  34.25739190404798
+Removes/㎲:               8.56363408295852
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10005 milliseconds
+
+TEST 3/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               366600751
+Total removes:            91624799
+Total contains:           0
+Number of scanned keys:   931328000
+Adds/㎲:                  36.64908037588723
+Removes/㎲:               9.159731980405878
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10003 milliseconds
+
+TEST 4/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               355615205
+Total removes:            88910979
+Total contains:           0
+Number of scanned keys:   911136000
+Adds/㎲:                  35.54730157936825
+Removes/㎲:               8.887542882846862
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10004 milliseconds
+
+TEST 5/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               353462205
+Total removes:            88356168
+Total contains:           0
+Number of scanned keys:   869920000
+Adds/㎲:                  35.33208766493403
+Removes/㎲:               8.832083966413435
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10004 milliseconds
+
+TEST 6/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               361868667
+Total removes:            90472638
+Total contains:           0
+Number of scanned keys:   862080000
+Adds/㎲:                  36.17239774090364
+Removes/㎲:               9.043646341463415
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10004 milliseconds
+
+TEST 7/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               343465775
+Total removes:            85861005
+Total contains:           0
+Number of scanned keys:   843424000
+Adds/㎲:                  34.3294127936032
+Removes/㎲:               8.5818095952024
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10005 milliseconds
+
+TEST 8/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               352182210
+Total removes:            88054143
+Total contains:           0
+Number of scanned keys:   767712000
+Adds/㎲:                  35.204139344262295
+Removes/㎲:               8.801893542582967
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10004 milliseconds
+
+TEST 9/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               358941171
+Total removes:            89734875
+Total contains:           0
+Number of scanned keys:   742464000
+Adds/㎲:                  35.87976519392243
+Removes/㎲:               8.969899540183926
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10004 milliseconds
+
+TEST 10/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               358873165
+Total removes:            89710498
+Total contains:           0
+Number of scanned keys:   714880000
+Adds/㎲:                  35.87296731307477
+Removes/㎲:               8.96746281487405
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10004 milliseconds
+
+TEST 11/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               356183941
+Total removes:            89037918
+Total contains:           0
+Number of scanned keys:   825056000
+Adds/㎲:                  35.60415243902439
+Removes/㎲:               8.900231707317074
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10004 milliseconds
+
+TEST 12/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               357829132
+Total removes:            89459040
+Total contains:           0
+Number of scanned keys:   832800000
+Adds/㎲:                  35.768605757696925
+Removes/㎲:               8.94232706917233
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10004 milliseconds
+
+TEST 13/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               350070916
+Total removes:            87535246
+Total contains:           0
+Number of scanned keys:   799360000
+Adds/㎲:                  34.9930943622551
+Removes/㎲:               8.750024590163935
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10004 milliseconds
+
+TEST 14/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               348876576
+Total removes:            87223317
+Total contains:           0
+Number of scanned keys:   830848000
+Adds/㎲:                  34.87022248875562
+Removes/㎲:               8.717972713643178
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10005 milliseconds
+
+TEST 15/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               358142058
+Total removes:            89531788
+Total contains:           0
+Number of scanned keys:   809984000
+Adds/㎲:                  35.80346476057183
+Removes/㎲:               8.950493651904429
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10003 milliseconds
+
+TEST 16/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               351179615
+Total removes:            87792395
+Total contains:           0
+Number of scanned keys:   719968000
+Adds/㎲:                  35.10391993202719
+Removes/㎲:               8.775729208316672
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10004 milliseconds
+
+TEST 17/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               361288704
+Total removes:            90327133
+Total contains:           0
+Number of scanned keys:   819072000
+Adds/㎲:                  36.114424630147944
+Removes/㎲:               9.029101659336266
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10004 milliseconds
+
+TEST 18/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               337983642
+Total removes:            84503935
+Total contains:           0
+Number of scanned keys:   759616000
+Adds/㎲:                  33.78485025989604
+Removes/㎲:               8.447014694122352
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10004 milliseconds
+
+TEST 19/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               361695845
+Total removes:            90424218
+Total contains:           0
+Number of scanned keys:   804672000
+Adds/㎲:                  36.155122451019594
+Removes/㎲:               9.038806277489005
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10004 milliseconds
+
+TEST 20/20 FINISHED - RESULTS
+*****************************************
+a:                        2
+b:                        16
+Total adds:               352304398
+Total removes:            88077708
+Total contains:           0
+Number of scanned keys:   710176000
+Adds/㎲:                  35.219873837848645
+Removes/㎲:               8.805129261221634
+Contains/㎲:              0.0
+Total Threads:            40
+Scan Threads:             12
+Non Scan Threads:         28
+Total time:               10003 milliseconds
