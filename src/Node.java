@@ -29,12 +29,11 @@ public class Node {
     public int[] keys;
     public AtomicInteger ver = new AtomicInteger(0);
     public ValueCell[] values;
+    public PutData[] putArray = new PutData[400];
     public Node[] nodes;
     public int searchKey;
 
     public Lock lock = new MCSLock();
-    public Lock leafLock = new MCSLock();
-
 
     public boolean isLeaf() {
         return this.isLeaf;

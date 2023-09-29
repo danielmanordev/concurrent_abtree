@@ -47,25 +47,25 @@ public class OCCABTree {
             return new Result(ReturnCode.RETRY);
         }
 
-       for (int i = 0; i < this.maxNodeSize; ++i) {
+       /*for (int i = 0; i < this.maxNodeSize; ++i) {
             if (node.keys[i] == key) {
                 node.unlock();
                 return new Result(ReturnCode.FAILURE);
             }
-        }
+        }*/
 
-        // At this point, we are guaranteed key is not in node
         int currSize = node.size;
         if(currSize < this.maxNodeSize) {
             for (int i = 0; i < this.maxNodeSize; ++i) {
                 if (node.keys[i] == NULL) {
                     int oldVersion = node.ver.get();
                     node.ver.set(oldVersion+1);
-                    updateInsert(node,i,new ValueCell(key,value,0,0));
-                    // node.keys[i] = key;
-                    // node.values[i] = value;
-                    // node.insertionTimes[i] = TIMESTAMP;
-                    // ++node.size;
+                    var vc = new ValueCell(key,value);
+                    node.values[i] = vc;
+                    node.keys[i] = vc.key;
+                    int ts = TIMESTAMP.get();
+                    node.values[i].version.compareAndSet(0,ts);
+                    node.size++;
                     node.ver.set(oldVersion+2);
                     node.unlock();
                     return new Result(value,ReturnCode.SUCCESS);
@@ -95,7 +95,8 @@ public class OCCABTree {
                 }
 
             }
-            keyValues[k] = new KeyValue(key, new ValueCell(key,value,TIMESTAMP.get(),0));
+            keyValues[k] = new KeyValue(key, new ValueCell(key,value));
+            keyValues[k].getValue().version.set(TIMESTAMP.get());
             ++k;
 
             Arrays.sort(keyValues, new SortKeyValues());
@@ -860,21 +861,6 @@ public class OCCABTree {
 
 
 
-        public Node updateInsert(Node leaf, int kvIndex, ValueCell instertedKv) {
-
-            // instertedKv.insertionTime = TIMESTAMP;
-
-            instertedKv.insertionTime = TIMESTAMP.get();
-
-
-            leaf.keys[kvIndex] = instertedKv.key;
-            leaf.values[kvIndex] = instertedKv;
-
-            leaf.size++;
-
-            return leaf;
-        }
-
         // TODO: continue here
         public void traversalStart(int threadId, int low, int high, Node entry) {
             initThread(threadId);
@@ -888,7 +874,7 @@ public class OCCABTree {
             traverseLeafs(threadId,low,high,entry);
 
         }
-
+        // TODO: find latest version of key
         private void traverseLeafs(int threadId, int low, int high, Node entry) {
             PathInfo pathInfo = new PathInfo();
             pathInfo.gp = null;
@@ -909,10 +895,19 @@ public class OCCABTree {
             boolean continueToNextNode=true;
             while(true){
                 for(int i=0;i<this.maxNodeSize;i++) {
-                    ValueCell value = leftNode.values[i];
-                    if(value == null){
+                    int key = leftNode.keys[i];
+                    if(key == 0){
                         continue;
                     }
+                    ValueCell valueCell = leftNode.values[i];
+
+                    if(valueCell.version.get() == 0){
+                        int ts = TIMESTAMP.get();
+                        valueCell.version.compareAndSet(0,ts);
+                        // this key was added after rq was linearized so continue
+                        continue;
+                    }
+
                     if(value.key >= low && value.key <= high && value.insertionTime < TIMESTAMP.get()){
                         visit(threadId, value);
 

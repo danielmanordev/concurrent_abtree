@@ -1,15 +1,17 @@
+import java.util.concurrent.atomic.AtomicInteger;
+
 public class ValueCell implements Comparable<ValueCell> {
 
-    public ValueCell(int key, int value, long insertionTime, long deletionTime) {
+    public ValueCell(int key, int value) {
         this.key = key;
         this.value = value;
-        this.insertionTime = insertionTime;
-        this.deletionTime = deletionTime;
+
     }
     public int key;
     public int value;
     public long insertionTime;
     public long deletionTime;
+    public AtomicInteger version = new AtomicInteger(0);
 
     @Override
     public int compareTo(ValueCell o) {
