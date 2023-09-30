@@ -10,8 +10,8 @@ public class MppRunner {
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
 
-        int dataRange = 1000000;
-        int numberOfThreads = Integer.parseInt(args[0]);
+        int dataRange = 1000;
+        int numberOfThreads = 4;
         int numberOfScanThreads = 0;//Integer.parseInt(args[0]);
         int a = 2;
         int b = 16;
@@ -34,8 +34,16 @@ public class MppRunner {
 
             Set concurrentSet = new MTASet(a,b,numberOfThreads);
             TestSet.seed(concurrentSet, dataRange, dataRange / 2);
-            concurrentSet.remove(10);
+            concurrentSet.remove(11);
             concurrentSet.add(10,666);
+            int jj = concurrentSet.add(10,667);
+            concurrentSet.getRange(new int[16],1,11);
+            int r = concurrentSet.remove(10);
+            int cr = concurrentSet.contains(10);
+            int f= concurrentSet.add(10,111);
+            int cr2 = concurrentSet.contains(10);
+
+
             concurrentSet.remove(10);
 
 

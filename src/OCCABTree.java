@@ -337,7 +337,7 @@ public class OCCABTree {
 
     }
 
-
+    // TODO: find latest
     private Result search(int key, Node targetNode, PathInfo pathInfo) {
         pathInfo.gp = null;
         pathInfo.p = entry;
@@ -373,20 +373,25 @@ public class OCCABTree {
 
 
     KeyIndexValueVersionResult getKeyIndexValueVersion(Node node, int key) {
-        int keyIndex;
+
         ValueCell value;
         int version;
 
         do {
             while (((version = node.ver.get()) & 1) != 0) {}
-            keyIndex = 0;
-            while (keyIndex < this.maxNodeSize && node.keys[keyIndex] != key) {
-                ++keyIndex;
-            }
-            value = keyIndex < this.maxNodeSize ? node.values[keyIndex] : null;
-        } while (node.ver.get() != version);
-        return value == null ? new KeyIndexValueVersionResult(NULL,NULL,ReturnCode.FAILURE) : new KeyIndexValueVersionResult(value.value,version,ReturnCode.SUCCESS);
+            int latestIndex = findLatest(key,Integer.MAX_VALUE,node);
 
+            value = latestIndex != -1 ? node.values[latestIndex] : null;
+        } while (node.ver.get() != version);
+        if(value == null) {
+            return new KeyIndexValueVersionResult(NULL,NULL,ReturnCode.FAILURE);
+        }
+        else if(value.value == NULL){
+            return new KeyIndexValueVersionResult(NULL,NULL,ReturnCode.FAILURE);
+        }
+        else {
+            return new KeyIndexValueVersionResult(value.value,version,ReturnCode.SUCCESS);
+        }
     }
 
 
@@ -811,17 +816,13 @@ public class OCCABTree {
                 continue;
             }
 
-            ValueCell value =null;
-            for (int keyIndex = 0; keyIndex < this.maxNodeSize - 1; keyIndex++) {
-                if (leaf.keys[keyIndex] == key) {
-                    value = leaf.values[keyIndex];
-                    break;
-                }
-            }
+            int latestIndex = findLatest(key,Integer.MAX_VALUE,leaf);
+
             int ver2 = leaf.ver.get();
             if (ver1 != ver2) {
                 continue;
             }
+            ValueCell value = leaf.values[latestIndex];
             if (value == null) {
                 return new Result(NULL, ReturnCode.FAILURE);
             } else {
@@ -882,7 +883,7 @@ public class OCCABTree {
 
                     if(key >= low && key <= high && leftNode.values[i].version.get() <= rqVersionWhenLinearized) {
                         int resultSize = threadsData[threadId].resultSize;
-                        if(key <= threadsData[threadId].result[resultSize-1].key){
+                        if(resultSize > 0 && key <= threadsData[threadId].result[resultSize-1].key){
                             // key was already found by "findLatest"
                             continue;
                         }
@@ -964,7 +965,12 @@ public class OCCABTree {
 
 
             Result searchResult = search(key,null,pathInfo);
+
             if(searchResult.getReturnCode() == ReturnCode.SUCCESS && value != NULL){
+                return searchResult.getValue();
+            }
+
+            if(searchResult.getReturnCode() == ReturnCode.FAILURE && value == NULL){
                 return searchResult.getValue();
             }
 
