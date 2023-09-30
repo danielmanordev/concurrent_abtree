@@ -971,118 +971,11 @@ public class OCCABTree {
 
 
 
-        public void visit(int threadId, ValueCell value){
-            tryAdd(threadId, value, null, RQSource.DataStructure);
-        }
 
         public int traversalEnd(int threadId, int[] result){
 
-            for(int i = 0; i<this.threadsDataSize; i++) {
-                if(threadsData[i]==null){
-                    continue;
-                }
-                for(int j=0;j<this.threadsData[i].rqAnnouncementsSize;j++)
-                {
-                    ValueCell announcement = threadsData[i].rqAnnouncements[j];
-                    tryAdd(threadId,announcement, announcement, RQSource.Announcement);
-                }
-
-            }
-
-            // Collect pointers to all limbo lists
-            // Traverse limbo lists
-
-            for(int j=0;j<this.threadsDataSize;j++) {
-                if(threadsData[j] == null){
-                    continue;
-                }
-                ValueCell[] limboList=threadsData[j].limboList;
-                for(int i=0;i<LIMBOLIST_SIZE;i++){
-                    if(limboList[i] == null){
-                        break;
-                    }
-                    tryAdd(threadId, limboList[i], null, RQSource.LimboList);
-                }
-            }
             Arrays.sort(this.threadsData[threadId].result, new SortValueCells());
-
-            int rangeSize=this.threadsData[threadId].rqHigh-this.threadsData[threadId].rqLow;
-            for(int i=0;i<rangeSize;i++)
-            {
-                if(this.threadsData[threadId].result[i] == null)
-                {
-                    result[i] = 0;
-                    continue;
-                }
-                result[i] = this.threadsData[threadId].result[i].value;
-            }
-
-            return this.threadsData[threadId].resultSize;
-        }
-
-
-        private void tryAdd(int threadId, ValueCell value, ValueCell announcedValue, RQSource rqSource) {
-            int low = threadsData[threadId].rqLow;
-            int high = threadsData[threadId].rqHigh;
-            long rqLinearzationTime = threadsData[threadId].rqLinearzationTime;
-
-            while (value.insertionTime == 0){}
-            if(value.insertionTime >= rqLinearzationTime){
-                return; // node inserted after RQ
-            }
-            if(rqSource == RQSource.DataStructure){
-                // do nothing: node was not deleted when RQ was linearized
-            }
-            else if(rqSource == RQSource.LimboList){
-                while (value.deletionTime == 0) {}
-                if(value.deletionTime < rqLinearzationTime){
-                    return; // node deleted before RQ
-                }
-
-            }
-            else if(rqSource == RQSource.Announcement) {
-                long deletionTime=0;
-                while (deletionTime==0 && value == announcedValue) {
-                    deletionTime= value.deletionTime;
-                }
-
-                if(deletionTime==0){
-                    // loop exited because the process removed this announcement
-                    // if the process deleted node, then it has now set node.dtime
-                    deletionTime = value.deletionTime;
-
-                    if(deletionTime == 0) {
-                        // the process did not delete node,
-                        // but another process might have
-                        return;
-                    }
-
-                }
-                if(deletionTime < rqLinearzationTime){
-                    return; // node deleted before RQ
-                }
-            }
-            if(value.key >= low && value.key <= high) {
-
-                /*if(rqSource == RQSource.LimboList) {
-                    rqResult.wasDeletedDuringRangeQuery = true;
-                }*/
-
-                /*if(threadsData[threadId].resultSize == 200){
-
-                    Arrays.sort(threadsData[threadId].result,new SortKeyValues());
-                    System.out.println("trouble");
-                }*/
-                if(rqSource == RQSource.LimboList || rqSource == RQSource.Announcement){
-                    if(threadsData[threadId].vc_hashset.contains(value))
-                    {
-                        return;
-                    }
-                }
-
-                threadsData[threadId].vc_hashset.add(value);
-                threadsData[threadId].result[threadsData[threadId].resultSize++] = value;
-            }
+            return 0;
         }
 
 
