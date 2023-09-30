@@ -7,8 +7,6 @@ public class OCCABTree {
 
     /* Constants */
     private final int NULL = 0;
-    private final int LIMBOLIST_SIZE = 1000;
-
     private Node entry;
 
     private final int minNodeSize;
@@ -47,32 +45,42 @@ public class OCCABTree {
             return new Result(ReturnCode.RETRY);
         }
 
-       /*for (int i = 0; i < this.maxNodeSize; ++i) {
+       for (int i = 0; i < this.maxNodeSize; ++i) {
             if (node.keys[i] == key) {
+                int latestIndex = findLatest(key,Integer.MAX_VALUE,node);
+
+                if(node.values[latestIndex].value == NULL && value != NULL){
+                    break;
+                }
+                if(node.values[latestIndex].value != NULL && value == NULL){
+                    break;
+                }
+
                 node.unlock();
                 return new Result(ReturnCode.FAILURE);
             }
-        }*/
+        }
 
         int currSize = node.size;
         if(currSize < this.maxNodeSize) {
-            for (int i = 0; i < this.maxNodeSize; ++i) {
-                if (node.keys[i] == NULL) {
-                    int oldVersion = node.ver.get();
-                    node.ver.set(oldVersion+1);
-                    var vc = new ValueCell(key,value);
-                    node.values[i] = vc;
-                    node.keys[i] = vc.key;
-                    int ts = GLOBAL_VERSION.get();
-                    node.values[i].version.compareAndSet(0,ts);
-                    node.size++;
-                    node.ver.set(oldVersion+2);
-                    node.unlock();
-                    return new Result(value,ReturnCode.SUCCESS);
-                }
-            }
+          Result result = writeToNode(key,value,node);
+          node.unlock();
+          return result;
         }
         else {
+
+            int numberOfCleanedDeletedKeys = cleanDeletedKeys(node);
+
+            // TODO: check if ordering of conditions below, between the diaz lines, can be optimized
+            // ###########################################################
+            if(numberOfCleanedDeletedKeys > 0){
+                Result writeResult = writeToNode(key,value,node);
+                node.unlock();
+                fixUnderfull(node);
+                return writeResult;
+            }
+            // ###########################################################
+
             parent.lock();
             if(parent.isMarked()) {
                 parent.unlock();
@@ -156,8 +164,26 @@ public class OCCABTree {
             fixTagged(replacementNode);
             return new Result(ReturnCode.SUCCESS);
         }
-        return new Result(ReturnCode.RETRY);
+        // return new Result(ReturnCode.RETRY);
 
+    }
+
+    private Result writeToNode(int key, int value, Node node){
+        for (int i = 0; i < this.maxNodeSize; ++i) {
+            if (node.keys[i] == NULL) {
+                int oldVersion = node.ver.get();
+                node.ver.set(oldVersion+1);
+                var vc = new ValueCell(key,value);
+                node.values[i] = vc;
+                node.keys[i] = vc.key;
+                int ts = GLOBAL_VERSION.get();
+                node.values[i].version.compareAndSet(0,ts);
+                node.size++;
+                node.ver.set(oldVersion+2);
+                return new Result(value,ReturnCode.SUCCESS);
+            }
+        }
+        return new Result(value,ReturnCode.RETRY);
     }
 
     private Node createExternalNode(boolean weight, int size, int searchKey){
@@ -178,7 +204,6 @@ public class OCCABTree {
         pathInfo.gp.unlock();
     }
 
-    // TODO: Continue here
     private ReturnCode fixTagged(Node node) {
         while (true) {
 
@@ -377,41 +402,6 @@ public class OCCABTree {
     }
 
 
-
-    private Result delete(PathInfo pathInfo, int key) {
-        Node node = pathInfo.n;
-
-        node.lock();
-
-        if (node.isMarked()) {
-            node.unlock();
-            return new Result(ReturnCode.RETRY);
-        }
-        int newSize = node.size - 1;
-        int deletedValue = NULL;
-        for (int i = 0; i < this.maxNodeSize; ++i) {
-           if(node.keys[i] == key) {
-               deletedValue = node.values[i].value;
-               int oldVersion = node.ver.get();
-               node.ver.set(oldVersion+1);
-               updateDelete(node,i, node.values[i]);
-               //node.keys[i] = 0;
-               //node.values[i] = 0;
-               //node.size = newSize;
-               node.ver.set(oldVersion+2);
-
-               if(newSize == this.minNodeSize-1) {
-                   node.unlock();
-                   fixUnderfull(node);
-                   return new Result(deletedValue, ReturnCode.SUCCESS);
-               }
-               node.unlock();
-               return new Result(deletedValue, ReturnCode.SUCCESS);
-           }
-        }
-        node.unlock();
-        return new Result(ReturnCode.FAILURE);
-    }
 
     private Result fixUnderfull(Node underFullNode) {
        Node parent,gParent,node,sibling;
@@ -841,24 +831,6 @@ public class OCCABTree {
     }
 
 
-       /* Range query */
-
-        public Node updateDelete(Node leaf, int kvIndex, ValueCell deletedKey) {
-
-            // deletedKey.deletionTime = TIMESTAMP;
-            deletedKey.deletionTime = GLOBAL_VERSION.get();
-            int threadId = (int) Thread.currentThread().getId();
-            initThread(threadId);
-            announcePhysicalDeletion(threadId ,deletedKey);
-
-            leaf.keys[kvIndex] = 0;
-            leaf.values[kvIndex] = null;
-
-            leaf.size = leaf.size-1;
-            physicalDeletionSucceeded(threadId, deletedKey);
-            return leaf;
-        }
-
 
 
         // TODO: continue here
@@ -866,7 +838,6 @@ public class OCCABTree {
             initThread(threadId);
             this.threadsData[threadId].resultSize=0;
             this.threadsData[threadId].result = new ValueCell[(high-low)+1];
-            this.threadsData[threadId].vc_hashset.clear();
             this.threadsData[threadId].rqVersionWhenLinearized = GLOBAL_VERSION.incrementAndGet();
             this.threadsData[threadId].rqLow = low;
             this.threadsData[threadId].rqHigh = high;
@@ -959,17 +930,9 @@ public class OCCABTree {
 
         private void initThread(int threadId) {
             if(this.threadsData[threadId] == null){
-                this.threadsData[threadId] = new ThreadData(LIMBOLIST_SIZE);
+                this.threadsData[threadId] = new ThreadData();
             }
         }
-
-        public void announcePhysicalDeletion(int threadId, ValueCell deletedKey) {
-            initThread(threadId);
-            this.threadsData[threadId].rqAnnouncements[threadsData[threadId].rqAnnouncementsSize] = deletedKey;
-            threadsData[threadId].rqAnnouncementsSize++;
-        }
-
-
 
 
         public int traversalEnd(int threadId, int[] result){
@@ -978,34 +941,6 @@ public class OCCABTree {
             return 0;
         }
 
-
-
-        private void physicalDeletionSucceeded(int threadId, ValueCell deletedKey) {
-
-            retire(threadId,deletedKey);
-            // ensure nodes are placed in the epoch bag BEFORE they are removed from announcements.
-            this.threadsData[threadId].rqAnnouncementsSize--;
-        }
-
-        private void retire(int threadId, ValueCell value) {
-            ThreadData currentThreadData = this.threadsData[threadId];
-
-            currentThreadData.limboList[currentThreadData.limboListCurrentIndex] = value;
-            int nextIndex = currentThreadData.limboListCurrentIndex+1;
-            currentThreadData.limboListCurrentIndex = nextIndex%LIMBOLIST_SIZE;
-
-        }
-
-        class RQResult {
-            RQResult(int key, int value) {
-                this.key = key;
-                this.value = value;
-            }
-            int key;
-            int value;
-
-            public boolean wasDeletedDuringRangeQuery = false;
-        }
 
     public int find(int key) {
 
@@ -1026,8 +961,10 @@ public class OCCABTree {
     public int tryInsert(int key, int value) {
         PathInfo pathInfo = new PathInfo();
         while (true) {
+
+
             Result searchResult = search(key,null,pathInfo);
-            if(searchResult.getReturnCode() == ReturnCode.SUCCESS){
+            if(searchResult.getReturnCode() == ReturnCode.SUCCESS && value != NULL){
                 return searchResult.getValue();
             }
 
@@ -1041,22 +978,10 @@ public class OCCABTree {
         }
     }
 
-    public int tryDelete(int key) {
-        PathInfo pathInfo = new PathInfo();
-        while (true) {
-            Result searchResult = search(key, null, pathInfo);
-
-            if(searchResult.getReturnCode() == ReturnCode.FAILURE){
-                return NULL;
-            }
-
-            Result deleteResult = delete(pathInfo, key);
-
-            if(deleteResult.getReturnCode() == ReturnCode.SUCCESS || deleteResult.getReturnCode() == ReturnCode.FAILURE){
-                return deleteResult.getValue();
-            }
-        }
+    public int cleanDeletedKeys(Node node){
+      return 0;
     }
+
 
     public int scan(int[] result, int low, int high) {
         int threadId=((int) Thread.currentThread().getId());

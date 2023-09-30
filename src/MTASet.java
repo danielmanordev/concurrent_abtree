@@ -21,7 +21,7 @@ public class MTASet implements Set {
 
     @Override
     public int remove(int key) {
-        return this.occABTree.tryDelete(key);
+        return this.occABTree.tryInsert(key,0);
     }
 
     @Override
