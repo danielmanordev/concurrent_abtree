@@ -33,7 +33,13 @@ public class MppRunner {
         for (int i = 0; i < numberOfTests; i++) {
 
             Set concurrentSet = new MTASet(a,b,numberOfThreads);
-            TestSet.seed(concurrentSet, dataRange, dataRange / 2);
+            TestSet.seed(concurrentSet, dataRange, dataRange);
+            concurrentSet.getRange(new int[16],1,11);
+            TestSet.seed(concurrentSet, dataRange, dataRange);
+            concurrentSet.getRange(new int[16],1,11);
+            TestSet.seed(concurrentSet, dataRange, dataRange);
+            concurrentSet.getRange(new int[16],1,11);
+            TestSet.seed(concurrentSet, dataRange, dataRange);
             concurrentSet.remove(11);
             concurrentSet.add(10,666);
             int jj = concurrentSet.add(10,667);
