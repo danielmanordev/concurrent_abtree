@@ -18,7 +18,7 @@ public class OCCABTree {
     private final int threadsDataSize;
 
 
-    public  AtomicInteger TIMESTAMP = new AtomicInteger(1);
+    public  AtomicInteger GLOBAL_VERSION = new AtomicInteger(1);
 
     public OCCABTree(int a, int b, int numberOfThreads) {
         this.minNodeSize = a;
@@ -63,7 +63,7 @@ public class OCCABTree {
                     var vc = new ValueCell(key,value);
                     node.values[i] = vc;
                     node.keys[i] = vc.key;
-                    int ts = TIMESTAMP.get();
+                    int ts = GLOBAL_VERSION.get();
                     node.values[i].version.compareAndSet(0,ts);
                     node.size++;
                     node.ver.set(oldVersion+2);
@@ -96,7 +96,7 @@ public class OCCABTree {
 
             }
             keyValues[k] = new KeyValue(key, new ValueCell(key,value));
-            keyValues[k].getValue().version.set(TIMESTAMP.get());
+            keyValues[k].getValue().version.set(GLOBAL_VERSION.get());
             ++k;
 
             Arrays.sort(keyValues, new SortKeyValues());
@@ -846,7 +846,7 @@ public class OCCABTree {
         public Node updateDelete(Node leaf, int kvIndex, ValueCell deletedKey) {
 
             // deletedKey.deletionTime = TIMESTAMP;
-            deletedKey.deletionTime = TIMESTAMP.get();
+            deletedKey.deletionTime = GLOBAL_VERSION.get();
             int threadId = (int) Thread.currentThread().getId();
             initThread(threadId);
             announcePhysicalDeletion(threadId ,deletedKey);
@@ -867,7 +867,7 @@ public class OCCABTree {
             this.threadsData[threadId].resultSize=0;
             this.threadsData[threadId].result = new ValueCell[(high-low)+1];
             this.threadsData[threadId].vc_hashset.clear();
-            this.threadsData[threadId].rqLinearzationTime = TIMESTAMP.incrementAndGet();
+            this.threadsData[threadId].rqVersionWhenLinearized = GLOBAL_VERSION.incrementAndGet();
             this.threadsData[threadId].rqLow = low;
             this.threadsData[threadId].rqHigh = high;
 
@@ -902,12 +902,12 @@ public class OCCABTree {
 
                     ValueCell valueCell = leftNode.values[i];
                     if(valueCell.version.get() == 0){
-                        int ts = TIMESTAMP.get();
+                        int ts = GLOBAL_VERSION.get();
                         valueCell.version.compareAndSet(0,ts);
                         // this key was added after rq was linearized, skip
                         continue;
                     }
-                    int rqVersionWhenLinearized = threadsData[threadId].rqVersionWhenLinearized.get();
+                    int rqVersionWhenLinearized = threadsData[threadId].rqVersionWhenLinearized;
 
                     if(key >= low && key <= high && leftNode.values[i].version.get() <= rqVersionWhenLinearized) {
                         int resultSize = threadsData[threadId].resultSize;

@@ -1,5 +1,4 @@
 import java.util.HashSet;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class ThreadData {
 
@@ -11,7 +10,7 @@ public class ThreadData {
     public int rqLow;
     public int rqHigh;
 
-    public AtomicInteger rqVersionWhenLinearized;
+    public int rqVersionWhenLinearized;
 
     public ValueCell[] rqAnnouncements = new ValueCell[100];
     public int rqAnnouncementsSize=0;
