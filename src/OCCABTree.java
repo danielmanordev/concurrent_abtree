@@ -899,18 +899,31 @@ public class OCCABTree {
                     if(key == 0){
                         continue;
                     }
-                    ValueCell valueCell = leftNode.values[i];
 
+                    ValueCell valueCell = leftNode.values[i];
                     if(valueCell.version.get() == 0){
                         int ts = TIMESTAMP.get();
                         valueCell.version.compareAndSet(0,ts);
-                        // this key was added after rq was linearized so continue
+                        // this key was added after rq was linearized, skip
                         continue;
                     }
+                    int rqVersionWhenLinearized = threadsData[threadId].rqVersionWhenLinearized.get();
 
-                    if(value.key >= low && value.key <= high && value.insertionTime < TIMESTAMP.get()){
-                        visit(threadId, value);
+                    if(key >= low && key <= high && leftNode.values[i].version.get() <= rqVersionWhenLinearized) {
+                        int resultSize = threadsData[threadId].resultSize;
+                        if(key <= threadsData[threadId].result[resultSize-1].key){
+                            // key was already found by "findLatest"
+                            continue;
+                        }
+                        int latestIndex = findLatest(key,rqVersionWhenLinearized,leftNode);
 
+                        if(leftNode.values[latestIndex].value == 0){
+                            // key was deleted before rq was linearized
+                            continue;
+                        }
+
+                        threadsData[threadId].result[resultSize]=leftNode.values[latestIndex];
+                        threadsData[threadId].resultSize++;
                         // System.out.println("Key: "+leftNode.keys[i]+ " Value: "+leftNode.values[i]);
 
                     }
@@ -926,7 +939,22 @@ public class OCCABTree {
                     break;
                 }
             }
+        }
 
+        private int findLatest(int key, int version, Node node){
+            int latestKeyIndex=-1;
+            int latestVersionFound=-1;
+
+            for (int i=0;i<maxNodeSize;i++){
+                if(node.keys[i] == key) {
+                    int keyVersion = node.values[i].version.get();
+                    if(keyVersion <= version && keyVersion >= latestVersionFound){
+                        latestKeyIndex=i;
+                        latestVersionFound=keyVersion;
+                    }
+                }
+            }
+            return latestKeyIndex;
         }
 
         private void initThread(int threadId) {
