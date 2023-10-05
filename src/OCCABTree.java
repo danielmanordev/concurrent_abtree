@@ -69,11 +69,11 @@ public class OCCABTree {
         }
         else {
 
-            int numberOfCleanedDeletedKeys = cleanDeletedKeys(node);
+            int numberOfRemovedObsoleteKeys = cleanObseleteKeys(node);
 
             // TODO: check if ordering of conditions below, between the diaz lines, can be optimized
             // ###########################################################
-            if(numberOfCleanedDeletedKeys > 0){
+            if(numberOfRemovedObsoleteKeys > 0){
                 Result writeResult = writeToNode(key,value,node);
                 node.unlock();
                 fixUnderfull(node);
@@ -839,9 +839,10 @@ public class OCCABTree {
             initThread(threadId);
             this.threadsData[threadId].resultSize=0;
             this.threadsData[threadId].result = new ValueCell[(high-low)+1];
-            this.threadsData[threadId].rqVersionWhenLinearized = GLOBAL_VERSION.incrementAndGet();
             this.threadsData[threadId].rqLow = low;
             this.threadsData[threadId].rqHigh = high;
+            int version = GLOBAL_VERSION.getAndIncrement();
+            this.threadsData[threadId].rqVersionWhenLinearized.compareAndSet(0, version);
 
             traverseLeafs(threadId,low,high,entry);
 
@@ -879,7 +880,7 @@ public class OCCABTree {
                         // this key was added after rq was linearized, skip
                         continue;
                     }
-                    int rqVersionWhenLinearized = threadsData[threadId].rqVersionWhenLinearized;
+                    int rqVersionWhenLinearized = threadsData[threadId].rqVersionWhenLinearized.get();
 
                     if(key >= low && key <= high && leftNode.values[i].version.get() <= rqVersionWhenLinearized) {
                         int resultSize = threadsData[threadId].resultSize;
@@ -937,8 +938,10 @@ public class OCCABTree {
 
 
         public int traversalEnd(int threadId, int[] result){
-
-            Arrays.sort(this.threadsData[threadId].result, new SortValueCells());
+            System.arraycopy(this.threadsData[threadId].result,0, result,0,this.threadsData[threadId].resultSize);
+            threadsData[threadId].rqHigh=0;
+            threadsData[threadId].rqLow=0;
+            threadsData[threadId].rqVersionWhenLinearized.set(0);
             return 0;
         }
 
@@ -984,7 +987,8 @@ public class OCCABTree {
         }
     }
 
-    public int cleanDeletedKeys(Node node){
+    public int cleanObseleteKeys(Node node){
+        // TODO: implement asap
       return 0;
     }
 
