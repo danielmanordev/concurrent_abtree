@@ -118,8 +118,11 @@ public class OCCABTree {
                 }
 
             }
+
             keyValues[k] = new KeyValue(key, new ValueCell(key,value));
-            keyValues[k].getValue().version.set(GLOBAL_VERSION.get());
+            putData.version.compareAndSet(0, GLOBAL_VERSION.get());
+            keyValues[k].getValue().version.set(putData.version.get());
+            node.publishPut(null);
             ++k;
 
             Arrays.sort(keyValues, new SortKeyValues());
