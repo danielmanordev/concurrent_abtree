@@ -1,7 +1,7 @@
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class PutData {
-    public AtomicInteger version;
+    public AtomicInteger version = new AtomicInteger(0);
     int key;
     int value;
 
