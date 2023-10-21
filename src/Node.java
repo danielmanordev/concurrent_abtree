@@ -7,12 +7,7 @@ public class Node {
 
     private boolean marked;
     private boolean isLeaf = false;
-    public Node left;
-    public Node right;
-
-    public boolean isTagged = false;
     private final boolean isEntry = false;
-
     private boolean weight = false;
 
     public Node(boolean weight, int size, int searchKey, int maxNodeSize){
@@ -25,11 +20,15 @@ public class Node {
 
     }
 
+    public Node left;
+    public Node right;
+
+    public boolean isTagged = false;
     public int size;
     public int[] keys;
     public AtomicInteger ver = new AtomicInteger(0);
     public ValueCell[] values;
-    public PutData[] putArray = new PutData[400];
+    public PutData[] putArray = new PutData[OCCABTree.MAX_THREADS+1];
     public Node[] nodes;
     public int searchKey;
 
@@ -62,5 +61,11 @@ public class Node {
     public void setAsLeaf(){
         this.isLeaf = true;
     }
+
+    public void publishPut(PutData putData){
+        int idx = (int) (Thread.currentThread().getId() % OCCABTree.MAX_THREADS);
+        this.putArray[idx] = putData;
+    }
+
 
 }

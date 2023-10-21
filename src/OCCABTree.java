@@ -7,13 +7,16 @@ public class OCCABTree {
 
     /* Constants */
     private final int NULL = 0;
+    public static int MAX_THREADS = 32;
     private Node entry;
 
     private final int minNodeSize;
     private final int maxNodeSize;
 
     private final ThreadData[] threadsData;
+    private final ScanData[] scanArray;
     private final int threadsDataSize;
+    private final int scanDataSize;
 
 
     public  AtomicInteger GLOBAL_VERSION = new AtomicInteger(1);
@@ -27,7 +30,11 @@ public class OCCABTree {
         entry.nodes[0] = entryLeft;
 
         this.threadsDataSize = (int)Math.pow(numberOfThreads+20,2);
+        this.scanDataSize = (int)Math.pow(numberOfThreads+20,2);
+
+
         this.threadsData = new ThreadData[threadsDataSize];
+        this.scanArray = new ScanData[MAX_THREADS+1];
 
     }
 
@@ -39,6 +46,9 @@ public class OCCABTree {
         assert(!parent.isLeaf());
 
         node.lock();
+
+        PutData putData = new PutData(key,value);
+        node.publishPut(putData);
 
         if(node.isMarked()){
             node.unlock();
@@ -63,7 +73,9 @@ public class OCCABTree {
 
         int currSize = node.size;
         if(currSize < this.maxNodeSize) {
-          Result result = writeToNode(key,value,node);
+
+          Result result = writeToNode(putData,node);
+          node.publishPut(null);
           node.unlock();
           return result;
         }
@@ -74,15 +86,18 @@ public class OCCABTree {
             // TODO: check if ordering of conditions below, between the diaz lines, can be optimized
             // ###########################################################
             if(numberOfRemovedObsoleteKeys > 0){
-                Result writeResult = writeToNode(key,value,node);
+                Result writeResult = writeToNode(putData,node);
+                node.publishPut(null);
                 node.unlock();
                 fixUnderfull(node);
+
                 return writeResult;
             }
             // ###########################################################
 
             parent.lock();
             if(parent.isMarked()) {
+                node.publishPut(null);
                 parent.unlock();
                 node.unlock();
                 return new Result(ReturnCode.RETRY);
@@ -168,22 +183,23 @@ public class OCCABTree {
 
     }
 
-    private Result writeToNode(int key, int value, Node node){
+    private Result writeToNode(PutData putData, Node node){
         for (int i = 0; i < this.maxNodeSize; ++i) {
             if (node.keys[i] == NULL) {
+
                 int oldVersion = node.ver.get();
                 node.ver.set(oldVersion+1);
-                var vc = new ValueCell(key,value);
+                putData.version.compareAndSet(0,GLOBAL_VERSION.get());
+                var vc = new ValueCell(putData.key,putData.value);
+                vc.version.set(putData.version.get());
                 node.values[i] = vc;
                 node.keys[i] = vc.key;
-                int ts = GLOBAL_VERSION.get();
-                node.values[i].version.compareAndSet(0,ts);
                 node.size++;
                 node.ver.set(oldVersion+2);
-                return new Result(value,ReturnCode.SUCCESS);
+                return new Result(node.values[i].value,ReturnCode.SUCCESS);
             }
         }
-        return new Result(value,ReturnCode.RETRY);
+        return new Result(putData.value,ReturnCode.RETRY);
     }
 
     private Node createExternalNode(boolean weight, int size, int searchKey){
@@ -831,24 +847,12 @@ public class OCCABTree {
         }
     }
 
-
-
-
         // TODO: continue here
-        public void traversalStart(int threadId, int low, int high, Node entry) {
-            initThread(threadId);
-            this.threadsData[threadId].resultSize=0;
-            this.threadsData[threadId].result = new ValueCell[(high-low)+1];
-            this.threadsData[threadId].rqLow = low;
-            this.threadsData[threadId].rqHigh = high;
-            int version = GLOBAL_VERSION.getAndIncrement();
-            this.threadsData[threadId].rqVersionWhenLinearized.compareAndSet(0, version);
+        public int traversalStart(int low, int high, Node entry, int[] result) {
+            int myVer = newVersion(low,high);
+            int resultSize =0;
+            int[] resultKeys = new int[(high-low)+1];
 
-            traverseLeafs(threadId,low,high,entry);
-
-        }
-        // TODO: find latest version of key
-        private void traverseLeafs(int threadId, int low, int high, Node entry) {
             PathInfo pathInfo = new PathInfo();
             pathInfo.gp = null;
             pathInfo.p = entry;
@@ -875,28 +879,27 @@ public class OCCABTree {
 
                     ValueCell valueCell = leftNode.values[i];
                     if(valueCell.version.get() == 0){
-                        int ts = GLOBAL_VERSION.get();
-                        valueCell.version.compareAndSet(0,ts);
+                        valueCell.version.compareAndSet(0,myVer);
                         // this key was added after rq was linearized, skip
                         continue;
                     }
-                    int rqVersionWhenLinearized = threadsData[threadId].rqVersionWhenLinearized.get();
 
-                    if(key >= low && key <= high && leftNode.values[i].version.get() <= rqVersionWhenLinearized) {
-                        int resultSize = threadsData[threadId].resultSize;
-                        if(resultSize > 0 && key <= threadsData[threadId].result[resultSize-1].key){
+                    if(key >= low && key <= high && leftNode.values[i].version.get() <= myVer) {
+
+                        if(resultSize > 0 && key <= resultKeys[resultSize-1]){
                             // key was already found by "findLatest"
                             continue;
                         }
-                        int latestIndex = findLatest(key,rqVersionWhenLinearized,leftNode);
+                        int latestIndex = findLatest(key,myVer,leftNode);
 
                         if(leftNode.values[latestIndex].value == 0){
                             // key was deleted before rq was linearized
                             continue;
                         }
 
-                        threadsData[threadId].result[resultSize]=leftNode.values[latestIndex];
-                        threadsData[threadId].resultSize++;
+                        result[resultSize]=leftNode.values[latestIndex].value;
+                        resultKeys[resultSize]=leftNode.keys[latestIndex];
+                        resultSize++;
                         // System.out.println("Key: "+leftNode.keys[i]+ " Value: "+leftNode.values[i]);
 
                     }
@@ -912,7 +915,29 @@ public class OCCABTree {
                     break;
                 }
             }
+            publishScan(null);
+            return resultSize;
         }
+
+        private int newVersion(int low, int high){
+           ScanData scanData = new ScanData(low,high);
+           publishScan(scanData);
+            int myVer = GLOBAL_VERSION.getAndIncrement();
+
+            if(scanData.version.compareAndSet(0, myVer))
+                return myVer;
+            else
+                return scanData.version.get();
+
+        }
+
+    private void publishScan(ScanData scanData)
+    {
+        int idx = (int) (Thread.currentThread().getId() % MAX_THREADS);
+
+        // publish into thread array
+        scanArray[idx] = scanData;
+    }
 
         private int findLatest(int key, int version, Node node){
             int latestKeyIndex=-1;
@@ -928,21 +953,6 @@ public class OCCABTree {
                 }
             }
             return latestKeyIndex;
-        }
-
-        private void initThread(int threadId) {
-            if(this.threadsData[threadId] == null){
-                this.threadsData[threadId] = new ThreadData();
-            }
-        }
-
-
-        public int traversalEnd(int threadId, int[] result){
-            System.arraycopy(this.threadsData[threadId].result,0, result,0,this.threadsData[threadId].resultSize);
-            threadsData[threadId].rqHigh=0;
-            threadsData[threadId].rqLow=0;
-            threadsData[threadId].rqVersionWhenLinearized.set(0);
-            return 0;
         }
 
 
@@ -994,10 +1004,6 @@ public class OCCABTree {
 
 
     public int scan(int[] result, int low, int high) {
-        int threadId=((int) Thread.currentThread().getId());
-        this.traversalStart(threadId,low,high,entry);
-
-        var numberOfScannedKeys=traversalEnd(threadId,result);
-        return numberOfScannedKeys;
+        return this.traversalStart(low,high,entry, result);
     }
 }

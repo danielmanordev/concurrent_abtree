@@ -40,7 +40,7 @@ public class MppRunner {
             TestSet.seed(concurrentSet, dataRange, dataRange);
             concurrentSet.getRange(new int[16],1,11);
             TestSet.seed(concurrentSet, dataRange, dataRange);
-            concurrentSet.remove(11);
+            int a6 = concurrentSet.remove(11);
             concurrentSet.add(10,666);
             int jj = concurrentSet.add(10,667);
             concurrentSet.getRange(new int[16],1,11);
