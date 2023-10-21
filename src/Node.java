@@ -67,5 +67,25 @@ public class Node {
         this.putArray[idx] = putData;
     }
 
+    public void helpPutInScan(int myVersion, int low, int high){
+        for(int i=0; i < OCCABTree.MAX_THREADS; ++i){
+            PutData putData = this.putArray[i];
+            if(putData == null){
+                continue;
+            }
+
+            if(putData.key < low || putData.key > high){
+                continue;
+            }
+
+            int currPutVersion = putData.version.get();
+
+            if(currPutVersion == 0){
+                putData.version.compareAndSet(currPutVersion,myVersion);
+            }
+
+        }
+    }
+
 
 }

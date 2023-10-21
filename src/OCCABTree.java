@@ -875,6 +875,7 @@ public class OCCABTree {
             Node leftNode = pathInfo.n;
             boolean continueToNextNode=true;
             while(true){
+                leftNode.helpPutInScan(myVer,low, high);
                 for(int i=0;i<this.maxNodeSize;i++) {
                     int key = leftNode.keys[i];
                     if(key == 0){
