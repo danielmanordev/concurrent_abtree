@@ -47,14 +47,14 @@ public class OCCABTree {
 
         node.lock();
 
-        PutData putData = new PutData(key,value);
-        node.publishPut(putData);
+
 
         if(node.isMarked()){
             node.unlock();
             return new Result(ReturnCode.RETRY);
         }
-
+        PutData putData = new PutData(key,value);
+        node.publishPut(putData);
        for (int i = 0; i < this.maxNodeSize; ++i) {
             if (node.keys[i] == key) {
                 int latestIndex = findLatest(key,Integer.MAX_VALUE,node);
@@ -66,6 +66,7 @@ public class OCCABTree {
                     break;
                 }
 
+                node.publishPut(null);
                 node.unlock();
                 return new Result(ReturnCode.FAILURE);
             }
