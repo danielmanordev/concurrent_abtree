@@ -120,7 +120,7 @@ public class OCCABTree {
 
             }
 
-            keyValues[k] = new KeyValue(key, new ValueCell(key,value));
+            keyValues[k] = new KeyValue(key, new ValueCell(key,value, System.currentTimeMillis()));
             putData.version.compareAndSet(0, GLOBAL_VERSION.get());
             keyValues[k].getValue().version.set(putData.version.get());
             node.publishPut(null);
@@ -194,7 +194,7 @@ public class OCCABTree {
                 int oldVersion = node.ver.get();
                 node.ver.set(oldVersion+1);
                 putData.version.compareAndSet(0,GLOBAL_VERSION.get());
-                var vc = new ValueCell(putData.key,putData.value);
+                var vc = new ValueCell(putData.key,putData.value, System.currentTimeMillis());
                 vc.version.set(putData.version.get());
                 node.values[i] = vc;
                 node.keys[i] = vc.key;
