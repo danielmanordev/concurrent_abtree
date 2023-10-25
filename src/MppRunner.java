@@ -1,24 +1,21 @@
 import abstractions.Set;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.OptionalDouble;
-import java.util.concurrent.ExecutionException;
 
 public class MppRunner {
 
-    public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
+    public static void main(String[] args) {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
 
-        int dataRange = 1000;
+        int dataRange = 1000000;
         int numberOfThreads = 4;
         int numberOfScanThreads = 0;//Integer.parseInt(args[0]);
         int a = 2;
         int b = 16;
         int numberOfTests = 4;
         int testDuration=10000;
-        int perAdd=0;
-        int perContains=100;
+        int perAdd=100;
+        int perContains=0;
         int perRemove=0;
         /// int perRange=100-perAdd-perContains-perRemove;
         ArrayList<Long> adds = new ArrayList();
@@ -33,23 +30,9 @@ public class MppRunner {
         for (int i = 0; i < numberOfTests; i++) {
 
             Set concurrentSet = new MTASet(a,b,numberOfThreads);
-            TestSet.seed(concurrentSet, dataRange, dataRange);
-            concurrentSet.getRange(new int[16],1,11);
-            TestSet.seed(concurrentSet, dataRange, dataRange);
-            concurrentSet.getRange(new int[16],1,11);
-            TestSet.seed(concurrentSet, dataRange, dataRange);
-            concurrentSet.getRange(new int[16],1,11);
-            TestSet.seed(concurrentSet, dataRange, dataRange);
-            int a6 = concurrentSet.remove(11);
+            TestSet.seed(concurrentSet, dataRange, dataRange / 2);
+            concurrentSet.remove(10);
             concurrentSet.add(10,666);
-            int jj = concurrentSet.add(10,667);
-            concurrentSet.getRange(new int[16],1,11);
-            int r = concurrentSet.remove(10);
-            int cr = concurrentSet.contains(10);
-            int f= concurrentSet.add(10,111);
-            int cr2 = concurrentSet.contains(10);
-
-
             concurrentSet.remove(10);
 
 
@@ -74,7 +57,7 @@ public class MppRunner {
             System.out.println("Scan Threads:             " + numberOfScanThreads);
             System.out.println("Non Scan Threads:         " + (numberOfThreads-numberOfScanThreads));
             System.out.println("Total time:               " + timeElapsed + " milliseconds");
-             //numberOfThreads++;
+            //numberOfThreads++;
             if (i > 1) {
                 adds.add(testResult.TotalAdds.longValue());
             }
