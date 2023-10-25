@@ -26,6 +26,7 @@ public class MTASet implements Set {
 
     @Override
     public int getRange(int[] result, int low, int high) {
-        return this.occABTree.scan(result,low,high);
+        int numOfScannedKeys = this.occABTree.scan(result,low,high);
+        return numOfScannedKeys;
     }
 }
