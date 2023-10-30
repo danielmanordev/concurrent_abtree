@@ -1,5 +1,6 @@
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -82,7 +83,7 @@ public class OCCABTree {
         }
         else {
 
-            int numberOfRemovedObsoleteKeys = cleanObseleteKeys(node);
+            int numberOfRemovedObsoleteKeys = cleanObsoleteKeys(node);
 
             // TODO: check if ordering of conditions below, between the diaz lines, can be optimized
             // ###########################################################
@@ -1002,9 +1003,88 @@ public class OCCABTree {
         }
     }
 
-    public int cleanObseleteKeys(Node node){
-        // TODO: implement asap
-      return 0;
+    private int cleanObsoleteKeys(Node node){
+
+        int minVersion=-1;
+        int numberOfCleanedKeys=0;
+        for(int i=0; i < OCCABTree.MAX_THREADS; ++i){
+            ScanData scanData = this.scanArray[i];
+            if(scanData == null){
+                continue;
+            }
+            int scanDataVersion=scanData.version.get();
+            if(scanDataVersion < minVersion){
+                minVersion=scanDataVersion;
+            }
+        }
+
+        HashMap<Integer, ObsoleteKeyCandidate> okcs = new HashMap<>();
+        // check for key duplications
+        for (int i=0;i<this.maxNodeSize;++i)
+        {
+            int key=node.keys[i];
+            if(key==0){
+                continue;
+            }
+            var vc = node.values[i];
+            var thisKeyVersion = vc.version.get();
+            if(thisKeyVersion >= minVersion && minVersion != -1){
+               continue;
+            }
+            var okc = okcs.get(key);
+            if(okc == null){
+                okc = new ObsoleteKeyCandidate(key,i);
+                okcs.put(key,okc);
+                continue;
+            }
+
+            var otherKeyIdx = okc.getIndex();
+            var otherVc = node.values[okc.getIndex()];
+            var otherKeyVersion = otherVc.version.get();
+            var thisTs = node.values[i].insertionTime;
+            var otherTs = node.values[otherKeyIdx].insertionTime;
+
+            node.ver.incrementAndGet();
+            if(otherKeyVersion > thisKeyVersion || (otherKeyVersion == thisKeyVersion && otherTs > thisTs)) {
+                // remove current key
+                node.keys[i] = 0;
+                node.values[i] = null;
+                node.size--;
+                numberOfCleanedKeys++;
+            }
+            else if(otherKeyVersion < thisKeyVersion || otherTs < thisTs){
+                // remove other key and put this key in set
+                node.keys[otherKeyIdx] = 0;
+                node.values[otherKeyIdx] = null;
+                node.size--;
+                var nokc = new ObsoleteKeyCandidate(node.keys[i],i);
+                okcs.put(nokc.getKey(),nokc);
+                numberOfCleanedKeys++;
+            }
+            node.ver.incrementAndGet();
+
+        }
+        // look for deleted keys with version smaller than min version
+        for (int i=0;i<this.maxNodeSize;++i){
+            if(node.values[i] == null){
+                continue;
+            }
+            if(node.values[i].version.get() > minVersion && minVersion != -1){
+                continue;
+            }
+            if(node.values[i].value != 0){
+                continue;
+            }
+            node.ver.incrementAndGet();
+            node.keys[i] = 0;
+            node.values[i] = null;
+            node.size--;
+            node.ver.incrementAndGet();
+            numberOfCleanedKeys++;
+        }
+
+
+      return numberOfCleanedKeys;
     }
 
 

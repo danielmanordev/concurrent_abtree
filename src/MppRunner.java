@@ -14,9 +14,9 @@ public class MppRunner {
         int b = 16;
         int numberOfTests = 4;
         int testDuration=10000;
-        int perAdd=100;
+        int perAdd=20;
         int perContains=0;
-        int perRemove=0;
+        int perRemove=80;
         /// int perRange=100-perAdd-perContains-perRemove;
         ArrayList<Long> adds = new ArrayList();
         System.out.println("Number of available processors: "+availableProcessors);
@@ -33,6 +33,8 @@ public class MppRunner {
             TestSet.seed(concurrentSet, dataRange, dataRange / 2);
             concurrentSet.remove(10);
             concurrentSet.add(10,666);
+            concurrentSet.remove(10);
+            concurrentSet.remove(10);
             concurrentSet.remove(10);
 
 
