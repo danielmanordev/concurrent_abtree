@@ -900,6 +900,9 @@ public class OCCABTree {
                             continue;
                         }
                         int latestIndex = findLatest(key,myVer,leftNode);
+                        if(latestIndex == -1){
+                            continue;
+                        }
                         var latestValue = leftNode.values[latestIndex];
 
                         if(latestValue == null){
@@ -958,6 +961,10 @@ public class OCCABTree {
 
             for (int i=0;i<maxNodeSize;i++){
                 if(node.keys[i] == key) {
+                    var value = node.values[i];
+                    if(value == null){
+                        continue;
+                    }
                     int keyVersion = node.values[i].version.get();
                     if(keyVersion <= version && keyVersion >= latestVersionFound){
                         latestKeyIndex=i;
