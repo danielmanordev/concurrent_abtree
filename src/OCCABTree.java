@@ -884,21 +884,28 @@ public class OCCABTree {
                     }
 
                     ValueCell valueCell = leftNode.values[i];
+                    if(valueCell == null){
+                        continue;
+                    }
                     if(valueCell.version.get() == 0){
                         valueCell.version.compareAndSet(0,myVer);
                         // this key was added after rq was linearized, skip
                         continue;
                     }
 
-                    if(key >= low && key <= high && leftNode.values[i].version.get() <= myVer) {
+                    if(key >= low && key <= high && valueCell.version.get() <= myVer) {
 
                         if(resultSize > 0 && key <= resultKeys[resultSize-1]){
                             // key was already found by "findLatest"
                             continue;
                         }
                         int latestIndex = findLatest(key,myVer,leftNode);
+                        var latestValue = leftNode.values[latestIndex];
 
-                        if(leftNode.values[latestIndex].value == 0){
+                        if(latestValue == null){
+                            continue;
+                        }
+                        if(latestValue.value == 0){
                             // key was deleted before rq was linearized
                             continue;
                         }
