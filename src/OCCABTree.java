@@ -1078,7 +1078,7 @@ public class OCCABTree {
             node.ver.incrementAndGet();
 
         }
-        // look for deleted keys with version smaller than min version
+        // look for single deleted keys with version smaller than min version
         for (int i=0;i<this.maxNodeSize;++i){
             if(node.values[i] == null){
                 continue;
