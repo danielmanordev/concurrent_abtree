@@ -17,6 +17,7 @@ public class Node {
         this.keys = new int[maxNodeSize];
         this.values = new ValueCell[maxNodeSize];
         this.nodes = new Node[maxNodeSize];
+        this.latestVersions = new LatestVersion[maxNodeSize];
 
     }
 
@@ -28,6 +29,8 @@ public class Node {
     public int[] keys;
     public AtomicInteger ver = new AtomicInteger(0);
     public ValueCell[] values;
+    public LatestVersion[] latestVersions;
+
     public PutData[] putArray = new PutData[OCCABTree.MAX_THREADS+1];
     public Node[] nodes;
     public int searchKey;

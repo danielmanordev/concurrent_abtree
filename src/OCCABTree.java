@@ -48,8 +48,6 @@ public class OCCABTree {
 
         node.lock();
 
-
-
         if(node.isMarked()){
             node.unlock();
             return new Result(ReturnCode.RETRY);
@@ -58,7 +56,7 @@ public class OCCABTree {
         node.publishPut(putData);
        for (int i = 0; i < this.maxNodeSize; ++i) {
             if (node.keys[i] == key) {
-                int latestIndex = findLatest(key,Integer.MAX_VALUE,node);
+                int latestIndex = findLatest(key,node);
 
                 if(node.values[latestIndex].value == NULL && value != NULL){
                     break;
@@ -200,11 +198,27 @@ public class OCCABTree {
                 node.values[i] = vc;
                 node.keys[i] = vc.key;
                 node.size++;
+
+                var latestVersion = node.latestVersions[vc.key%maxNodeSize];
+
+                if(latestVersion == null){
+                    node.latestVersions[vc.key%maxNodeSize] = new LatestVersion(vc.key,vc.version.get(),i);
+                }
+                else if (latestVersion.version <= vc.version.get()){
+                    node.latestVersions[vc.key%maxNodeSize] = new LatestVersion(vc.key,vc.version.get(),i);
+                }
                 node.ver.set(oldVersion+2);
                 return new Result(node.values[i].value,ReturnCode.SUCCESS);
             }
         }
         return new Result(putData.value,ReturnCode.RETRY);
+    }
+
+    private int findLatest(int key, Node node){
+        if(node.latestVersions[key%maxNodeSize] == null){
+              return -1;
+        }
+        return node.latestVersions[key%maxNodeSize].index;
     }
 
     private Node createExternalNode(boolean weight, int size, int searchKey){
