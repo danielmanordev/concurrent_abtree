@@ -25,7 +25,22 @@ class SortKeyValues implements Comparator<KeyValue> {
         if (o1.getKey() < o2.getKey()) {
             return -1;
         } else {
-            return 0;
+            if(o1.getValue().version.get() > o2.getValue().version.get()){
+                return 1;
+            }
+            if(o1.getValue().version.get() < o2.getValue().version.get()){
+                return -1;
+            }
+            else {
+                if(o1.getValue().insertionTime > o2.getValue().insertionTime){
+                    return 1;
+                }
+                if(o1.getValue().insertionTime < o2.getValue().insertionTime){
+                    return -1;
+                }
+            }
+
         }
+        return 0;
     }
 }
