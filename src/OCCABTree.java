@@ -56,7 +56,7 @@ public class OCCABTree {
         node.publishPut(putData);
        for (int i = 0; i < this.maxNodeSize; ++i) {
             if (node.keys[i] == key) {
-                int latestIndex = findLatest(key,node);
+                int latestIndex = node.findLatest(key);
 
                 if(node.values[latestIndex].value == NULL && value != NULL){
                     break;
@@ -140,6 +140,7 @@ public class OCCABTree {
                 left.values[i] = keyValues[i].getValue();
 
             }
+            left.initLatestVersions();
 
             int rightSize = (this.maxNodeSize+1) - leftSize;
             Node right = createExternalNode(true,rightSize, keyValues[leftSize].getKey());
@@ -148,6 +149,7 @@ public class OCCABTree {
                 right.values[i] = keyValues[i+leftSize].getValue();
 
             }
+            right.initLatestVersions();
 
 
             left.left = node.left;
@@ -198,15 +200,7 @@ public class OCCABTree {
                 node.values[i] = vc;
                 node.keys[i] = vc.key;
                 node.size++;
-
-                var latestVersion = node.latestVersions[vc.key%maxNodeSize];
-
-                if(latestVersion == null){
-                    node.latestVersions[vc.key%maxNodeSize] = new LatestVersion(vc.key,vc.version.get(),i);
-                }
-                else if (latestVersion.version <= vc.version.get()){
-                    node.latestVersions[vc.key%maxNodeSize] = new LatestVersion(vc.key,vc.version.get(),i);
-                }
+                node.setLatestVersion(vc.key,vc, i);
                 node.ver.set(oldVersion+2);
                 return new Result(node.values[i].value,ReturnCode.SUCCESS);
             }
@@ -214,12 +208,6 @@ public class OCCABTree {
         return new Result(putData.value,ReturnCode.RETRY);
     }
 
-    private int findLatest(int key, Node node){
-        if(node.latestVersions[key%maxNodeSize] == null){
-              return -1;
-        }
-        return node.latestVersions[key%maxNodeSize].index;
-    }
 
     private Node createExternalNode(boolean weight, int size, int searchKey){
         Node node = createInternalNode(weight, size, searchKey);
@@ -596,6 +584,7 @@ public class OCCABTree {
                        right.right.left = newNodeExt;
                    }
                    newNode = newNodeExt;
+                   newNode.initLatestVersions();
                } else {
                    Node newNodeInt = createInternalNode(true, size, node.searchKey);
                    for (int i = 0; i < getKeyCount(left); i++) {
@@ -759,6 +748,7 @@ public class OCCABTree {
 
                    newLeft = newLeftExt;
                    newLeft.searchKey = newLeftExt.keys[0];
+                   newLeft.initLatestVersions();
                    pivot = keyValues[keyCounter].key;
 
                } else {
@@ -799,6 +789,7 @@ public class OCCABTree {
                    for (int i = 0; i < rightSize; i++) {
                        newRight.values[i] = keyValues[valCounter++].value;
                    }
+                   newRight.initLatestVersions();
                } else {
                    Node newRightInt = createInternalNode(true, rightSize, 0);
                    for (int i = 0; i < rightSize - index; i++) {
@@ -1031,6 +1022,7 @@ public class OCCABTree {
         }
     }
 
+    // TODO: Update latest key Hashmap after deleteing keys
     private int cleanObsoleteKeys(Node node){
 
         int minVersion=-1;

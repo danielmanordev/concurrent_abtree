@@ -1,6 +1,7 @@
 import abstractions.Lock;
 import locks.MCSLock;
 
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Node {
@@ -9,6 +10,7 @@ public class Node {
     private boolean isLeaf = false;
     private final boolean isEntry = false;
     private boolean weight = false;
+    private final int maxNodeSize;
 
     public Node(boolean weight, int size, int searchKey, int maxNodeSize){
         this.weight = weight;
@@ -17,7 +19,8 @@ public class Node {
         this.keys = new int[maxNodeSize];
         this.values = new ValueCell[maxNodeSize];
         this.nodes = new Node[maxNodeSize];
-        this.latestVersions = new LatestVersion[maxNodeSize];
+        this.latestVersions = new HashMap<>();
+        this.maxNodeSize = maxNodeSize;
 
     }
 
@@ -29,7 +32,7 @@ public class Node {
     public int[] keys;
     public AtomicInteger ver = new AtomicInteger(0);
     public ValueCell[] values;
-    public LatestVersion[] latestVersions;
+    public HashMap<Integer, LatestVersion> latestVersions;
 
     public PutData[] putArray = new PutData[OCCABTree.MAX_THREADS+1];
     public Node[] nodes;
@@ -68,6 +71,36 @@ public class Node {
     public void publishPut(PutData putData){
         int idx = (int) (Thread.currentThread().getId() % OCCABTree.MAX_THREADS);
         this.putArray[idx] = putData;
+    }
+
+    public void initLatestVersions(){
+        for(int i=0;i<this.maxNodeSize;i++){
+            int key = keys[i];
+            if(key == 0){
+                continue;
+            }
+            ValueCell vc = values[i];
+            setLatestVersion(key,vc,i);
+        }
+    }
+
+    public int findLatest(int key){
+        var latest = this.latestVersions.get(key);
+        if(latest == null){
+            return -1;
+        }
+        return latest.index;
+    }
+
+    public void setLatestVersion(int key, ValueCell vc, int index){
+
+        var latestVersion = this.latestVersions.get(key);
+        if(latestVersion == null){
+            this.latestVersions.put(key, new LatestVersion(vc.key,vc.version.get(),vc.insertionTime, index));
+        }
+        else if (latestVersion.version < vc.version.get() || (latestVersion.version ==  vc.version.get() && latestVersion.insertionTime <= vc.insertionTime)){
+            this.latestVersions.put(key, new LatestVersion(vc.key,vc.version.get(),vc.insertionTime, index));
+        }
     }
 
     public void helpPutInScan(int myVersion, int low, int high){
