@@ -86,6 +86,7 @@ public class OCCABTree {
             // TODO: check if ordering of conditions below, between the diaz lines, can be optimized
             // ###########################################################
             if(numberOfRemovedObsoleteKeys > 0){
+                // node.initLatestVersions();
                 Result writeResult = writeToNode(putData,node);
                 node.publishPut(null);
                 node.unlock();
@@ -1070,6 +1071,7 @@ public class OCCABTree {
                 node.keys[i] = 0;
                 node.values[i] = null;
                 node.size--;
+
                 numberOfCleanedKeys++;
             }
             else if(otherKeyVersion < thisKeyVersion || otherTs < thisTs){
@@ -1096,6 +1098,7 @@ public class OCCABTree {
                 continue;
             }
             node.ver.incrementAndGet();
+            //node.removeLatestVersion(node.keys[i]);
             node.keys[i] = 0;
             node.values[i] = null;
             node.size--;

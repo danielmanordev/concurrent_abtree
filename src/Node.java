@@ -74,6 +74,7 @@ public class Node {
     }
 
     public void initLatestVersions(){
+        this.latestVersions.clear();
         for(int i=0;i<this.maxNodeSize;i++){
             int key = keys[i];
             if(key == 0){
@@ -93,7 +94,6 @@ public class Node {
     }
 
     public void setLatestVersion(int key, ValueCell vc, int index){
-
         var latestVersion = this.latestVersions.get(key);
         if(latestVersion == null){
             this.latestVersions.put(key, new LatestVersion(vc.key,vc.version.get(),vc.insertionTime, index));
@@ -101,6 +101,10 @@ public class Node {
         else if (latestVersion.version < vc.version.get() || (latestVersion.version ==  vc.version.get() && latestVersion.insertionTime <= vc.insertionTime)){
             this.latestVersions.put(key, new LatestVersion(vc.key,vc.version.get(),vc.insertionTime, index));
         }
+    }
+
+    public void removeLatestVersion(int key){
+        this.latestVersions.remove(key);
     }
 
     public void helpPutInScan(int myVersion, int low, int high){
