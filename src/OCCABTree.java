@@ -58,7 +58,7 @@ public class OCCABTree {
         node.publishPut(putData);
        for (int i = 0; i < this.maxNodeSize; ++i) {
             if (node.keys[i] == key) {
-                int latestIndex = findLatest(key,Integer.MAX_VALUE,node);
+                int latestIndex =findLatest(key,Integer.MAX_VALUE,node);
 
                 if(node.values[latestIndex].value == NULL && value != NULL){
                     break;
@@ -83,7 +83,7 @@ public class OCCABTree {
         }
         else {
 
-            int numberOfRemovedObsoleteKeys = cleanObsoleteKeys(node);
+            int numberOfRemovedObsoleteKeys =0;//cleanObsoleteKeys(node);
 
             // TODO: check if ordering of conditions below, between the diaz lines, can be optimized
             // ###########################################################
