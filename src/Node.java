@@ -34,7 +34,7 @@ public class Node {
     public ValueCell[] values;
     public HashMap<Integer, LatestVersion> latestVersions;
 
-    public PutData[] putArray = new PutData[OCCABTree.MAX_THREADS+1];
+    // public PutData[] putArray = new PutData[OCCABTree.MAX_THREADS+1];
     public Node[] nodes;
     public int searchKey;
 
@@ -68,10 +68,10 @@ public class Node {
         this.isLeaf = true;
     }
 
-    public void publishPut(PutData putData){
+    /*public void publishPut(PutData putData){
         int idx = (int) (Thread.currentThread().getId() % OCCABTree.MAX_THREADS);
         this.putArray[idx] = putData;
-    }
+    }*/
 
     public void initLatestVersions(){
         this.latestVersions.clear();
@@ -96,10 +96,10 @@ public class Node {
     public void setLatestVersion(int key, ValueCell vc, int index){
         var latestVersion = this.latestVersions.get(key);
         if(latestVersion == null){
-            this.latestVersions.put(key, new LatestVersion(vc.key,vc.version.get(),vc.insertionTime, index));
+            this.latestVersions.put(key, new LatestVersion(vc.key,vc.version,vc.insertionTime, index));
         }
-        else if (latestVersion.version < vc.version.get() || (latestVersion.version ==  vc.version.get() && latestVersion.insertionTime <= vc.insertionTime)){
-            this.latestVersions.put(key, new LatestVersion(vc.key,vc.version.get(),vc.insertionTime, index));
+        else if (latestVersion.version < vc.version || (latestVersion.version ==  vc.version && latestVersion.insertionTime <= vc.insertionTime)){
+            this.latestVersions.put(key, new LatestVersion(vc.key,vc.version,vc.insertionTime, index));
         }
     }
 
@@ -107,7 +107,7 @@ public class Node {
         this.latestVersions.remove(key);
     }
 
-    public void helpPutInScan(int myVersion, int low, int high){
+    /*public void helpPutInScan(int myVersion, int low, int high){
         for(int i=0; i < OCCABTree.MAX_THREADS; ++i){
             PutData putData = this.putArray[i];
             if(putData == null){
@@ -118,14 +118,14 @@ public class Node {
                 continue;
             }
 
-            int currPutVersion = putData.version.get();
+            int currPutVersion = putData.version;
 
             if(currPutVersion == 0){
                 putData.version.compareAndSet(currPutVersion,myVersion);
             }
 
         }
-    }
+    }*/
 
 
 }

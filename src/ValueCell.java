@@ -11,7 +11,7 @@ public class ValueCell implements Comparable<ValueCell> {
     public int key;
     public int value;
     public long insertionTime;
-    public AtomicInteger version = new AtomicInteger(0);
+    public int version;
 
     @Override
     public int compareTo(ValueCell o) {
