@@ -116,7 +116,7 @@ class TestSet extends Thread
 
         for (int i=0;i<numberOfKeys;i++){
             int key = ThreadLocalRandom.current().nextInt(1,dataRange);
-            int value = ThreadLocalRandom.current().nextInt(1,dataRange);
+            int value = key;
             set.add(key,value);
         }
     }

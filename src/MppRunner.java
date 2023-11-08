@@ -31,12 +31,6 @@ public class MppRunner {
 
             Set concurrentSet = new MTASet(a,b,numberOfThreads);
             TestSet.seed(concurrentSet, dataRange, dataRange / 2);
-            concurrentSet.remove(10);
-            concurrentSet.add(10,666);
-            concurrentSet.remove(10);
-            concurrentSet.remove(10);
-            concurrentSet.remove(10);
-
 
             long start = System.currentTimeMillis();
             TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, numberOfScanThreads ,dataRange, perContains, perAdd,1,32000,testDuration);
