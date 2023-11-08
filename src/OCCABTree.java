@@ -83,7 +83,7 @@ public class OCCABTree {
         }
         else {
 
-            int numberOfRemovedObsoleteKeys =0;//cleanObsoleteKeys(node);
+            int numberOfRemovedObsoleteKeys =cleanObsoleteKeys(node);
 
             // TODO: check if ordering of conditions below, between the diaz lines, can be optimized
             // ###########################################################
