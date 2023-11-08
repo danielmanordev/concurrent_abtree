@@ -9,14 +9,14 @@ public class MppRunner {
 
         int dataRange = 1000000;
         int numberOfThreads = 12;
-        int numberOfScanThreads = 0;//Integer.parseInt(args[0]);
+        int numberOfScanThreads = 6;//Integer.parseInt(args[0]);
         int a = 2;
         int b = 256;
         int numberOfTests = 4;
         int testDuration=10000;
-        int perAdd=80;
+        int perAdd=100;
         int perContains=0;
-        int perRemove=20;
+        int perRemove=0;
         /// int perRange=100-perAdd-perContains-perRemove;
         ArrayList<Long> adds = new ArrayList();
         System.out.println("Number of available processors: "+availableProcessors);

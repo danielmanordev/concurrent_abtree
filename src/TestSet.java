@@ -54,7 +54,7 @@ class TestSet extends Thread
                     }*/
                     int rangeSize = this.high-this.low+1;
                     int scannedKeys = set.getRange(new int[rangeSize],this.low,this.high);
-                    numberOfScannedKeys=numberOfScannedKeys.add(BigInteger.valueOf(rangeSize));
+                    numberOfScannedKeys=numberOfScannedKeys.add(BigInteger.valueOf(scannedKeys));
 
                 } else {
 
