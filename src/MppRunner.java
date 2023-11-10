@@ -9,10 +9,10 @@ public class MppRunner {
 
         int dataRange = 1000000;
         int numberOfThreads = 12;
-        int numberOfScanThreads = 0;//Integer.parseInt(args[0]);
+        int numberOfScanThreads = 1;//Integer.parseInt(args[0]);
         int a = 2;
-        int b = 512;
-        int numberOfTests = 96;
+        int b = 16;
+        int numberOfTests = 10;
         int testDuration=10000;
         int perAdd=100;
         int perContains=0;
@@ -31,11 +31,6 @@ public class MppRunner {
 
             Set concurrentSet = new MTASet(a,b,numberOfThreads);
             TestSet.seed(concurrentSet, dataRange, dataRange / 2);
-            concurrentSet.remove(10);
-            concurrentSet.add(10,666);
-            concurrentSet.remove(10);
-            concurrentSet.remove(10);
-            concurrentSet.remove(10);
 
 
             long start = System.currentTimeMillis();
@@ -60,6 +55,7 @@ public class MppRunner {
             System.out.println("Non Scan Threads:         " + (numberOfThreads-numberOfScanThreads));
             System.out.println("Total time:               " + timeElapsed + " milliseconds");
             //numberOfThreads++;
+            numberOfScanThreads++;
             if (i > 1) {
                 adds.add(testResult.TotalAdds.longValue());
             }
