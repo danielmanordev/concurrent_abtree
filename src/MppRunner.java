@@ -1,4 +1,7 @@
 import abstractions.Set;
+import util.LatestVersion;
+import util.LatestVersionsMap;
+import util.LatestVersionsMapNode;
 
 import java.util.ArrayList;
 
@@ -6,6 +9,20 @@ public class MppRunner {
 
     public static void main(String[] args) {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
+
+        LatestVersionsMap mm = new LatestVersionsMap(10);
+        for (int i=0;i<10;i++){
+            mm.put(i,new LatestVersion(i,1,System.currentTimeMillis(),i));
+        }
+
+        for (int i=10;i<20;i++){
+            mm.put(i,new LatestVersion(i,1,System.currentTimeMillis(),i));
+        }
+
+        mm.remove(3);
+        mm.put(23, new LatestVersion(23,2,System.currentTimeMillis(),1));
+        mm.put(33, new LatestVersion(33,2,System.currentTimeMillis(),1));
+        mm.remove(23);
 
         int dataRange = 1000000;
         int numberOfThreads = 12;

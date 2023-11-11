@@ -1,5 +1,6 @@
 import abstractions.Lock;
 import locks.MCSLock;
+import util.LatestVersion;
 
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
