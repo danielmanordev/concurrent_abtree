@@ -86,7 +86,7 @@ public class OCCABTree {
             // TODO: check if ordering of conditions below, between the diaz lines, can be optimized
             // ###########################################################
             if(numberOfRemovedObsoleteKeys > 0){
-                // node.initLatestVersions();
+               //  node.initLatestVersions();
                 Result writeResult = writeToNode(key,value,node);
                 //node.publishPut(null);
                 node.unlock();
@@ -1065,7 +1065,8 @@ public class OCCABTree {
                 node.keys[i] = 0;
                 node.values[i] = null;
                 node.size--;
-
+                node.latestVersions.remove(node.keys[i]);
+                node.latestVersions.put(node.keys[otherKeyIdx],new LatestVersion(node.keys[otherKeyIdx],otherKeyVersion,node.values[otherKeyIdx].insertionTime,otherKeyIdx));
                 numberOfCleanedKeys++;
             }
             else if(otherKeyVersion < thisKeyVersion || otherTs < thisTs){
@@ -1073,6 +1074,8 @@ public class OCCABTree {
                 node.keys[otherKeyIdx] = 0;
                 node.values[otherKeyIdx] = null;
                 node.size--;
+                node.latestVersions.remove(node.keys[otherKeyIdx]);
+                node.latestVersions.put(node.keys[i],new LatestVersion(node.keys[i],otherKeyVersion,node.values[i].insertionTime,i));
                 var nokc = new ObsoleteKeyCandidate(node.keys[i],i);
                 okcs.put(nokc.getKey(),nokc);
                 numberOfCleanedKeys++;
@@ -1096,6 +1099,7 @@ public class OCCABTree {
             node.keys[i] = 0;
             node.values[i] = null;
             node.size--;
+            node.latestVersions.remove(node.keys[i]);
             node.ver.incrementAndGet();
             numberOfCleanedKeys++;
         }
