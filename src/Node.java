@@ -97,10 +97,10 @@ public class Node {
     public void setLatestVersion(int key, ValueCell vc, int index){
         var latestVersion = this.latestVersions.get(key);
         if(latestVersion == null){
-            this.latestVersions.put(key, new LatestVersion(vc.key,vc.version,vc.insertionTime, index));
+            this.latestVersions.put(key, new LatestVersion(vc.key,vc.value,vc.version,vc.insertionTime, index));
         }
         else if (latestVersion.version < vc.version || (latestVersion.version ==  vc.version && latestVersion.insertionTime <= vc.insertionTime)){
-            this.latestVersions.put(key, new LatestVersion(vc.key,vc.version,vc.insertionTime, index));
+            this.latestVersions.put(key, new LatestVersion(vc.key,vc.value,vc.version,vc.insertionTime, index));
         }
     }
 

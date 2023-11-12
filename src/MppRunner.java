@@ -33,7 +33,7 @@ public class MppRunner {
 
         int dataRange = 1000000;
         int numberOfThreads = 12;
-        int numberOfScanThreads = 1;//Integer.parseInt(args[0]);
+        int numberOfScanThreads = 0;//Integer.parseInt(args[0]);
         int a = 2;
         int b = 16;
         int numberOfTests = 10;

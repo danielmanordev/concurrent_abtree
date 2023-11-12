@@ -31,14 +31,19 @@ class SortKeyValues implements Comparator<KeyValue> {
             if(o1.getValue().version < o2.getValue().version){
                 return -1;
             }
-            else {
-                if(o1.getValue().insertionTime > o2.getValue().insertionTime){
-                    return 1;
-                }
-                if(o1.getValue().insertionTime < o2.getValue().insertionTime){
-                    return -1;
-                }
+            if(o1.getValue().insertionTime > o2.getValue().insertionTime){
+                return 1;
             }
+            if(o1.getValue().insertionTime < o2.getValue().insertionTime){
+                return -1;
+            }
+            if(o1.getValue().value == 0){
+                return 1;
+            }
+            if(o2.getValue().value == 0){
+                return -1;
+            }
+
 
         }
         return 0;
