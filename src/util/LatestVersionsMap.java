@@ -1,5 +1,6 @@
 package util;
 
+// TODO: can be generic, ex: "ModuloMap"
 public class LatestVersionsMap {
 
     private final LatestVersionsMapNode[] values;
@@ -79,6 +80,10 @@ public class LatestVersionsMap {
                     }
                     newItem.prev = curr.prev;
                     newItem.next = curr.next;
+
+                    if(newItem.prev == null){
+                        this.values[key % this.size] = newItem;
+                    }
 
                     if(curr.prev != null){
                         curr.prev.next = newItem;

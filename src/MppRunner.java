@@ -10,7 +10,7 @@ public class MppRunner {
     public static void main(String[] args) {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
 
-        LatestVersionsMap mm = new LatestVersionsMap(10);
+       /* LatestVersionsMap mm = new LatestVersionsMap(10);
         for (int i=0;i<10;i++){
             mm.put(i,new LatestVersion(i,1,System.currentTimeMillis(),i));
         }
@@ -22,7 +22,14 @@ public class MppRunner {
         mm.remove(3);
         mm.put(23, new LatestVersion(23,2,System.currentTimeMillis(),1));
         mm.put(33, new LatestVersion(33,2,System.currentTimeMillis(),1));
-        mm.remove(23);
+        mm.put(33, new LatestVersion(33,3,System.currentTimeMillis(),6));
+        mm.put(33, new LatestVersion(33,2,System.currentTimeMillis(),1));
+        mm.put(23, new LatestVersion(23,2,System.currentTimeMillis(),1));
+        mm.put(23, new LatestVersion(23,1,System.currentTimeMillis(),1));
+        mm.put(23, new LatestVersion(23,6,12,1));
+        mm.put(13, new LatestVersion(13,1,System.currentTimeMillis(),1));
+        mm.remove(13);
+        mm.put(33, new LatestVersion(33,3,System.currentTimeMillis(),1));*/
 
         int dataRange = 1000000;
         int numberOfThreads = 12;

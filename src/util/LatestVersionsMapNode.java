@@ -1,5 +1,6 @@
 package util;
 
+// TODO: can be generic, ex: "ModuleMapNode"
 public class LatestVersionsMapNode implements Comparable<LatestVersionsMapNode> {
     int key;
     LatestVersion latestVersion;
