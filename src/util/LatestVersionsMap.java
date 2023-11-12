@@ -10,6 +10,12 @@ public class LatestVersionsMap {
         this.size = size;
     }
 
+    public void clear(){
+        for(int i=0;i<size;i++){
+            this.values[i] = null;
+        }
+    }
+
     public LatestVersion get(int key){
         LatestVersionsMapNode item = this.values[key % this.size];
         while (true){

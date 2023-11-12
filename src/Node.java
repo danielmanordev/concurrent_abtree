@@ -1,8 +1,8 @@
 import abstractions.Lock;
 import locks.MCSLock;
 import util.LatestVersion;
+import util.LatestVersionsMap;
 
-import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Node {
@@ -20,7 +20,7 @@ public class Node {
         this.keys = new int[maxNodeSize];
         this.values = new ValueCell[maxNodeSize];
         this.nodes = new Node[maxNodeSize];
-        this.latestVersions = new HashMap<>();
+        this.latestVersions = new LatestVersionsMap(maxNodeSize);
         this.maxNodeSize = maxNodeSize;
 
     }
@@ -33,7 +33,8 @@ public class Node {
     public int[] keys;
     public AtomicInteger ver = new AtomicInteger(0);
     public ValueCell[] values;
-    public HashMap<Integer, LatestVersion> latestVersions;
+    private final LatestVersionsMap latestVersions;
+
 
     // public PutData[] putArray = new PutData[OCCABTree.MAX_THREADS+1];
     public Node[] nodes;
