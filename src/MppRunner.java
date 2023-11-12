@@ -7,12 +7,33 @@ public class MppRunner {
     public static void main(String[] args) {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
 
+       /* LatestVersionsMap mm = new LatestVersionsMap(10);
+        for (int i=0;i<10;i++){
+            mm.put(i,new LatestVersion(i,1,System.currentTimeMillis(),i));
+        }
+
+        for (int i=10;i<20;i++){
+            mm.put(i,new LatestVersion(i,1,System.currentTimeMillis(),i));
+        }
+
+        mm.remove(3);
+        mm.put(23, new LatestVersion(23,2,System.currentTimeMillis(),1));
+        mm.put(33, new LatestVersion(33,2,System.currentTimeMillis(),1));
+        mm.put(33, new LatestVersion(33,3,System.currentTimeMillis(),6));
+        mm.put(33, new LatestVersion(33,2,System.currentTimeMillis(),1));
+        mm.put(23, new LatestVersion(23,2,System.currentTimeMillis(),1));
+        mm.put(23, new LatestVersion(23,1,System.currentTimeMillis(),1));
+        mm.put(23, new LatestVersion(23,6,12,1));
+        mm.put(13, new LatestVersion(13,1,System.currentTimeMillis(),1));
+        mm.remove(13);
+        mm.put(33, new LatestVersion(33,3,System.currentTimeMillis(),1));*/
+
         int dataRange = 1000000;
         int numberOfThreads = 12;
-        int numberOfScanThreads = 6;//Integer.parseInt(args[0]);
+        int numberOfScanThreads = 0;//Integer.parseInt(args[0]);
         int a = 2;
-        int b = 16;
-        int numberOfTests = 4;
+        int b = 128;
+        int numberOfTests = 10;
         int testDuration=10000;
         int perAdd=100;
         int perContains=0;
@@ -31,11 +52,6 @@ public class MppRunner {
 
             Set concurrentSet = new MTASet(a,b,numberOfThreads);
             TestSet.seed(concurrentSet, dataRange, dataRange / 2);
-            concurrentSet.remove(10);
-            concurrentSet.add(10,666);
-            concurrentSet.remove(10);
-            concurrentSet.remove(10);
-            concurrentSet.remove(10);
 
 
             long start = System.currentTimeMillis();
@@ -60,6 +76,7 @@ public class MppRunner {
             System.out.println("Non Scan Threads:         " + (numberOfThreads-numberOfScanThreads));
             System.out.println("Total time:               " + timeElapsed + " milliseconds");
             //numberOfThreads++;
+            //numberOfScanThreads++;
             if (i > 1) {
                 adds.add(testResult.TotalAdds.longValue());
             }
