@@ -76,7 +76,7 @@ public class Node {
     }*/
 
     public void initLatestVersions(){
-        this.latestVersions.clear();
+        /*this.latestVersions.clear();
         for(int i=0;i<this.maxNodeSize;i++){
             int key = keys[i];
             if(key == 0){
@@ -84,7 +84,7 @@ public class Node {
             }
             ValueCell vc = values[i];
             setLatestVersion(key,vc,i);
-        }
+        }*/
     }
 
     public int findLatest(int key){
