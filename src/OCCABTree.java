@@ -146,7 +146,6 @@ public class OCCABTree {
                 left.values[i] = keyValues[i].getValue();
 
             }
-            left.initLatestVersions();
 
             int rightSize = (this.maxNodeSize+1) - leftSize;
             Node right = createExternalNode(true,rightSize, keyValues[leftSize].getKey());
@@ -155,7 +154,6 @@ public class OCCABTree {
                 right.values[i] = keyValues[i+leftSize].getValue();
 
             }
-            right.initLatestVersions();
 
 
             left.left = node.left;
@@ -634,7 +632,6 @@ public class OCCABTree {
                        right.right.left = newNodeExt;
                    }
                    newNode = newNodeExt;
-                   newNode.initLatestVersions();
                } else {
                    Node newNodeInt = createInternalNode(true, size, node.searchKey);
                    for (int i = 0; i < getKeyCount(left); i++) {
@@ -798,7 +795,6 @@ public class OCCABTree {
 
                    newLeft = newLeftExt;
                    newLeft.searchKey = newLeftExt.keys[0];
-                   newLeft.initLatestVersions();
                    pivot = keyValues[keyCounter].key;
 
                } else {
@@ -839,7 +835,6 @@ public class OCCABTree {
                    for (int i = 0; i < rightSize; i++) {
                        newRight.values[i] = keyValues[valCounter++].value;
                    }
-                   newRight.initLatestVersions();
                } else {
                    Node newRightInt = createInternalNode(true, rightSize, 0);
                    for (int i = 0; i < rightSize - index; i++) {
@@ -911,7 +906,7 @@ public class OCCABTree {
         public int traversalStart(int low, int high, Node entry, int[] result) {
             int myVer = newVersion(low,high);
             int resultSize =0;
-            int[] resultKeys = new int[(high-low)+1];
+
 
             PathInfo pathInfo = new PathInfo();
             pathInfo.gp = null;
@@ -931,8 +926,11 @@ public class OCCABTree {
             Node leftNode = pathInfo.n;
             boolean continueToNextNode=true;
             HashSet<Integer> hs = new HashSet<>(this.maxNodeSize);
+            KeyValue[] kvs = new KeyValue[maxNodeSize];
+
             while(true){
                 hs.clear();
+                int kvSize =0;
                 for(int i=0;i<this.maxNodeSize;i++) {
                     int key = leftNode.keys[i];
                     if(key == 0){
@@ -950,7 +948,7 @@ public class OCCABTree {
                             // key was already found by "findLatest"
                             continue;
                         }
-                        int latestIndex = findLatest(key,myVer,leftNode);
+                        int latestIndex = findLatest(key, myVer,leftNode,i,maxNodeSize);
                         if(latestIndex == -1){
                             continue;
                         }
@@ -964,16 +962,23 @@ public class OCCABTree {
                             continue;
                         }
 
-                        result[resultSize]=leftNode.values[latestIndex].value;
-                        hs.add(key);
-                        resultSize++;
-                        // System.out.println("Key: "+leftNode.keys[i]+ " Value: "+leftNode.values[i]);
 
+                        kvs[kvSize] = new KeyValue(key,latestValue);
+                        kvSize++;
+                        hs.add(key);
                     }
                     if(leftNode.keys[i]>high) {
                         continueToNextNode = false;
                     }
                 }
+                //Arrays.sort(kvs,0,kvSize-1,new SortKeyValues());
+
+                for(int i=0;i<kvSize;i++){
+                    result[resultSize]=kvs[i].getValue().value;
+                    resultSize++;
+                }
+                //resultSize += kvSize;
+
                 if(continueToNextNode && leftNode.right != null) {
 
                     leftNode = leftNode.right;
@@ -1016,7 +1021,7 @@ public class OCCABTree {
                     if(value == null){
                         continue;
                     }
-                    int keyVersion = node.values[i].version;
+                    int keyVersion = value.version;
                     if(keyVersion <= version && keyVersion >= latestVersionFound){
                         latestKeyIndex=i;
                         latestVersionFound=keyVersion;
@@ -1025,6 +1030,26 @@ public class OCCABTree {
             }
             return latestKeyIndex;
         }
+
+    private int findLatest(int key, int version, Node node, int startIndex, int size){
+        int latestKeyIndex=-1;
+        int latestVersionFound=-1;
+
+        for (int i=startIndex;i<size;++i){
+            if(node.keys[i] == key) {
+                var value = node.values[i];
+                if(value == null){
+                    continue;
+                }
+                int keyVersion =value.version;
+                if(keyVersion <= version && keyVersion >= latestVersionFound){
+                    latestKeyIndex=i;
+                    latestVersionFound=keyVersion;
+                }
+            }
+        }
+        return latestKeyIndex;
+    }
 
 
     public int find(int key) {
@@ -1151,7 +1176,6 @@ public class OCCABTree {
             node.ver.incrementAndGet();
             numberOfCleanedKeys++;
 
-            node.initLatestVersions();
         }
       return numberOfCleanedKeys;
     }
