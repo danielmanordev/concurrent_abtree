@@ -983,14 +983,9 @@ public class OCCABTree {
             }
             Arrays.sort(this.threadsData[threadId].result, new SortValueCells());
 
-            int rangeSize=this.threadsData[threadId].rqHigh-this.threadsData[threadId].rqLow;
-            for(int i=0;i<rangeSize;i++)
+            int resultSize=this.threadsData[threadId].resultSize;
+            for(int i=0;i<resultSize;i++)
             {
-                if(this.threadsData[threadId].result[i] == null)
-                {
-                    result[i] = 0;
-                    continue;
-                }
                 result[i] = this.threadsData[threadId].result[i].value;
             }
 
@@ -1040,7 +1035,9 @@ public class OCCABTree {
                 }
             }
             if(value.key >= low && value.key <= high) {
-
+             if(value == null){
+                return;
+             }
                 /*if(rqSource == RQSource.LimboList) {
                     rqResult.wasDeletedDuringRangeQuery = true;
                 }*/
@@ -1145,7 +1142,6 @@ public class OCCABTree {
     public int scan(int[] result, int low, int high) {
         int threadId=((int) Thread.currentThread().getId());
         this.traversalStart(threadId,low,high,entry);
-
         var numberOfScannedKeys=traversalEnd(threadId,result);
         return numberOfScannedKeys;
     }
