@@ -925,60 +925,38 @@ public class OCCABTree {
             }
             Node leftNode = pathInfo.n;
             boolean continueToNextNode=true;
-            HashSet<Integer> hs = new HashSet<>(this.maxNodeSize);
             KeyValue[] kvs = new KeyValue[maxNodeSize];
+            var sortKvs = new SortKeyValues();
+            int kvsSize;
 
             while(true){
-                hs.clear();
-                int kvSize =0;
+                kvsSize=0;
+
                 for(int i=0;i<this.maxNodeSize;i++) {
                     int key = leftNode.keys[i];
                     if(key == 0){
                         continue;
                     }
-
                     ValueCell valueCell = leftNode.values[i];
                     if(valueCell == null){
                         continue;
                     }
 
                     if(key >= low && key <= high && valueCell.version <= myVer) {
-
-                        if(hs.contains(key)){
-                            // key was already found by "findLatest"
-                            continue;
-                        }
-                        int latestIndex = findLatest(key, myVer,leftNode,i,maxNodeSize);
-                        if(latestIndex == -1){
-                            continue;
-                        }
-                        var latestValue = leftNode.values[latestIndex];
-
-                        if(latestValue == null){
-                            continue;
-                        }
-                        if(latestValue.value == 0){
-                            // key was deleted before rq was linearized
-                            continue;
-                        }
-
-
-                        kvs[kvSize] = new KeyValue(key,latestValue);
-                        kvSize++;
-                        hs.add(key);
+                        kvs[i] = new KeyValue(key,valueCell);
+                        kvsSize++;
                     }
-                    if(leftNode.keys[i]>high) {
+                    if(key>high) {
                         continueToNextNode = false;
                     }
                 }
-                //Arrays.sort(kvs,0,kvSize-1,new SortKeyValues());
+                Arrays.sort(kvs,0,kvsSize,sortKvs);
 
-                for(int i=0;i<kvSize;i++){
+                for(int i=0;i<kvsSize;++i){
+                    i = findLatestSorted(kvs[i].key, myVer,kvs,i,kvsSize);
                     result[resultSize]=kvs[i].getValue().value;
                     resultSize++;
                 }
-                //resultSize += kvSize;
-
                 if(continueToNextNode && leftNode.right != null) {
 
                     leftNode = leftNode.right;
@@ -986,6 +964,7 @@ public class OCCABTree {
                 else {
                     break;
                 }
+
             }
             publishScan(null);
             return resultSize;
@@ -1031,13 +1010,18 @@ public class OCCABTree {
             return latestKeyIndex;
         }
 
-    private int findLatest(int key, int version, Node node, int startIndex, int size){
+    private int findLatestSorted(int key, int version, KeyValue[] kvs, int startIndex, int size){
         int latestKeyIndex=-1;
         int latestVersionFound=-1;
 
         for (int i=startIndex;i<size;++i){
-            if(node.keys[i] == key) {
-                var value = node.values[i];
+
+            if(kvs[i].key > key){
+                break;
+            }
+
+            if(kvs[i].key == key) {
+                var value = kvs[i].value;
                 if(value == null){
                     continue;
                 }
@@ -1047,6 +1031,7 @@ public class OCCABTree {
                     latestVersionFound=keyVersion;
                 }
             }
+
         }
         return latestKeyIndex;
     }
