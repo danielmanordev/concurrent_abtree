@@ -7,7 +7,7 @@ public class OCCABTree {
 
     /* Constants */
     private final int NULL = 0;
-    private final int LIMBOLIST_SIZE = 1000;
+    private final int LIMBOLIST_SIZE = 10000;
 
     private Node entry;
 
