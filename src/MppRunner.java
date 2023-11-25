@@ -33,11 +33,11 @@ public class MppRunner {
         int numberOfScanThreads = 1;//Integer.parseInt(args[0]);
         int a = 2;
         int b = 128;
-        int numberOfTests = 80;
+        int numberOfTests = 79;
         int testDuration=10000;
-        int perAdd=80;
+        int perAdd=100;
         int perContains=0;
-        int perRemove=20;
+        int perRemove=0;
         /// int perRange=100-perAdd-perContains-perRemove;
         ArrayList<Long> adds = new ArrayList();
         System.out.println("Number of available processors: "+availableProcessors);
