@@ -2,7 +2,6 @@
 
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
@@ -10,7 +9,7 @@ public class OCCABTree {
 
     /* Constants */
     private final int NULL = 0;
-    public static int MAX_THREADS = 32;
+    public static int MAX_THREADS = 80;
     private Node entry;
 
     private final int minNodeSize;
@@ -445,11 +444,9 @@ public class OCCABTree {
                 if(node.keys[keyIndex] == key){
                     var vc = node.values[keyIndex];
                     if(vc == null){
-                        keyIndex--;
                         continue;
                     }
                     if(vc.key != key){
-                        keyIndex--;
                         continue;
                     }
                     if(vc.version > latestVersion){
@@ -943,7 +940,7 @@ public class OCCABTree {
                     }
 
                     if(key >= low && key <= high && valueCell.version <= myVer) {
-                        kvs[i] = new KeyValue(key,valueCell);
+                        kvs[kvsSize] = new KeyValue(key,valueCell);
                         kvsSize++;
                     }
                     if(key>high) {
@@ -1015,7 +1012,6 @@ public class OCCABTree {
         int latestVersionFound=-1;
 
         for (int i=startIndex;i<size;++i){
-
             if(kvs[i].key > key){
                 break;
             }
