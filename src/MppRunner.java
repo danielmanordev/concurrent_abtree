@@ -32,14 +32,15 @@ public class MppRunner {
         int numberOfThreads = 1;
         int numberOfScanThreads = 0;//Integer.parseInt(args[0]);
         int a = 2;
-        int b = 128;
+        int b = 256;
         int numberOfTests = 79;
         int testDuration=10000;
-        int perAdd=100;
-        int perContains=0;
+        int perAdd=0;
+        int perContains=100;
         int perRemove=0;
         /// int perRange=100-perAdd-perContains-perRemove;
-        ArrayList<Long> adds = new ArrayList();
+
+        System.out.println("git branch: rq_support_77_kiwi_inspired");
         System.out.println("Number of available processors: "+availableProcessors);
         System.out.println("Number of tests: "+numberOfTests);
         System.out.println("Dataset Size: "+dataRange+" keys");
@@ -51,7 +52,7 @@ public class MppRunner {
         for (int i = 0; i < numberOfTests; i++) {
 
             Set concurrentSet = new MTASet(a,b,numberOfThreads);
-            TestSet.seed(concurrentSet, dataRange, dataRange / 2);
+            TestSet.seed(concurrentSet, dataRange, 10*dataRange);
 
 
             long start = System.currentTimeMillis();
@@ -76,10 +77,8 @@ public class MppRunner {
             System.out.println("Non Scan Threads:         " + (numberOfThreads-numberOfScanThreads));
             System.out.println("Total time:               " + timeElapsed + " milliseconds");
             numberOfThreads++;
-            //numberOfScanThreads++;
-            if (i > 1) {
-                adds.add(testResult.TotalAdds.longValue());
-            }
+            // numberOfScanThreads++;
+
         }
     }
 }
