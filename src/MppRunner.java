@@ -32,12 +32,12 @@ public class MppRunner {
         int numberOfThreads = 1;
         int numberOfScanThreads = 0;//Integer.parseInt(args[0]);
         int a = 2;
-        int b = 256;
+        int b = 128;
         int numberOfTests = 79;
         int testDuration=10000;
-        int perAdd=0;
-        int perContains=100;
-        int perRemove=0;
+        int perAdd=80;
+        int perContains=0;
+        int perRemove=20;
         /// int perRange=100-perAdd-perContains-perRemove;
 
         System.out.println("git branch: rq_support_77_kiwi_inspired");
@@ -52,7 +52,7 @@ public class MppRunner {
         for (int i = 0; i < numberOfTests; i++) {
 
             Set concurrentSet = new MTASet(a,b,numberOfThreads);
-            TestSet.seed(concurrentSet, dataRange, 10*dataRange);
+            TestSet.seed(concurrentSet, dataRange, dataRange/2);
 
 
             long start = System.currentTimeMillis();
