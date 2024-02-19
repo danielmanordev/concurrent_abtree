@@ -1,17 +1,17 @@
 import abstractions.Lock;
 import locks.MCSLock;
-import util.LatestVersion;
-import util.LatestVersionsMap;
 
+
+import java.lang.reflect.Constructor;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Node {
-
     private boolean marked;
     private boolean isLeaf = false;
     private final boolean isEntry = false;
     private boolean weight = false;
     private final int maxNodeSize;
+
 
     public Node(boolean weight, int size, int searchKey, int maxNodeSize){
         this.weight = weight;

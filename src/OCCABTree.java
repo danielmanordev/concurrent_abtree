@@ -209,8 +209,9 @@ public class OCCABTree {
                 int oldVersion = node.ver.get();
                 node.ver.set(oldVersion+1);
                 var vc = new ValueCell(key,value, System.currentTimeMillis());
-                vc.version = GLOBAL_VERSION.get();
+
                 node.values[i] = vc;
+                node.values[i].casVersion(0, GLOBAL_VERSION.get());
                 node.keys[i] = vc.key;
                 node.size++;
                 // node.setLatestVersion(vc.key,vc, i);
@@ -1165,4 +1166,6 @@ public class OCCABTree {
     public int scan(int[] result, int low, int high) {
         return this.traversalStart(low,high,entry, result);
     }
+
+
 }

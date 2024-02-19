@@ -29,11 +29,11 @@ public class MppRunner {
         mm.put(33, new LatestVersion(33,3,System.currentTimeMillis(),1));*/
 
         int dataRange = 1000000;
-        int numberOfThreads = 1;
-        int numberOfScanThreads = 0;//Integer.parseInt(args[0]);
+        int numberOfThreads = 8;
+        int numberOfScanThreads = 4;//Integer.parseInt(args[0]);
         int a = 2;
         int b = 128;
-        int numberOfTests = 79;
+        int numberOfTests = 10;
         int testDuration=10000;
         int perAdd=100;
         int perContains=0;
