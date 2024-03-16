@@ -118,10 +118,10 @@ V insert (key,value)
       for i = 0 to MAX_SIZE - 1
         if leaf.keys[i]=⊥
           leaf.ver++ // Start modification
-		  val=new ValueCell(key,value,System.currentTimeMillis())
+		      val=new ValueCell(key,value,System.currentTimeMillis())
           leaf.keys[i]=key
           leaf.vals[i]=val
-		  leaf.vals[i].casVersion(0, GLOBAL_VERSION.get());
+		      leaf.vals[i].casVersion(0, GLOBAL_VERSION.get());
           leaf.size++
           leaf.ver++ // End modification
           Unlock leaf and return ⊥
