@@ -131,7 +131,7 @@ V insert (key,value)
 	  if numberOfCleanedKey > 0
 	    write key,value to leaf
 		Unlock leaf
-        fixUnderfull(leaf)
+    fixUnderfull(leaf)
 		return value
       
 	  Lock parent
