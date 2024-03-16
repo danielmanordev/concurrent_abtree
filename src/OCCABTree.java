@@ -75,15 +75,7 @@ public class OCCABTree {
 
         int currSize = node.size;
         if(currSize < this.maxNodeSize) {
-           if(li != -1){
-                if(node.values[li].value != NULL && value == NULL){
-                    Result result = writeToNode(li, key, value, node);
-                    node.unlock();
-                    return result;
-                }
-            }
-
-
+          
           Result result = writeToNode(key,value,node);
           node.unlock();
           return result;
@@ -886,12 +878,12 @@ public class OCCABTree {
             }
 
             int latestIndex = findLatest(key, Integer.MAX_VALUE,leaf);
-
+            ValueCell value = leaf.values[latestIndex];
             int ver2 = leaf.ver.get();
             if (ver1 != ver2) {
                 continue;
             }
-            ValueCell value = leaf.values[latestIndex];
+            
             if (value == null) {
                 return new Result(NULL, ReturnCode.FAILURE);
             } else {
@@ -991,6 +983,7 @@ public class OCCABTree {
         private int findLatest(int key, int version, Node node){
             int latestKeyIndex=-1;
             int latestVersionFound=-1;
+            long latestInserationTime=-1;
 
             for (int i=0;i<maxNodeSize;i++){
                 if(node.keys[i] == key) {
@@ -999,9 +992,11 @@ public class OCCABTree {
                         continue;
                     }
                     int keyVersion = value.version;
-                    if(keyVersion <= version && keyVersion >= latestVersionFound){
+                    long keyInsertionTime = value.insertionTime;
+                    if(keyVersion <= version && keyVersion >= latestVersionFound && keyInsertionTime > latestInserationTime){
                         latestKeyIndex=i;
                         latestVersionFound=keyVersion;
+                        latestInserationTime=keyInsertionTime;
                     }
                 }
             }
