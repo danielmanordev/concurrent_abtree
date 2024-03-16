@@ -130,9 +130,9 @@ V insert (key,value)
 	  numberOfCleanedKey = cleanObsoleteKeys(leaf)
 	  if numberOfCleanedKey > 0
 	    write key,value to leaf
-		Unlock leaf
-    fixUnderfull(leaf)
-		return value
+		  Unlock leaf
+      fixUnderfull(leaf)
+		  return value
       
 	  Lock parent
       if parent.marked
