@@ -1,0 +1,147 @@
+abstract type Node 
+keys: K[MAX_SIZE]
+lock: MCSLock
+size : int 
+marked : bool 
+
+
+type Leaf inherits Node 
+vals : Value[ MAX_SIZE ] 
+ver : int 
+
+
+type Internal inherits Node 
+ptrs : Node [ MAX_SIZE ] 
+
+type TaggedInternal inherits Internal 
+
+type PathInfo 
+gp : Node
+p : Node 
+pIdx : int
+n : Node 
+nIdx : int 
+
+RetCode is SUCCESS or FAILURE or RETRY 
+
+type entry : Internal 
+
+<INT> findLatest(key, version, node)
+  latestKeyIndex=-1;
+  latestVersionFound=-1;
+  latestInsertionTime=-1
+
+  for i to MAX_SIZE-1
+    if key = node.keys[i]
+	  value = node.values[i]
+	  if value = ⊥
+	    continue
+	keyVersion = value.version
+	keyInserationTime = value.insertionTime
+	
+	if keyVersion <= version AND keyVersion >= latestVersionFound AND keyInserationTime > latestInsertionTime
+	  latestKeyIndex=i
+	  latestVersionFound=keyVersion
+	  latestInsertionTime=keyInserationTime
+
+  return latestKeyIndex
+
+
+<RetCode,V> searchLeaf(leaf,key)
+RETRY:
+  ver1 = leaf.ver
+  if ver1 is odd
+    goto RETRY
+
+  latestIndex=findLatest(key, Integer.MAX_VALUE,leaf)
+  value = ⊥
+  value = leaf.values[latestIndex];
+  ver2 = leaf.ver
+  
+  if ver2 is odd
+    goto RETRY
+  
+  if value = ⊥
+    return FAILURE, ⊥
+  else
+    return SUCCESS, value
+
+
+PathInfo search(key,targetNode)
+  gp=NULL,p=NULL,pIdx=0,n=entry,nIdx=0
+  while n is not Leaf
+    if n = targetNode 
+	  break
+    gp=p,p=n,pIdx=nIdx,nIdx=0
+    while nIdx<node.size-1 AND key≥node.keys[nIdx]
+      nIdx++
+    n=n.ptrs[nIdx]
+  return PathInfo(gp,p,pIdx,n,nIdx)
+
+
+V find(key)
+  pathInfo=search(key,NULL)
+  rc,val=searchLeaf(pathInfo.n,key)
+  return val
+
+
+V insert (key,value)
+  RETRY:
+    path=search(key,NULL)
+    rc,value=searchLeaf(path.n,key)
+  
+	if rc=SUCCESS AND value != ⊥
+	  return value
+	
+	if rc=FAILURE AND value = ⊥
+	  return value
+  
+    leaf,parent=path.n,path.p
+    Lock leaf
+    if leaf.marked
+      Unlock leaf and goto RETRY
+ 
+  // Verify key is not present
+    for i = 0 to MAX_SIZE - 1
+      if leaf.keys[i]=key
+	    latestIndex=findLatest(key, Integer.MAX_VALUE,leaf)
+		
+		if node.values[latestIndex].value = ⊥ AND value != ⊥
+			break
+	
+		if node.values[latestIndex].value != ⊥ AND value = ⊥
+			break
+        Unlock leaf and return leaf.vals[i]
+  
+    if leaf.size < MAX_SIZE
+      // Insert without splitting
+      for i = 0 to MAX_SIZE - 1
+        if leaf.keys[i]=⊥
+          leaf.ver++ // Start modification
+		  val=new ValueCell(key,value,System.currentTimeMillis())
+          leaf.keys[i]=key
+          leaf.vals[i]=val
+		  leaf.vals[i].casVersion(0, GLOBAL_VERSION.get());
+          leaf.size++
+          leaf.ver++ // End modification
+          Unlock leaf and return ⊥
+  
+	else
+	  numberOfCleanedKey = cleanObsoleteKeys(leaf)
+	  if numberOfCleanedKey > 0
+	    write key,value to leaf
+		Unlock leaf
+        fixUnderfull(leaf)
+		return value
+      
+	  Lock parent
+      if parent.marked
+        Unlock leaf and parent and goto RETRY
+
+      N = { contents of leaf } U {key/val}
+      newLeaf = TaggedInternal with two children that evenly share N
+      parent.ptrs[path.nIdx] = newLeaf
+      node.marked = true
+      Unlock leaf and parent
+      fixTagged(newLeaf)
+      return ⊥
