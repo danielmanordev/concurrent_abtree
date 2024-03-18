@@ -138,3 +138,28 @@ V insert(key,value)
       Unlock leaf and parent
       fixTagged(newLeaf)
       return ⊥
+
+
+fixTagged(node)
+  RETRY:
+    if node.marked return
+    path = search ( node . searchKey , node )
+    if path.n != node return
+  
+    Lock path.n, path.p, and path.gp
+    if node , parent or gParent is marked or path .p is TaggedInternal
+      Release all locks and goto RETRY
+    
+    node.marked = true
+    path.p.marked = true
+    if path.p.size + 1 <= MAX_NODE_SIZE
+      newNode = new Internal containing the keys & pointers of node and parent
+      path .gp. ptrs [ path . pIdx ] = newNode
+      Release all locks
+    else
+      // newNode is a TaggedInternal , unless it will be the new root (in which case it is Internal )
+      newNode = new subtree of three nodes consisting of a new Internal that points to two new internal nodes which evenly share the keys & pointers
+                of node and parent ( except for the pointer to node )
+      path.gp.ptrs[path.pIdx] = newNode
+      Release all locks
+      fixTagged(newNode)
