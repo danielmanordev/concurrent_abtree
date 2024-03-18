@@ -58,15 +58,12 @@ public class OCCABTree {
         int li =-1;
        for (int i = 0; i < this.maxNodeSize; ++i) {
             if (node.keys[i] == key) {
-                 li = findLatest(key,Integer.MAX_VALUE,node);
+                li = findLatest(key,Integer.MAX_VALUE,node);
 
-                if(node.values[li].value == NULL && value != NULL){
+                if((node.values[li].value == NULL && value != NULL) || (node.values[li].value != NULL && value == NULL)){
                     break;
                 }
-                if(node.values[li].value != NULL && value == NULL){
-                    break;
-                }
-
+              
                 //node.publishPut(null);
                 node.unlock();
                 return new Result(ReturnCode.FAILURE);
@@ -1052,11 +1049,7 @@ public class OCCABTree {
 
             Result searchResult = search(key,null,pathInfo);
 
-            if(searchResult.getReturnCode() == ReturnCode.SUCCESS && value != NULL){
-                return searchResult.getValue();
-            }
-
-            if(searchResult.getReturnCode() == ReturnCode.FAILURE && value == NULL){
+            if((searchResult.getReturnCode() == ReturnCode.SUCCESS && value != NULL) || (searchResult.getReturnCode() == ReturnCode.FAILURE && value == NULL)){
                 return searchResult.getValue();
             }
 

@@ -27,22 +27,22 @@ RetCode is SUCCESS or FAILURE or RETRY
 type entry : Internal 
 
 <INT> findLatest(key, version, node)
-  latestKeyIndex=-1;
-  latestVersionFound=-1;
+  latestKeyIndex=-1
+  latestVersionFound=-1
   latestInsertionTime=-1
 
   for i to MAX_SIZE-1
     if key = node.keys[i]
-	  value = node.values[i]
-	  if value = ⊥
-	    continue
-	keyVersion = value.version
-	keyInserationTime = value.insertionTime
+	    value = node.values[i]
+	    if value = ⊥
+	      continue
+	    keyVersion = value.version
+	    keyInserationTime = value.insertionTime
 	
-	if keyVersion <= version AND keyVersion >= latestVersionFound AND keyInserationTime > latestInsertionTime
-	  latestKeyIndex=i
-	  latestVersionFound=keyVersion
-	  latestInsertionTime=keyInserationTime
+	    if keyVersion <= version AND keyVersion >= latestVersionFound AND keyInserationTime > latestInsertionTime
+	      latestKeyIndex=i
+	      latestVersionFound=keyVersion
+	      latestInsertionTime=keyInserationTime
 
   return latestKeyIndex
 
@@ -85,32 +85,25 @@ V find(key)
   return val
 
 
-V insert (key,value)
+V insert(key,value)
   RETRY:
     path=search(key,NULL)
     rc,value=searchLeaf(path.n,key)
   
-	if rc=SUCCESS AND value != ⊥
-	  return value
+	  if rc=SUCCESS AND value != ⊥ OR rc=FAILURE AND value = ⊥
+	    return value
 	
-	if rc=FAILURE AND value = ⊥
-	  return value
-  
     leaf,parent=path.n,path.p
     Lock leaf
     if leaf.marked
       Unlock leaf and goto RETRY
  
-  // Verify key is not present
+    // Verify key is not present
     for i = 0 to MAX_SIZE - 1
       if leaf.keys[i]=key
-	    latestIndex=findLatest(key, Integer.MAX_VALUE,leaf)
-		
-		if node.values[latestIndex].value = ⊥ AND value != ⊥
-			break
-	
-		if node.values[latestIndex].value != ⊥ AND value = ⊥
-			break
+	      latestIndex=findLatest(key, Integer.MAX_VALUE,leaf)	
+		    if node.values[latestIndex].value = ⊥ AND value != ⊥ OR node.values[latestIndex].value != ⊥ AND value = ⊥
+			    break
         Unlock leaf and return leaf.vals[i]
   
     if leaf.size < MAX_SIZE
@@ -126,18 +119,18 @@ V insert (key,value)
           leaf.ver++ // End modification
           Unlock leaf and return ⊥
   
-	else
-	  numberOfCleanedKey = cleanObsoleteKeys(leaf)
-	  if numberOfCleanedKey > 0
-	    write key,value to leaf
-		  Unlock leaf
-      fixUnderfull(leaf)
-		  return value
-      
-	  Lock parent
-      if parent.marked
-        Unlock leaf and parent and goto RETRY
-
+	  else
+	    numberOfCleanedKey = cleanObsoleteKeys(leaf)
+	    if numberOfCleanedKey > 0
+	      write key,value to leaf
+		    Unlock leaf
+        fixUnderfull(leaf)
+		    return value
+        
+	    Lock parent
+        if parent.marked
+          Unlock leaf and parent and goto RETRY
+  
       N = { contents of leaf } U {key/val}
       newLeaf = TaggedInternal with two children that evenly share N
       parent.ptrs[path.nIdx] = newLeaf
