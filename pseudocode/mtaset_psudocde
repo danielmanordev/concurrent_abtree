@@ -143,7 +143,7 @@ V insert(key,value)
 fixTagged(node)
   RETRY:
     if node.marked return
-    path = search ( node . searchKey , node )
+    path = search (node.searchKey,node)
     if path.n != node return
   
     Lock path.n, path.p, and path.gp
