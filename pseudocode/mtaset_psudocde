@@ -141,7 +141,10 @@ V insert(key,value)
       child2.left = child1
       child2.right = node.right
 
-      
+      node.right.left = child2
+      node.left.right = child1 
+
+
 
       newTaggedInternal = TaggedInternal with two child1 and child2 that evenly share N
       parent.ptrs[path.nIdx] = newTaggedInternal
