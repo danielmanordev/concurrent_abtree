@@ -7,7 +7,10 @@ marked : bool
 
 type Leaf inherits Node 
 vals : Value[ MAX_SIZE ] 
-ver : int 
+ver : int
+left : leaf 
+right : Leaf
+
 
 
 type Internal inherits Node 
@@ -132,8 +135,16 @@ V insert(key,value)
           Unlock leaf and parent and goto RETRY
   
       N = { contents of leaf } U {key/val}
-      newLeaf = TaggedInternal with two children that evenly share N
-      parent.ptrs[path.nIdx] = newLeaf
+      initialize two leaf nodes, child1 and child2
+      child1.right = child2
+      child1.left = node.left
+      child2.left = child1
+      child2.right = node.right
+
+      
+
+      newTaggedInternal = TaggedInternal with two child1 and child2 that evenly share N
+      parent.ptrs[path.nIdx] = newTaggedInternal
       node.marked = true
       Unlock leaf and parent
       fixTagged(newLeaf)
@@ -143,11 +154,11 @@ V insert(key,value)
 fixTagged(node)
   RETRY:
     if node.marked return
-    path = search (node.searchKey,node)
+    path = search(node.searchKey,node)
     if path.n != node return
   
     Lock path.n, path.p, and path.gp
-    if node , parent or gParent is marked or path .p is TaggedInternal
+    if node , parent or gParent is marked or path.p is TaggedInternal
       Release all locks and goto RETRY
     
     node.marked = true
@@ -163,3 +174,45 @@ fixTagged(node)
       path.gp.ptrs[path.pIdx] = newNode
       Release all locks
       fixTagged(newNode)
+
+fixUnderfull(node)
+  if node=entry OR node=entry.ptrs[0] return
+  
+  RETRY:
+    path=search(node.searchKey, node)
+    if path.n != node return
+  
+    if path.nIdx = 0
+      sIndex = 1 // Sibling is right child
+    else
+      sIndex = path.nIdx-1 
+    sibling = parent.ptrs[sIndex]
+  
+    Lock node, sibling ,path.p, path.gp
+    if node.size >= MIN_NODE_SIZE return
+    if parent . size < MIN_NODE_SIZE or
+       node , sibling , parent , or gParent is marked or
+       node , sibling or parent is TaggedInternal
+      Release all locks and goto RETRY
+  
+    if node.size + sibling.size <= 2 * MIN_NODE_SIZE
+      newNode , sibling = Distribute keys of node and sibling evenly amongst new node and sibling
+168 newParent = copy of parent plus pointer to newNode
+and key between newNode and sibling
+169 gParent . ptrs [ path . pIdx ] = newParent
+170 Mark node , parent , and sibling
+171 Release all locks and return
+172 else
+173 newNode = Combined keys of node and sibling
+174 if gParent = entry and parent . size = 2
+175 entry . ptrs [0] = newNode
+176 Mark node , parent , and sibling
+177 Release all locks and return
+178 else
+179 newParent = copy of parent with pointer to
+newNode instead of node / sibling
+180 path .gp. ptrs [ path . pIdx ] = newParent
+181 Mark node , parent , and sibling
+182 Release all locks
+183 fixUnderfull ( newNode )
+184 fixUnderfull ( newParent )
