@@ -27,7 +27,13 @@ nIdx : int
 
 RetCode is SUCCESS or FAILURE or RETRY 
 
-type entry : Internal 
+type entry : Internal
+
+type ScanData {
+    low: int
+    high: int
+    version: int
+}
 
 <INT> findLatest(key, version, node)
   latestKeyIndex=-1
@@ -114,44 +120,44 @@ V insert(key,value)
       for i = 0 to MAX_SIZE - 1
         if leaf.keys[i]=⊥
           leaf.ver++ // Start modification
-		      val=new ValueCell(key,value,System.currentTimeMillis())
+		  val=new ValueCell(key,value,System.currentTimeMillis())
           leaf.keys[i]=key
           leaf.vals[i]=val
-		      leaf.vals[i].casVersion(0, GLOBAL_VERSION.get());
+		  leaf.vals[i].casVersion(0, GLOBAL_VERSION.get());
           leaf.size++
           leaf.ver++ // End modification
           Unlock leaf and return ⊥
   
 	  else
-	    numberOfCleanedKey = cleanObsoleteKeys(leaf)
-	    if numberOfCleanedKey > 0
+	    numberOfCleanedKeys = cleanObsoleteKeys(leaf)
+	    if numberOfCleanedKeys > 0
 	      write key,value to leaf
-		    Unlock leaf
-        fixUnderfull(leaf)
-		    return value
+		  Unlock leaf
+          fixUnderfull(leaf)
+		  return value
         
 	    Lock parent
         if parent.marked
           Unlock leaf and parent and goto RETRY
   
-      N = { contents of leaf } U {key/val}
-      initialize two leaf nodes, child1 and child2
-      child1.right = child2
-      child1.left = node.left
-      child2.left = child1
-      child2.right = node.right
+        N = { contents of leaf } U {key/val}
+        initialize two leaf nodes, child1 and child2
+        child1.right = child2
+        child1.left = node.left
+        child2.left = child1
+        child2.right = node.right
 
-      node.right.left = child2
-      node.left.right = child1 
+        node.right.left = child2
+        node.left.right = child1
 
 
 
-      newTaggedInternal = TaggedInternal with two child1 and child2 that evenly share N
-      parent.ptrs[path.nIdx] = newTaggedInternal
-      node.marked = true
-      Unlock leaf and parent
-      fixTagged(newLeaf)
-      return ⊥
+        newTaggedInternal = TaggedInternal with two children: child1 and child2 that evenly share N
+        parent.ptrs[path.nIdx] = newTaggedInternal
+        node.marked = true
+        Unlock leaf and parent
+        fixTagged(newTaggedInternal)
+        return ⊥
 
 
 fixTagged(node)
@@ -178,44 +184,74 @@ fixTagged(node)
       Release all locks
       fixTagged(newNode)
 
+
+
 fixUnderfull(node)
   if node=entry OR node=entry.ptrs[0] return
   
   RETRY:
     path=search(node.searchKey, node)
     if path.n != node return
-  
+
+    Node right, left
+
     if path.nIdx = 0
       sIndex = 1 // Sibling is right child
+      right = parent.ptrs[sIndex]
+      left = path.n
     else
-      sIndex = path.nIdx-1 
+      sIndex = path.nIdx-1
+      right = path.n
+      left = parent.ptrs[sIndex]
     sibling = parent.ptrs[sIndex]
   
     Lock node, sibling ,path.p, path.gp
     if node.size >= MIN_NODE_SIZE return
-    if parent . size < MIN_NODE_SIZE or
+    if parent.size < MIN_NODE_SIZE or
        node , sibling , parent , or gParent is marked or
        node , sibling or parent is TaggedInternal
       Release all locks and goto RETRY
   
-    if node.size + sibling.size <= 2 * MIN_NODE_SIZE
+    if node.size + sibling.size <= 2 * MIN_NODE_SIZE // AbsorbSibling
       newNode , sibling = Distribute keys of node and sibling evenly amongst new node and sibling
-168 newParent = copy of parent plus pointer to newNode
-and key between newNode and sibling
-169 gParent . ptrs [ path . pIdx ] = newParent
-170 Mark node , parent , and sibling
-171 Release all locks and return
-172 else
-173 newNode = Combined keys of node and sibling
-174 if gParent = entry and parent . size = 2
-175 entry . ptrs [0] = newNode
-176 Mark node , parent , and sibling
-177 Release all locks and return
-178 else
-179 newParent = copy of parent with pointer to
-newNode instead of node / sibling
-180 path .gp. ptrs [ path . pIdx ] = newParent
-181 Mark node , parent , and sibling
-182 Release all locks
-183 fixUnderfull ( newNode )
-184 fixUnderfull ( newParent )
+      newParent = copy of parent plus pointer to newNode and key between newNode and sibling
+      gParent.ptrs[path.pIdx] = newParent
+      Mark node , parent , and sibling
+      Release all locks and return
+    else
+     newNode = Combined keys of node and sibling
+     if gParent = entry and parent.size = 2
+       entry.ptrs[0] = newNode
+       Mark node , parent , and sibling
+       Release all locks and return
+     else
+       newParent = copy of parent with pointer to newNode instead of node / sibling
+       path.gp.ptrs[path.pIdx] = newParent
+       Mark node , parent , and sibling
+       Release all locks
+       fixUnderfull(newNode)
+       fixUnderfull(newParent)
+
+
+
+INT Scan(low, high, entry, result)
+
+1. Initialise ScanData and add it to ScanData array (publish)
+2. Get and increment global version atomically
+3. CAS the read version to ScanData and read version from ScanData to myVersion variable
+4. Find the left most leaf that supposed to contain the low key, refer to it with leftNode variable
+5. while true
+  a. foreach key in leftNode:
+     1. if key >= low and key <= high and keyVersion <= myVersion
+        a. add key and value to local_array
+     2. if key > high then continueToNextNode = false
+  b. sort local_array by key, ascending order
+  c. for each key in local_array
+     1. find the key latest version and copy it to the result[] array
+  d. if continueToNextNode && leftNode.right != null
+     1. point to the right node: leftNode = leftNode.right
+     else
+       break
+6. remove ScanData from the ScanData array
+7. return the result[] array size
+
