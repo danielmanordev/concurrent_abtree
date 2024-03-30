@@ -142,6 +142,8 @@ V insert(key,value)
   
         N = { contents of leaf } U {key/val}
         initialize two leaf nodes, child1 and child2
+        newTaggedInternal = TaggedInternal with two children: child1 and child2 that evenly share N
+
         child1.right = child2
         child1.left = node.left
         child2.left = child1
@@ -150,9 +152,6 @@ V insert(key,value)
         node.right.left = child2
         node.left.right = child1
 
-
-
-        newTaggedInternal = TaggedInternal with two children: child1 and child2 that evenly share N
         parent.ptrs[path.nIdx] = newTaggedInternal
         node.marked = true
         Unlock leaf and parent
