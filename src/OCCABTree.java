@@ -609,15 +609,17 @@ public class OCCABTree {
 
                        }
                    }
-                   newNodeExt.left = left.left;
-                   if(left.left != null) {
-                       left.left.right = newNodeExt;
-                   }
 
                    newNodeExt.right = right.right;
                    if(right.right != null) {
                        right.right.left = newNodeExt;
                    }
+
+                   newNodeExt.left = left.left;
+                   if(left.left != null) {
+                       left.left.right = newNodeExt;
+                   }
+
                    newNode = newNodeExt;
                } else {
                    Node newNodeInt = createInternalNode(true, size, node.searchKey);

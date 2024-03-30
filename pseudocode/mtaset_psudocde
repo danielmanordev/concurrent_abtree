@@ -212,14 +212,25 @@ fixUnderfull(node)
        node , sibling or parent is TaggedInternal
       Release all locks and goto RETRY
   
-    if node.size + sibling.size <= 2 * MIN_NODE_SIZE // AbsorbSibling
-      newNode , sibling = Distribute keys of node and sibling evenly amongst new node and sibling
-      newParent = copy of parent plus pointer to newNode and key between newNode and sibling
+    if node.size + sibling.size <= 2 * MIN_NODE_SIZE
+      newNode , newSibling = Distribute keys of node and sibling evenly amongst newNode and newSibling
+      newParent = copy of parent plus pointer to newNode and newSibling, and key between newNode and newSibling
+      if node and sibling are leafs
+        point newNode and newSibiling to each other, using the left and right pointers
+        and connect newNode and newSibiling to the leafs linked-list using
+        node and sibling and left and right pointers.
+
       gParent.ptrs[path.pIdx] = newParent
       Mark node , parent , and sibling
       Release all locks and return
     else
      newNode = Combined keys of node and sibling
+     if newNode is leaf
+       newNode.left = left.left
+       newNode.right = right.right
+       right.right.left = newNode
+       left.left.right = newNode
+
      if gParent = entry and parent.size = 2
        entry.ptrs[0] = newNode
        Mark node , parent , and sibling
