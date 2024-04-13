@@ -962,7 +962,7 @@ public class OCCABTree {
         private int newVersion(int low, int high){
            ScanData scanData = new ScanData(low,high);
            publishScan(scanData);
-            int myVer = GLOBAL_VERSION.getAndIncrement();
+           int myVer = GLOBAL_VERSION.getAndIncrement();
 
             if(scanData.version.compareAndSet(0, myVer))
                 return myVer;
@@ -1077,6 +1077,14 @@ public class OCCABTree {
                 continue;
             }
             int scanDataVersion=scanData.version.get();
+
+            if(scanDataVersion == 0){
+                int newVersion = GLOBAL_VERSION.getAndIncrement();
+                if(scanData.version.compareAndSet(0,newVersion)){
+                    scanDataVersion = newVersion;
+                }
+            }
+
             if(scanDataVersion < minVersion){
                 minVersion=scanDataVersion;
             }
