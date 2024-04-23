@@ -18,7 +18,7 @@ public class OCCABTree {
     private final ThreadData[] threadsData;
     private final ScanData[] scanArray;
     private final int threadsDataSize;
-    private final int scanDataSize;
+
 
 
     public  AtomicInteger GLOBAL_VERSION = new AtomicInteger(1);
@@ -32,7 +32,7 @@ public class OCCABTree {
         entry.nodes[0] = entryLeft;
 
         this.threadsDataSize = (int)Math.pow(numberOfThreads+20,2);
-        this.scanDataSize = (int)Math.pow(numberOfThreads+20,2);
+
 
 
         this.threadsData = new ThreadData[threadsDataSize];
