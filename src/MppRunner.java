@@ -32,7 +32,7 @@ public class MppRunner {
         int numberOfThreads = 96;
         int numberOfScanThreads = 1;//Integer.parseInt(args[0]);
         int a = 2;
-        int b = 128;
+        int b = 256;
         int numberOfTests = 80;
         int testDuration=10000;
         int perAdd=80;
