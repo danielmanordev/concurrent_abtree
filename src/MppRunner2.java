@@ -1,4 +1,5 @@
 import abstractions.Set;
+import benchmark.JavaConcurrentSkipList;
 
 import java.util.ArrayList;
 
@@ -7,7 +8,7 @@ public class MppRunner2 {
     public static void main(String[] args) {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
 
-            Set concurrentSet = new MTASet(2,4,8);
+            Set concurrentSet = new JavaConcurrentSkipList();//new MTASet(2,4,8);
             concurrentSet.add(3,3);
             concurrentSet.add(2,2);
             concurrentSet.add(1,1);
