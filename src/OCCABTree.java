@@ -55,12 +55,12 @@ public class OCCABTree {
         }
         // PutData putData = new PutData(key,value);
         //node.publishPut(putData);
-        int li =-1;
+        int keyIdx =-1;
        for (int i = 0; i < this.maxNodeSize; ++i) {
             if (node.keys[i] == key) {
-                li = findLatest(key,Integer.MAX_VALUE,node);
-
-                if((node.values[li].value == NULL && value != NULL) || (node.values[li].value != NULL && value == NULL)){
+                //li = findLatest(key,Integer.MAX_VALUE,node);
+                keyIdx = i;
+                if((node.values[keyIdx].getLatestValue() == NULL && value != NULL) || (node.values[keyIdx].getLatestValue() != NULL && value == NULL)){
                     break;
                 }
               
@@ -70,10 +70,16 @@ public class OCCABTree {
             }
         }
 
+       if(keyIdx != -1){
+           Result result = updateKeyInIndex(keyIdx,value,node);
+           node.unlock();
+           return result;
+       }
+
         int currSize = node.size;
         if(currSize < this.maxNodeSize) {
           
-          Result result = writeToNode(key,value,node);
+          Result result = insertKey(key,value,node);
           node.unlock();
           return result;
         }
@@ -84,7 +90,7 @@ public class OCCABTree {
             // TODO: check if ordering of conditions below, between the diaz lines, can be optimized
             // ###########################################################
             if(numberOfRemovedObsoleteKeys > 0){
-                Result writeResult = writeToNode(key,value,node);
+                Result writeResult = insertKey(key,value,node);
                 node.unlock();
                 fixUnderfull(node);
                 return writeResult;
@@ -113,9 +119,10 @@ public class OCCABTree {
                 }
 
             }
-
-            keyValues[k] = new KeyValue(key, new ValueCell(key,value, System.currentTimeMillis()));
-            keyValues[k].getValue().version = GLOBAL_VERSION.get();
+            var vc = new ValueCell(key);
+            vc.putNewValue(value);
+            keyValues[k] = new KeyValue(key, vc);
+            keyValues[k].getValueCell().setLatestVersion(GLOBAL_VERSION.get()); // no need to be atomic, at this point, only a single thread can access this
            // node.publishPut(null);
             ++k;
 
@@ -131,7 +138,7 @@ public class OCCABTree {
             Node left = createExternalNode(true,leftSize, keyValues[0].getKey());
             for (int i = 0; i < leftSize; i++) {
                 left.keys[i] = keyValues[i].getKey();
-                left.values[i] = keyValues[i].getValue();
+                left.values[i] = keyValues[i].getValueCell();
 
             }
 
@@ -139,7 +146,7 @@ public class OCCABTree {
             Node right = createExternalNode(true,rightSize, keyValues[leftSize].getKey());
             for (int i = 0; i < rightSize; i++) {
                 right.keys[i] = keyValues[i+leftSize].getKey();
-                right.values[i] = keyValues[i+leftSize].getValue();
+                right.values[i] = keyValues[i+leftSize].getValueCell();
 
             }
 
@@ -180,7 +187,7 @@ public class OCCABTree {
 
     }
 
-   private Result writeToNode(int idx, int key, int value,Node node){
+   /*private Result writeToNode(int idx, int key, int value,Node node){
                 int oldVersion = node.ver.get();
                 node.ver.set(oldVersion+1);
                 var vc = new ValueCell(key,value, System.currentTimeMillis());
@@ -189,28 +196,36 @@ public class OCCABTree {
                 node.keys[idx] = vc.key;
                 node.ver.set(oldVersion+2);
                 return new Result(node.values[idx].value,ReturnCode.SUCCESS);
+    }*/
+
+    private Result updateKeyInIndex(int keyIndex, int value, Node node){
+        int oldVersion = node.ver.get();
+        node.ver.set(oldVersion+1);
+        var vc = node.values[keyIndex];
+        vc.putNewValue(value);
+        vc.casLatestVersion(0, GLOBAL_VERSION.get());
+        node.ver.set(oldVersion+2);
+        return new Result(node.values[keyIndex].getLatestValue(),ReturnCode.SUCCESS);
     }
 
-    private Result writeToNode(int key, int value, Node node){
+    private Result insertKey(int key, int value, Node node){
         for (int i = 0; i < this.maxNodeSize; ++i) {
             if (node.keys[i] == NULL) {
-
                 int oldVersion = node.ver.get();
                 node.ver.set(oldVersion+1);
-                var vc = new ValueCell(key,value, System.currentTimeMillis());
-
+                var vc = new ValueCell(key);
+                vc.putNewValue(value);
                 node.values[i] = vc;
-                node.values[i].casVersion(0, GLOBAL_VERSION.get());
+                node.values[i].casLatestVersion(0, GLOBAL_VERSION.get());
                 node.keys[i] = vc.key;
                 node.size++;
                 // node.setLatestVersion(vc.key,vc, i);
                 node.ver.set(oldVersion+2);
-                return new Result(node.values[i].value,ReturnCode.SUCCESS);
+                return new Result(node.values[i].getLatestValue(),ReturnCode.SUCCESS);
             }
         }
         return new Result(value,ReturnCode.RETRY);
     }
-
 
     private Node createExternalNode(boolean weight, int size, int searchKey){
         Node node = createInternalNode(weight, size, searchKey);
@@ -420,7 +435,7 @@ public class OCCABTree {
         }
     }*/
 
-    KeyIndexValueVersionResult getKeyIndexValueVersion(Node node, int key) {
+    /*KeyIndexValueVersionResult getKeyIndexValueVersion(Node node, int key) {
         int keyIndex, latestIndex,latestVersion;
         ValueCell value;
         int version;
@@ -449,6 +464,23 @@ public class OCCABTree {
             value = latestIndex != -1 ? node.values[latestIndex] : null;
         } while (node.ver.get() != version);
         return value == null ? new KeyIndexValueVersionResult(NULL,NULL,ReturnCode.FAILURE) : new KeyIndexValueVersionResult(value.value,version,ReturnCode.SUCCESS);
+
+    }*/
+
+    KeyIndexValueVersionResult getKeyIndexValueVersion(Node node, int key) {
+        int keyIndex;
+        int value;
+        int version;
+
+        do {
+            while (((version = node.ver.get()) & 1) != 0) {}
+            keyIndex = 0;
+            while (keyIndex < this.maxNodeSize && node.keys[keyIndex] != key) {
+                ++keyIndex;
+            }
+            value = keyIndex < this.maxNodeSize ? node.values[keyIndex].getLatestValue() : NULL;
+        } while (node.ver.get() != version);
+        return value == NULL ? new KeyIndexValueVersionResult(NULL,NULL,ReturnCode.FAILURE) : new KeyIndexValueVersionResult(value,version,ReturnCode.SUCCESS);
 
     }
 
@@ -719,7 +751,7 @@ public class OCCABTree {
                    for (int i = 0; i < this.maxNodeSize; i++) {
                        if (left.keys[i] != NULL) {
                            keyValues[keyCounter++].key = left.keys[i];
-                           keyValues[valCounter++].value = left.values[i];
+                           keyValues[valCounter++].valueCell = left.values[i];
 
                        }
                    }
@@ -740,7 +772,7 @@ public class OCCABTree {
                    for (int i = 0; i < this.maxNodeSize; i++) {
                        if (right.keys[i] != NULL) {
                           keyValues[keyCounter++].key = right.keys[i];
-                          keyValues[valCounter++].value = right.values[i];
+                          keyValues[valCounter++].valueCell = right.values[i];
 
                        }
                    }
@@ -777,7 +809,7 @@ public class OCCABTree {
 
                    for (int i = 0; i < leftSize; i++) {
                        newLeftExt.keys[i] = keyValues[keyCounter++].key;
-                       newLeftExt.values[i] = keyValues[valCounter++].value;
+                       newLeftExt.values[i] = keyValues[valCounter++].valueCell;
 
                    }
 
@@ -822,7 +854,7 @@ public class OCCABTree {
                    newRight = newRightExt;
                    newRight.searchKey = newRightExt.keys[0]; // TODO: verify searchKey setting is same as llx/scx based version
                    for (int i = 0; i < rightSize; i++) {
-                       newRight.values[i] = keyValues[valCounter++].value;
+                       newRight.values[i] = keyValues[valCounter++].valueCell;
                    }
                } else {
                    Node newRightInt = createInternalNode(true, rightSize, 0);
@@ -876,7 +908,36 @@ public class OCCABTree {
                 continue;
             }
 
-            int latestIndex = findLatest(key, Integer.MAX_VALUE,leaf);
+            int val = NULL;
+            for (int keyIndex = 0; keyIndex < this.maxNodeSize; keyIndex++) {
+                if (leaf.keys[keyIndex] == key) {
+                    val = leaf.values[keyIndex].getLatestValue();
+                    break;
+                }
+            }
+            int ver2 = leaf.ver.get();
+            if (ver1 != ver2) {
+                continue;
+            }
+            if (val == NULL) {
+                return new Result(NULL, ReturnCode.FAILURE);
+            } else {
+                return new Result(val, ReturnCode.SUCCESS);
+            }
+        }
+    }
+/*
+    private Result searchLeaf(Node leaf, int key) {
+        if(!leaf.isLeaf()) {
+            return new Result(NULL, ReturnCode.FAILURE);
+        }
+        while (true) {
+            int ver1 = leaf.ver.get();
+            if (ver1 % 2 != 0) {
+                continue;
+            }
+
+            // int latestIndex = findLatest(key, Integer.MAX_VALUE,leaf);
             ValueCell value = leaf.values[latestIndex];
             int ver2 = leaf.ver.get();
             if (ver1 != ver2) {
@@ -886,11 +947,11 @@ public class OCCABTree {
             if (value == null) {
                 return new Result(NULL, ReturnCode.FAILURE);
             } else {
-                return new Result(value.value, ReturnCode.SUCCESS);
+                return new Result(value.getLatestValue(), ReturnCode.SUCCESS);
             }
         }
     }
-
+*/
         // TODO: continue here
         public int traversalStart(int low, int high, Node entry, int[] result) {
             int myVer = newVersion(low,high);
@@ -931,8 +992,24 @@ public class OCCABTree {
                         continue;
                     }
 
-                    if(key >= low && key <= high && valueCell.version <= myVer) {
-                        kvs[kvsSize] = new KeyValue(key,valueCell);
+                    if(key >= low && key <= high) {
+                        var lvv= valueCell.getLatestVersionedValue();
+                        int value;
+                        if(lvv.getVersion() == 0){
+                            lvv.casVersion(0, GLOBAL_VERSION.get());
+                            value = valueCell.getValueByVersion(myVer);
+                        }
+                        else if (lvv.getVersion() <= myVer){
+                            value = lvv.value;
+                        }
+                        else{
+                            value = valueCell.getValueByVersion(myVer);
+                        }
+                        if(value == 0)
+                        {
+                            continue;
+                        }
+                        kvs[kvsSize] = new KeyValue(key,value);
                         kvsSize++;
                     }
                     if(key>high) {
@@ -942,12 +1019,11 @@ public class OCCABTree {
                 Arrays.sort(kvs,0,kvsSize,sortKvs);
 
                 for(int i=0;i<kvsSize;++i){
-                    i = findLatestSorted(kvs[i].key, myVer,kvs,i,kvsSize);
-                    result[resultSize]=kvs[i].getValue().value;
+                    // i = findLatestSorted(kvs[i].key, myVer,kvs,i,kvsSize);
+                    result[resultSize]=kvs[i].value;
                     resultSize++;
                 }
                 if(continueToNextNode && leftNode.right != null) {
-
                     leftNode = leftNode.right;
                 }
                 else {
@@ -977,54 +1053,6 @@ public class OCCABTree {
 
         // publish into thread array
         scanArray[idx] = scanData;
-    }
-
-        private int findLatest(int key, int version, Node node){
-            int latestKeyIndex=-1;
-            int latestVersionFound=-1;
-            long latestInserationTime=-1;
-
-            for (int i=0;i<maxNodeSize;i++){
-                if(node.keys[i] == key) {
-                    var value = node.values[i];
-                    if(value == null){
-                        continue;
-                    }
-                    int keyVersion = value.version;
-                    long keyInsertionTime = value.insertionTime;
-                    if(keyVersion <= version && keyVersion >= latestVersionFound && keyInsertionTime > latestInserationTime){
-                        latestKeyIndex=i;
-                        latestVersionFound=keyVersion;
-                        latestInserationTime=keyInsertionTime;
-                    }
-                }
-            }
-            return latestKeyIndex;
-        }
-
-    private int findLatestSorted(int key, int version, KeyValue[] kvs, int startIndex, int size){
-        int latestKeyIndex=-1;
-        int latestVersionFound=-1;
-
-        for (int i=startIndex;i<size;++i){
-            if(kvs[i].key > key){
-                break;
-            }
-
-            if(kvs[i].key == key) {
-                var value = kvs[i].value;
-                if(value == null){
-                    continue;
-                }
-                int keyVersion =value.version;
-                if(keyVersion <= version && keyVersion >= latestVersionFound){
-                    latestKeyIndex=i;
-                    latestVersionFound=keyVersion;
-                }
-            }
-
-        }
-        return latestKeyIndex;
     }
 
 

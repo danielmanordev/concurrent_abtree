@@ -1,27 +1,53 @@
-import java.util.concurrent.atomic.AtomicInteger;
+import util.VersionedValue;
+import util.VersionsBST;
 
 public class ValueCell implements Comparable<ValueCell> {
 
-    public ValueCell(int key, int value, long insertionTime) {
-        this.key = key;
-        this.value = value;
-        this.insertionTime = insertionTime;
+    private final VersionsBST versionsBst;
+    private VersionedValue latestValue;
+    public final int key;
 
+    private void addLatestValueToBST(){
+        this.versionsBst.insert(latestValue.getVersion(),latestValue.value);
     }
-    public int key;
-    public int value;
-    public long insertionTime;
-    public int version;
-    private AtomicInteger atomicVersion = new AtomicInteger(0);
+
+    public ValueCell(int key){
+        this.key = key;
+        this.versionsBst = new VersionsBST(key);
+    }
+
 
     @Override
     public int compareTo(ValueCell o) {
         return Integer.compare(this.key, o.key);
     }
 
-    public void casVersion(int expectedValue, int newValue){
-        if (atomicVersion.compareAndSet(expectedValue,newValue)){
-            version = newValue;
-        }
+    public boolean casLatestVersion(int expectedValue, int newValue){
+        return this.latestValue.casVersion(expectedValue,newValue);
+    }
+
+    public boolean setLatestVersion(int latestVersion){
+        return this.latestValue.setLatestVersion(latestVersion);
+    }
+
+    public int getLatestValue(){
+        return this.latestValue.value;
+    }
+
+    public VersionedValue getLatestVersionedValue(){
+        return this.latestValue;
+    }
+
+    public int getLatestValueVersion(){
+        return this.latestValue.getVersion();
+    }
+
+    public int getValueByVersion(int maxVersion){
+        return this.versionsBst.floor(maxVersion);
+    }
+
+    public void putNewValue(int value){
+       addLatestValueToBST();
+       latestValue = new VersionedValue(0,value,this.key);
     }
 }
