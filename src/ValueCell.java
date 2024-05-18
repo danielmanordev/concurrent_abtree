@@ -2,7 +2,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ValueCell implements Comparable<ValueCell> {
 
-    public ValueCell(int key, int value, long insertionTime) {
+    public ValueCell(int key, int value, int insertionTime) {
         this.key = key;
         this.value = value;
         this.insertionTime = insertionTime;
@@ -10,7 +10,7 @@ public class ValueCell implements Comparable<ValueCell> {
     }
     public int key;
     public int value;
-    public long insertionTime;
+    public int insertionTime;
     public int version;
     private AtomicInteger atomicVersion = new AtomicInteger(0);
 

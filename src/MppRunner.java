@@ -32,7 +32,7 @@ public class MppRunner {
         int numberOfThreads = 79;
         int numberOfScanThreads = 1;//Integer.parseInt(args[0]);
         int a = 2;
-        int b = 256;
+        int b = 4;
         int numberOfTests = 79;
         int testDuration=10000;
         int perAdd=80;
@@ -51,6 +51,13 @@ public class MppRunner {
         for (int i = 0; i < numberOfTests; i++) {
 
             Set concurrentSet = new MTASet(a,b,numberOfThreads);
+            concurrentSet.add(1,2);
+            concurrentSet.remove(1);
+            concurrentSet.add(1,5);
+            concurrentSet.remove(1);
+            concurrentSet.add(1,9);
+
+
             TestSet.seed(concurrentSet, dataRange, dataRange / 2);
 
 

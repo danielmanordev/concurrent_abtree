@@ -1,14 +1,11 @@
 import abstractions.Lock;
 import locks.MCSLock;
 
-
-import java.lang.reflect.Constructor;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Node {
     private boolean marked;
     private boolean isLeaf = false;
-    private final boolean isEntry = false;
     private boolean weight = false;
     private final int maxNodeSize;
 
@@ -30,7 +27,7 @@ public class Node {
     public boolean isTagged = false;
     public int size;
     public int[] keys;
-    public AtomicInteger ver = new AtomicInteger(0);
+    public int ver = 0;
     public ValueCell[] values;
 
 
