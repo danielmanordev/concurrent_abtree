@@ -42,8 +42,8 @@ public class ValueCell implements Comparable<ValueCell> {
         return this.latestValue.value;
     }
 
-    public VersionedValue getLatestVersionedValue(){
-        return this.latestValue;
+    public int getLatestVersion(){
+        return this.latestValue.getVersion();
     }
 
     public int helpAndGetValueByVersion(int version){

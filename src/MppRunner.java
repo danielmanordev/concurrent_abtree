@@ -76,7 +76,7 @@ public class MppRunner {
             System.out.println("Non Scan Threads:         " + (numberOfThreads-numberOfScanThreads));
             System.out.println("Total time:               " + timeElapsed + " milliseconds");
             //numberOfThreads++;
-            numberOfScanThreads++;
+            //numberOfScanThreads++;
             if (i > 1) {
                 adds.add(testResult.TotalAdds.longValue());
             }

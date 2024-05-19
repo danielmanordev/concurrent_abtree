@@ -63,7 +63,7 @@ public class OCCABTree {
                 if((node.values[keyIdx].getLatestValue() == NULL && value != NULL) || (node.values[keyIdx].getLatestValue() != NULL && value == NULL)){
                     break;
                 }
-              
+
                 //node.publishPut(null);
                 node.unlock();
                 return new Result(ReturnCode.FAILURE);
@@ -78,14 +78,14 @@ public class OCCABTree {
 
         int currSize = node.size;
         if(currSize < this.maxNodeSize) {
-          
+
           Result result = insertKey(key,value,node);
           node.unlock();
           return result;
         }
         else {
 
-           /* int numberOfRemovedObsoleteKeys = cleanObsoleteKeys(node);
+           int numberOfRemovedObsoleteKeys = cleanObsoleteKeys(node);
 
             // TODO: check if ordering of conditions below, between the diaz lines, can be optimized
             // ###########################################################
@@ -96,7 +96,7 @@ public class OCCABTree {
                 return writeResult;
             }
             // ###########################################################
-            */
+
             parent.lock();
             if(parent.isMarked()) {
                 parent.unlock();
@@ -199,28 +199,27 @@ public class OCCABTree {
     }*/
 
     private Result updateKeyInIndex(int keyIndex, int value, Node node){
-        int oldVersion = node.ver.get();
-        node.ver.set(oldVersion+1);
+        node.version++;
         var vc = node.values[keyIndex];
         vc.putNewValue(value);
         vc.casLatestVersion(0, GlobalVersion.Value.get());
-        node.ver.set(oldVersion+2);
+        node.version++;
         return new Result(node.values[keyIndex].getLatestValue(),ReturnCode.SUCCESS);
     }
 
     private Result insertKey(int key, int value, Node node){
         for (int i = 0; i < this.maxNodeSize; ++i) {
             if (node.keys[i] == NULL) {
-                int oldVersion = node.ver.get();
-                node.ver.set(oldVersion+1);
+                node.version++;
+
                 var vc = new ValueCell(key);
                 vc.putNewValue(value);
                 node.values[i] = vc;
-                node.values[i].casLatestVersion(0, GlobalVersion.Value.get());
                 node.keys[i] = vc.key;
+                node.values[i].casLatestVersion(0, GlobalVersion.Value.get());
                 node.size++;
                 // node.setLatestVersion(vc.key,vc, i);
-                node.ver.set(oldVersion+2);
+                node.version++;
                 return new Result(node.values[i].getLatestValue(),ReturnCode.SUCCESS);
             }
         }
@@ -473,13 +472,13 @@ public class OCCABTree {
         int version;
 
         do {
-            while (((version = node.ver.get()) & 1) != 0) {}
+            while (((version = node.version) & 1) != 0) {}
             keyIndex = 0;
             while (keyIndex < this.maxNodeSize && node.keys[keyIndex] != key) {
                 ++keyIndex;
             }
             value = keyIndex < this.maxNodeSize ? node.values[keyIndex].getLatestValue() : NULL;
-        } while (node.ver.get() != version);
+        } while (node.version != version);
         return value == NULL ? new KeyIndexValueVersionResult(NULL,NULL,ReturnCode.FAILURE) : new KeyIndexValueVersionResult(value,version,ReturnCode.SUCCESS);
 
     }
@@ -903,7 +902,7 @@ public class OCCABTree {
             return new Result(NULL, ReturnCode.FAILURE);
         }
         while (true) {
-            int ver1 = leaf.ver.get();
+            int ver1 = leaf.version;
             if (ver1 % 2 != 0) {
                 continue;
             }
@@ -915,7 +914,7 @@ public class OCCABTree {
                     break;
                 }
             }
-            int ver2 = leaf.ver.get();
+            int ver2 = leaf.version;
             if (ver1 != ver2) {
                 continue;
             }
@@ -1081,12 +1080,12 @@ public class OCCABTree {
 
         }
     }
-/*
+
     // TODO: Update latest key Hashmap after deleteing keys
-    private int cleanObsoleteKeys(Node node){
+    private int cleanObsoleteKeys(Node node) {
 
         // get smallest on-going range version
-        int minVersion=-1;
+        int minVersion=Integer.MAX_VALUE;
         int numberOfCleanedKeys=0;
         for(int i=0; i < OCCABTree.MAX_THREADS; ++i){
             ScanData scanData = this.scanArray[i];
@@ -1096,7 +1095,7 @@ public class OCCABTree {
             int scanDataVersion=scanData.version.get();
 
             if(scanDataVersion == 0){
-                int newVersion = GLOBAL_VERSION.getAndIncrement();
+                int newVersion = GlobalVersion.Value.getAndIncrement();
                 if(scanData.version.compareAndSet(0,newVersion)){
                     scanDataVersion = newVersion;
                 }
@@ -1107,80 +1106,31 @@ public class OCCABTree {
             }
         }
 
-        HashMap<Integer, ObsoleteKeyCandidate> okcs = new HashMap<>();
-        // check for key duplications
         for (int i=0;i<this.maxNodeSize;++i)
         {
             int key=node.keys[i];
-            if(key==0){
-                continue;
-            }
             var vc = node.values[i];
-            var thisKeyVersion = vc.version;
-            if(thisKeyVersion >= minVersion && minVersion != -1){
+            var latestValue = vc.helpAndGetValueByVersion(Integer.MAX_VALUE);
+            if(latestValue != 0){
                continue;
             }
-            var okc = okcs.get(key);
-            if(okc == null){
-                okc = new ObsoleteKeyCandidate(key,i);
-                okcs.put(key,okc);
-                continue;
-            }
-
-            var otherKeyIdx = okc.getIndex();
-            var otherVc = node.values[otherKeyIdx];
-            var otherKeyVersion = otherVc.version;
-            var thisTs = node.values[i].insertionTime;
-            var otherTs = node.values[otherKeyIdx].insertionTime;
-            var thisValue = node.values[i].value;
-            var otherValue = node.values[otherKeyIdx].value;
-
-            node.ver.incrementAndGet();
-            if(otherKeyVersion > thisKeyVersion || (otherKeyVersion == thisKeyVersion && otherTs > thisTs) || (otherKeyVersion == thisKeyVersion && otherTs == thisTs && otherValue == 0)) {
-                // remove current key
+            // key is deleted, lets see if we can remove it and save space
+            var latestVersion = vc.getLatestVersion();
+            if(minVersion >= latestVersion){
+                node.version++;
                 node.keys[i] = 0;
                 node.values[i] = null;
                 node.size--;
+                node.version++;
                 numberOfCleanedKeys++;
             }
-            else if(otherKeyVersion < thisKeyVersion || otherTs < thisTs || thisValue == 0) {
-                // remove other key and put this key in set
-                node.keys[otherKeyIdx] = 0;
-                node.values[otherKeyIdx] = null;
-                node.size--;
-                var nokc = new ObsoleteKeyCandidate(node.keys[i],i);
-                okcs.put(nokc.getKey(),nokc);
-                numberOfCleanedKeys++;
-            }
-            node.ver.incrementAndGet();
-
         }
-        // look for single deleted keys with version smaller than min version
-        for (int i=0;i<this.maxNodeSize;++i){
-            if(node.values[i] == null){
-                continue;
-            }
-            if(node.values[i].version >= minVersion && minVersion != -1){
-                continue;
-            }
-            if(node.values[i].value != 0){
-                continue;
-            }
-            node.ver.incrementAndGet();
-            node.keys[i] = 0;
-            node.values[i] = null;
-            node.size--;
-            node.ver.incrementAndGet();
-            numberOfCleanedKeys++;
-
-        }
-      return numberOfCleanedKeys;
-    }*/
+        return numberOfCleanedKeys;
+    }
 
 
     public int scan(int[] result, int low, int high) {
         return this.traversalStart(low,high,entry, result);
     }
-
 
 }

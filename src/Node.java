@@ -30,7 +30,7 @@ public class Node {
     public boolean isTagged = false;
     public int size;
     public int[] keys;
-    public AtomicInteger ver = new AtomicInteger(0);
+    public int version = 0;
     public ValueCell[] values;
 
 
