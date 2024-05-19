@@ -9,65 +9,69 @@ public class VersionsBST {
         this.key = key;
     }
 
-    public int insert(int version, int value){
-        return insertInternal(this.root, new VersionedValue(version,value,this.key)).valueVersion.getVersion();
-    }
-
-
-    // A utility function to insert
-    // a new BinarySearchTreeNode with given key in BST
-    VersionsBSTNode insertInternal(VersionsBSTNode BinarySearchTreeNode, VersionedValue valueVersion) {
-        // If the tree is empty, return a new BinarySearchTreeNode
-        if (BinarySearchTreeNode == null) {
-            BinarySearchTreeNode = new VersionsBSTNode(valueVersion);
-            return BinarySearchTreeNode;
+    public void put(int version, int value) {
+        var vv = new VersionedValue(version,value,this.key);
+        VersionsBSTNode bstNode = new VersionsBSTNode(vv);
+        if (root == null) {
+            root = bstNode;
+            return;
         }
 
-        // Otherwise, recur down the tree
-        if (valueVersion.getVersion() < valueVersion.getVersion())
-            BinarySearchTreeNode.left = insertInternal(BinarySearchTreeNode.left, valueVersion);
-        else if (valueVersion.getVersion() > BinarySearchTreeNode.valueVersion.getVersion())
-            BinarySearchTreeNode.right = insertInternal(BinarySearchTreeNode.right, valueVersion);
-
-        // Return the (unchanged) BinarySearchTreeNode pointer
-        return BinarySearchTreeNode;
+        VersionsBSTNode parent = null, x = root;
+        while (x != null) {
+            parent = x;
+             int existingVersion = x.valueVersion.getVersion();
+            if      (version < existingVersion) x = x.left;
+            else if (version > existingVersion) x = x.right;
+            else {
+                x.valueVersion.value = value;
+                return;
+            }
+        }
+         if (version < parent.valueVersion.getVersion()) parent.left  = bstNode;
+        else         parent.right = bstNode;
     }
 
-    // Utility function to search a key in a BST
-    VersionsBSTNode search(VersionsBSTNode root, int key) {
-        // Base Cases: root is null or key is present at root
-        if (root == null || root.valueVersion.getVersion() == key)
-            return root;
 
-        // Key is greater than root's key
-        if (root.valueVersion.getVersion() < key)
-            return search(root.right, key);
-
-        // Key is smaller than root's key
-        return search(root.left, key);
+    int get(int version) {
+        VersionsBSTNode bstNode = root;
+        while (bstNode != null) {
+            int existingVersion = bstNode.valueVersion.getVersion();
+            if      (version < existingVersion) bstNode = bstNode.left;
+            else if (version > existingVersion) bstNode = bstNode.right;
+            else return bstNode.valueVersion.value;
+        }
+        return 0;
     }
 
-    public int floor(int version){
-        return floorInternal(this.root,version);
-    }
+    public int floor(int version) {
+        int floor = 0;
+        VersionsBSTNode curr = this.root;
 
-    int floorInternal(VersionsBSTNode root, int version)
-    {
-        if (root == null)
-            return Integer.MAX_VALUE;
+        while (curr != null) {
+            var vv = curr.valueVersion;
+            if(vv == null){
+                break;
+            }
 
-        /* If root->data is equal to key */
-        if (root.valueVersion.getVersion() == version)
-            return root.valueVersion.value;
+            if (vv.getVersion() == version) {
+                floor = vv.value;
+                return floor;
+            }
 
-        /* If root->data is greater than the key */
-        if (root.valueVersion.getVersion() > version)
-            return floorInternal(root.left, version);
+            if (version > vv.getVersion()) {
 
-        /* Else, the floor may lie in right subtree
-    or may be equal to the root*/
-        int floorValue = floorInternal(root.right, version);
-        return (floorValue <= version) ? floorValue : root.valueVersion.getVersion();
+                floor = vv.value;
+                curr = curr.right;
+            } else {
+
+                curr = curr.left;
+            }
+        }
+        return floor;
     }
 }
+
+
+
  

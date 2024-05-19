@@ -8,7 +8,11 @@ public class ValueCell implements Comparable<ValueCell> {
     public final int key;
 
     private void addLatestValueToBST(){
-        this.versionsBst.insert(latestValue.getVersion(),latestValue.value);
+        var vv = latestValue;
+        if(vv == null){
+            return;
+        }
+        this.versionsBst.put(vv.getVersion(),vv.value);
     }
 
     public ValueCell(int key){
@@ -31,6 +35,10 @@ public class ValueCell implements Comparable<ValueCell> {
     }
 
     public int getLatestValue(){
+        var vv = this.latestValue;
+        if(vv == null){
+            return 0;
+        }
         return this.latestValue.value;
     }
 
@@ -38,12 +46,19 @@ public class ValueCell implements Comparable<ValueCell> {
         return this.latestValue;
     }
 
-    public int getLatestValueVersion(){
-        return this.latestValue.getVersion();
-    }
-
-    public int getValueByVersion(int maxVersion){
-        return this.versionsBst.floor(maxVersion);
+    public int helpAndGetValueByVersion(int version){
+        var lv = latestValue;
+        if(lv == null){
+            return 0;
+        }
+        if(lv.getVersion() == 0){
+            lv.casVersion(0,GlobalVersion.Value.get());
+        }
+        var lvv = lv.getVersion();
+        if(lvv <= version){
+            return lv.value;
+        }
+        return this.versionsBst.floor(version);
     }
 
     public void putNewValue(int value){

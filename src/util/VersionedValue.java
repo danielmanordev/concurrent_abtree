@@ -4,11 +4,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class VersionedValue {
     private int version;
-    private AtomicInteger atomicVersion;
+    private AtomicInteger atomicVersion = new AtomicInteger();
     public int key;
     public int value;
     public boolean casVersion(int expectedVersion, int newVersion){
-        if (atomicVersion.compareAndSet(expectedVersion,expectedVersion)){
+        if (atomicVersion.compareAndSet(expectedVersion,newVersion)){
             version = newVersion;
             return true;
         }
@@ -16,7 +16,7 @@ public class VersionedValue {
     }
 
     public boolean setLatestVersion(int version){
-        if(version != 0){
+        if(this.version != 0){
             return false;
         }
         this.version = version;

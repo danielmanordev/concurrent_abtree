@@ -16,6 +16,10 @@ public class MppRunner2 {
         concurrentSet.add(1000,1000);
         concurrentSet.add(4,4);
         concurrentSet.add(5,5);
+        concurrentSet.remove(5);
+        concurrentSet.add(5,6);
+        concurrentSet.remove(5);
+        concurrentSet.add(5,55);
         int[] res = new int[1000];
         concurrentSet.getRange(res,0,1000);
         System.out.println(123);

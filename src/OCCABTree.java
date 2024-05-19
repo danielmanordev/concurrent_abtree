@@ -21,7 +21,7 @@ public class OCCABTree {
 
 
 
-    public  AtomicInteger GLOBAL_VERSION = new AtomicInteger(1);
+    //public  AtomicInteger GLOBAL_VERSION = new AtomicInteger(1);
 
     public OCCABTree(int a, int b, int numberOfThreads) {
         this.minNodeSize = a;
@@ -85,7 +85,7 @@ public class OCCABTree {
         }
         else {
 
-            int numberOfRemovedObsoleteKeys = cleanObsoleteKeys(node);
+           /* int numberOfRemovedObsoleteKeys = cleanObsoleteKeys(node);
 
             // TODO: check if ordering of conditions below, between the diaz lines, can be optimized
             // ###########################################################
@@ -96,7 +96,7 @@ public class OCCABTree {
                 return writeResult;
             }
             // ###########################################################
-
+            */
             parent.lock();
             if(parent.isMarked()) {
                 parent.unlock();
@@ -122,7 +122,7 @@ public class OCCABTree {
             var vc = new ValueCell(key);
             vc.putNewValue(value);
             keyValues[k] = new KeyValue(key, vc);
-            keyValues[k].getValueCell().setLatestVersion(GLOBAL_VERSION.get()); // no need to be atomic, at this point, only a single thread can access this
+            keyValues[k].getValueCell().setLatestVersion(GlobalVersion.Value.get()); // no need to be atomic, at this point, only a single thread can access this
            // node.publishPut(null);
             ++k;
 
@@ -203,7 +203,7 @@ public class OCCABTree {
         node.ver.set(oldVersion+1);
         var vc = node.values[keyIndex];
         vc.putNewValue(value);
-        vc.casLatestVersion(0, GLOBAL_VERSION.get());
+        vc.casLatestVersion(0, GlobalVersion.Value.get());
         node.ver.set(oldVersion+2);
         return new Result(node.values[keyIndex].getLatestValue(),ReturnCode.SUCCESS);
     }
@@ -216,7 +216,7 @@ public class OCCABTree {
                 var vc = new ValueCell(key);
                 vc.putNewValue(value);
                 node.values[i] = vc;
-                node.values[i].casLatestVersion(0, GLOBAL_VERSION.get());
+                node.values[i].casLatestVersion(0, GlobalVersion.Value.get());
                 node.keys[i] = vc.key;
                 node.size++;
                 // node.setLatestVersion(vc.key,vc, i);
@@ -993,21 +993,10 @@ public class OCCABTree {
                     }
 
                     if(key >= low && key <= high) {
-                        var lvv= valueCell.getLatestVersionedValue();
-                        int value;
-                        if(lvv.getVersion() == 0){
-                            lvv.casVersion(0, GLOBAL_VERSION.get());
-                            value = valueCell.getValueByVersion(myVer);
-                        }
-                        else if (lvv.getVersion() <= myVer){
-                            value = lvv.value;
-                        }
-                        else{
-                            value = valueCell.getValueByVersion(myVer);
-                        }
-                        if(value == 0)
-                        {
-                            continue;
+                        int value = valueCell.helpAndGetValueByVersion(myVer);
+
+                        if(value == 0){
+                           continue;
                         }
                         kvs[kvsSize] = new KeyValue(key,value);
                         kvsSize++;
@@ -1038,7 +1027,7 @@ public class OCCABTree {
         private int newVersion(int low, int high){
            ScanData scanData = new ScanData(low,high);
            publishScan(scanData);
-           int myVer = GLOBAL_VERSION.getAndIncrement();
+           int myVer = GlobalVersion.Value.getAndIncrement();
 
             if(scanData.version.compareAndSet(0, myVer))
                 return myVer;
@@ -1092,7 +1081,7 @@ public class OCCABTree {
 
         }
     }
-
+/*
     // TODO: Update latest key Hashmap after deleteing keys
     private int cleanObsoleteKeys(Node node){
 
@@ -1186,7 +1175,7 @@ public class OCCABTree {
 
         }
       return numberOfCleanedKeys;
-    }
+    }*/
 
 
     public int scan(int[] result, int low, int high) {
