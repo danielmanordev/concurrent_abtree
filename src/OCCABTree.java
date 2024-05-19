@@ -468,7 +468,7 @@ public class OCCABTree {
 
     KeyIndexValueVersionResult getKeyIndexValueVersion(Node node, int key) {
         int keyIndex;
-        int value;
+        ValueCell value = null;
         int version;
 
         do {
@@ -477,9 +477,20 @@ public class OCCABTree {
             while (keyIndex < this.maxNodeSize && node.keys[keyIndex] != key) {
                 ++keyIndex;
             }
-            value = keyIndex < this.maxNodeSize ? node.values[keyIndex].getLatestValue() : NULL;
+            if(keyIndex < this.maxNodeSize) {
+                var vc = node.values[keyIndex];
+                if (vc == null) {
+                    keyIndex--;
+                    continue;
+                }
+                if (vc.key != key) {
+                    keyIndex--;
+                    continue;
+                }
+                value = vc;
+            }
         } while (node.version != version);
-        return value == NULL ? new KeyIndexValueVersionResult(NULL,NULL,ReturnCode.FAILURE) : new KeyIndexValueVersionResult(value,version,ReturnCode.SUCCESS);
+        return value == null ? new KeyIndexValueVersionResult(NULL,NULL,ReturnCode.FAILURE) : new KeyIndexValueVersionResult(value.getLatestValue(),version,ReturnCode.SUCCESS);
 
     }
 

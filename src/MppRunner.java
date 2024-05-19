@@ -35,9 +35,9 @@ public class MppRunner {
         int b = 256;
         int numberOfTests = 6 ;
         int testDuration=10000;
-        int perAdd=100;
+        int perAdd=80;
         int perContains=0;
-        int perRemove=0;
+        int perRemove=20;
         /// int perRange=100-perAdd-perContains-perRemove;
         ArrayList<Long> adds = new ArrayList();
         System.out.println("Number of available processors: "+availableProcessors);

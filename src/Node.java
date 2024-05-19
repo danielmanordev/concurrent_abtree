@@ -30,7 +30,7 @@ public class Node {
     public boolean isTagged = false;
     public int size;
     public int[] keys;
-    public int version = 0;
+    public volatile int version = 0;
     public ValueCell[] values;
 
 
