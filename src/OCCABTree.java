@@ -1048,13 +1048,18 @@ public class OCCABTree {
                     System.out.println("trouble");
                 }*/
                 if(rqSource == RQSource.LimboList || rqSource == RQSource.Announcement){
-                    if(threadsData[threadId].vc_hashset.contains(value))
+                    for(int i=0;i<threadsData[threadId].resultSize;i++){
+                        if(threadsData[threadId].result[i].key==value.key){
+                            return;
+                        }
+                    }
+                    /*if(threadsData[threadId].vc_hashset.contains(value))
                     {
                         return;
-                    }
+                    }*/
                 }
 
-                threadsData[threadId].vc_hashset.add(value);
+                // threadsData[threadId].vc_hashset.add(value);
                 threadsData[threadId].result[threadsData[threadId].resultSize++] = value;
             }
         }
