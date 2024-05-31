@@ -29,11 +29,11 @@ public class MppRunner {
         mm.put(33, new LatestVersion(33,3,System.currentTimeMillis(),1));*/
 
         int dataRange = 1000000;
-        int numberOfThreads = 85;
-        int numberOfScanThreads = 0;//Integer.parseInt(args[0]);
+        int numberOfThreads = 12;
+        int numberOfScanThreads = 6;//Integer.parseInt(args[0]);
         int a = 2;
         int b = 256;
-        int numberOfTests = 80 ;
+        int numberOfTests = 5 ;
         int testDuration=10000;
         int perAdd=80;
         int perContains=0;
@@ -76,7 +76,7 @@ public class MppRunner {
             System.out.println("Non Scan Threads:         " + (numberOfThreads-numberOfScanThreads));
             System.out.println("Total time:               " + timeElapsed + " milliseconds");
             //numberOfThreads++;
-            numberOfScanThreads++;
+            //numberOfScanThreads++;
             if (i > 1) {
                 adds.add(testResult.TotalAdds.longValue());
             }
