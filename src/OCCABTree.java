@@ -40,6 +40,20 @@ public class OCCABTree {
 
     }
 
+    private boolean isParentOf(Node parent, Node child){
+        if(child == null){
+            return true;
+        }
+        for(int i=0;i<parent.size;i++){
+            if(parent.nodes[i] != null){
+                if(parent.nodes[i] == child){
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private Result insert(PathInfo pathInfo, int key, int value) {
         Node node = pathInfo.n;
         Node parent = pathInfo.p;
@@ -98,7 +112,35 @@ public class OCCABTree {
             // ###########################################################
 
             parent.lock();
-            if(parent.isMarked()) {
+            boolean isRightMarked =false;
+            boolean isLeftMarked =false;
+            boolean isRightSameParent =true;
+            boolean isLeftSameParent =true;
+
+            if(parent.isMarked()){
+                parent.unlock();
+                node.unlock();
+                return new Result(ReturnCode.RETRY);
+            }
+            isRightSameParent = isParentOf(parent,node.right);
+            if(!isRightSameParent){
+                    node.right.lock();
+                    isRightMarked = node.right.isMarked();
+            }
+            isLeftSameParent = isParentOf(parent,node.left);
+            if(!isLeftSameParent){
+                    node.left.lock();
+                    isLeftMarked = node.left.isMarked();
+            }
+
+            if(isRightMarked || isLeftMarked) {
+                if(!isLeftSameParent){
+                    node.left.unlock();
+                }
+
+                if(!isRightSameParent){
+                    node.right.unlock();
+                }
                 parent.unlock();
                 node.unlock();
                 return new Result(ReturnCode.RETRY);
@@ -178,6 +220,15 @@ public class OCCABTree {
 
             parent.nodes[pathInfo.nIdx] = replacementNode;
             node.mark();
+
+            if(!isLeftSameParent){
+                node.left.unlock();
+            }
+
+            if(!isRightSameParent){
+                node.right.unlock();
+            }
+
             node.unlock();
             parent.unlock();
             fixTagged(replacementNode);
