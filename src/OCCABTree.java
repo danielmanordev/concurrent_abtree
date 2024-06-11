@@ -1233,6 +1233,9 @@ public class OCCABTree {
                 if(scanData.version.compareAndSet(0,newVersion)){
                     scanDataVersion = newVersion;
                 }
+                else{
+                    scanDataVersion=scanData.version.get();
+                }
             }
 
             if(scanDataVersion < minVersion){
