@@ -27,7 +27,7 @@ public class JavaConcurrentSkipListBenchmark {
         System.out.println("Starting....");
         for (int i = 0; i < numberOfTests; i++) {
 
-            Set concurrentSet = new MTASet(2,128,12);
+            Set concurrentSet = new MTASet(2,256);
             TestSet.seed(concurrentSet, dataRange, dataRange);
 
 
