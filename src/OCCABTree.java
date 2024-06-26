@@ -15,15 +15,15 @@ public class OCCABTree {
     private final int minNodeSize;
     private final int maxNodeSize;
 
-    private final ThreadData[] threadsData;
+    //private final ThreadData[] threadsData;
     private final ScanData[] scanArray;
-    private final int threadsDataSize;
+    //private final int threadsDataSize;
 
 
 
     //public  AtomicInteger GLOBAL_VERSION = new AtomicInteger(1);
 
-    public OCCABTree(int a, int b, int numberOfThreads) {
+    public OCCABTree(int a, int b) {
         this.minNodeSize = a;
         this.maxNodeSize = b;
         int anyKey = 26;
@@ -31,11 +31,11 @@ public class OCCABTree {
         entry = createInternalNode(true,1,anyKey);
         entry.nodes[0] = entryLeft;
 
-        this.threadsDataSize = (int)Math.pow(numberOfThreads+20,2);
+        //this.threadsDataSize = (int)Math.pow(numberOfThreads+20,2);
 
 
 
-        this.threadsData = new ThreadData[threadsDataSize];
+        //this.threadsData = new ThreadData[threadsDataSize];
         this.scanArray = new ScanData[MAX_THREADS+1];
 
     }

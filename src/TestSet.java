@@ -121,6 +121,7 @@ class TestSet extends Thread
         }
     }
 
+
     /** This is the base method for the TestSet class, which executes a single test.
      * @param set the set to test
      * @param numThreads number of threads for the current set
@@ -129,10 +130,15 @@ class TestSet extends Thread
      * @param perAdd percentage of add(x) operations
      * @param ms length of test (in milliseconds)
      */
-    public static TestResult runTest(Set set, int numThreads, int numberOfScanThreads ,int dataRange, int perCon, int perAdd, int scanLow, int scanHigh ,int ms)
+    public static TestResult runTest(Set set, int numThreads, int numberOfScanThreads ,int dataRange, int perCon, int perAdd, int scanLow, int scanHigh ,int ms, boolean scanOnly)
     {
-        int numberOfNonScanThreads = numThreads - numberOfScanThreads;
-
+        int numberOfNonScanThreads;
+        if (scanOnly){
+            numberOfNonScanThreads =0;
+        }
+        else {
+            numberOfNonScanThreads = numThreads - numberOfScanThreads;
+        }
 
         // create non scan threads for the test
         TestSet[] threads = new TestSet[numThreads];

@@ -1,43 +1,20 @@
 import abstractions.Set;
+import benchmark.JavaConcurrentSkipList;
 
 import java.util.ArrayList;
 
-public class MppRunner {
-
+public class JavaConcurrentSkipListBenchmark {
     public static void main(String[] args) {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
-
-       /* LatestVersionsMap mm = new LatestVersionsMap(10);
-        for (int i=0;i<10;i++){
-            mm.put(i,new LatestVersion(i,1,System.currentTimeMillis(),i));
-        }
-
-        for (int i=10;i<20;i++){
-            mm.put(i,new LatestVersion(i,1,System.currentTimeMillis(),i));
-        }
-
-        mm.remove(3);
-        mm.put(23, new LatestVersion(23,2,System.currentTimeMillis(),1));
-        mm.put(33, new LatestVersion(33,2,System.currentTimeMillis(),1));
-        mm.put(33, new LatestVersion(33,3,System.currentTimeMillis(),6));
-        mm.put(33, new LatestVersion(33,2,System.currentTimeMillis(),1));
-        mm.put(23, new LatestVersion(23,2,System.currentTimeMillis(),1));
-        mm.put(23, new LatestVersion(23,1,System.currentTimeMillis(),1));
-        mm.put(23, new LatestVersion(23,6,12,1));
-        mm.put(13, new LatestVersion(13,1,System.currentTimeMillis(),1));
-        mm.remove(13);
-        mm.put(33, new LatestVersion(33,3,System.currentTimeMillis(),1));*/
-
         int dataRange = 1000000;
-        int numberOfThreads = 12;
-        int numberOfScanThreads = 6;//Integer.parseInt(args[0]);
-        int a = 2;
-        int b = 256;
-        int numberOfTests = 5 ;
+        int numberOfThreads = 1;
+        int numberOfScanThreads = 1;//Integer.parseInt(args[0]);
+        int numberOfTests = 12 ;
         int testDuration=10000;
-        int perAdd=80;
+        int perAdd=0;
         int perContains=0;
-        int perRemove=20;
+        int perRemove=0;
+        boolean scanOnly=true;
         /// int perRange=100-perAdd-perContains-perRemove;
         ArrayList<Long> adds = new ArrayList();
         System.out.println("Number of available processors: "+availableProcessors);
@@ -50,20 +27,18 @@ public class MppRunner {
         System.out.println("Starting....");
         for (int i = 0; i < numberOfTests; i++) {
 
-            Set concurrentSet = new MTASet(a,b,numberOfThreads);
-            TestSet.seed(concurrentSet, dataRange, dataRange / 2);
+            Set concurrentSet = new MTASet(2,128,12);
+            TestSet.seed(concurrentSet, dataRange, dataRange);
 
 
             long start = System.currentTimeMillis();
-            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, numberOfScanThreads ,dataRange, perContains, perAdd,1,32000,testDuration,false);
+            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, numberOfScanThreads ,dataRange, perContains, perAdd,1,32000,testDuration,scanOnly);
             long finish = System.currentTimeMillis();
             long timeElapsed = finish - start;
             long timeElapsedMicroseconds = timeElapsed * 1000;
             System.out.println();
             System.out.println("TEST " + (i + 1) + "/" + numberOfTests + " FINISHED - RESULTS");
             System.out.println("*****************************************");
-            System.out.println("a:                        " + a);
-            System.out.println("b:                        " + b);
             System.out.println("Total adds:               " + testResult.TotalAdds.longValue());
             System.out.println("Total removes:            " + testResult.TotalRemoves.longValue());
             System.out.println("Total contains:           " + testResult.TotalContains.longValue());
@@ -75,8 +50,8 @@ public class MppRunner {
             System.out.println("Scan Threads:             " + numberOfScanThreads);
             System.out.println("Non Scan Threads:         " + (numberOfThreads-numberOfScanThreads));
             System.out.println("Total time:               " + timeElapsed + " milliseconds");
-            //numberOfThreads++;
-            //numberOfScanThreads++;
+            numberOfThreads++;
+            numberOfScanThreads++;
             if (i > 1) {
                 adds.add(testResult.TotalAdds.longValue());
             }
