@@ -50,7 +50,7 @@ public class MppRunner {
         System.out.println("Starting....");
         for (int i = 0; i < numberOfTests; i++) {
 
-            Set concurrentSet = new MTASet(a,b,numberOfThreads);
+            Set concurrentSet = new MTASet(a,b);
             TestSet.seed(concurrentSet, dataRange, dataRange / 2);
 
 

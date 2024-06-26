@@ -7,7 +7,7 @@ public class MppRunner2 {
     public static void main(String[] args) {
         int availableProcessors = Runtime.getRuntime().availableProcessors();
         int[] res = new int[1000];
-            Set concurrentSet = new MTASet(2,4,8);
+            Set concurrentSet = new MTASet(2,4);
             concurrentSet.add(1,1);
             concurrentSet.add(3,3);
             concurrentSet.add(2,2);

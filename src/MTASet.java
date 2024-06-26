@@ -4,8 +4,8 @@ public class MTASet implements Set {
 
     private OCCABTree occABTree;
 
-    public MTASet(int a, int b, int numberOfThreads){
-        this.occABTree = new OCCABTree(a,b,numberOfThreads);
+    public MTASet(int a, int b){
+        this.occABTree = new OCCABTree(a,b);
     }
 
 
