@@ -35,7 +35,7 @@ public class JavaConcurrentSkipList implements Set {
         for (int i = s; i <= t; i++) {
             Integer value = concurrentSkipListMap.get(i);
             if (value != null) {
-                result[resultSize] = concurrentSkipListMap.get(i);
+                result[resultSize] = value;
                 resultSize++;
             }
         }

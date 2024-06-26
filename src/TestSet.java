@@ -121,6 +121,13 @@ class TestSet extends Thread
         }
     }
 
+    public static void fill(Set set, int numberOfKeys){
+
+        for (int i=0;i<numberOfKeys;i++){
+            set.add(i,i);
+        }
+    }
+
 
     /** This is the base method for the TestSet class, which executes a single test.
      * @param set the set to test
