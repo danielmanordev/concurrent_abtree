@@ -39,7 +39,7 @@ public class ScanOnlyBenchmark {
 
             if(wu){
                 System.out.println("Warming up...");
-                TestResult testResult = TestSet.runTest(cs, numberOfThreads, numberOfScanThreads ,dataRange, perContains, perAdd,1,32000,testDuration,scanOnly);
+                TestResult testResult = TestSet.runTest(cs, numberOfThreads, numberOfScanThreads ,dataRange, perContains, perAdd,1,32000,testDuration,false);
                 System.out.println("Warming up done");
                 wu = false;
                 i--;
