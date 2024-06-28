@@ -1,10 +1,11 @@
 package benchmark;
 
 import abstractions.Set;
+import abstractions.SetFactory;
 
 import java.util.concurrent.ConcurrentSkipListMap;
 
-public class JavaConcurrentSkipList implements Set {
+public class JavaConcurrentSkipList implements Set, SetFactory {
     private final ConcurrentSkipListMap<Integer, Integer> concurrentSkipListMap;
 
     public JavaConcurrentSkipList() {
@@ -40,5 +41,10 @@ public class JavaConcurrentSkipList implements Set {
             }
         }
         return resultSize;
+    }
+
+    @Override
+    public Set newInstance() {
+        return new JavaConcurrentSkipList();
     }
 }

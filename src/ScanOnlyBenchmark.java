@@ -1,22 +1,23 @@
 import abstractions.Set;
+import abstractions.SetFactory;
 import benchmark.JavaConcurrentSkipList;
+import benchmark.Test;
 
 import java.util.ArrayList;
 
-public class ScanOnlyBenchmark {
-    public static void main(String[] args) {
-      System.out.println("SCAN ONLY");
-      System.out.println("JavaConcurrentSkipList");
-   //   run(new JavaConcurrentSkipList());
-      System.out.println("MTASet");
-      run(new MTASet(2,256));
+public class ScanOnlyBenchmark implements Test {
+    Set set;
+
+    public ScanOnlyBenchmark(Set set){
+        this.set = set;
     }
-    private static void run(Set cs){
+
+     public void run(){
         int availableProcessors = Runtime.getRuntime().availableProcessors();
         int dataRange = 1000000;
         int numberOfThreads = 1;
         int numberOfScanThreads = 1;//Integer.parseInt(args[0]);
-        int numberOfTests = 80;
+        int numberOfTests = 4;
         int testDuration=10000;
         int perAdd=0;
         int perContains=0;
@@ -31,52 +32,22 @@ public class ScanOnlyBenchmark {
         System.out.println("insert: "+perAdd+"%");
         System.out.println("remove: "+perRemove+"%");
         System.out.println("contains: "+perContains+"%");
-        System.out.println("Starting....");
-        boolean wu=true;
+        System.out.println("Scan Only, Starting....");
+
+
         for (int i = 0; i < numberOfTests; i++) {
 
-            TestSet.fill(cs,dataRange);
-
-            if(wu){
-
-                System.out.println("Warming up...");
-                TestResult testResult = TestSet.runTest(cs, 5, 0 ,dataRange, 0, 95,1,32000,20000,false);
-                System.out.println("Warming up done");
-                wu = false;
-                i--;
-                continue;
-            }
-
+            TestSet.fill(set,1000000);
             long start = System.currentTimeMillis();
-            TestResult testResult = TestSet.runTest(cs, numberOfThreads, numberOfScanThreads ,dataRange, perContains, perAdd,1,32000,testDuration,scanOnly);
+            TestResult testResult = TestSet.runTest(set, numberOfThreads, numberOfScanThreads ,dataRange, perContains, perAdd,1,32000,testDuration,scanOnly);
             long finish = System.currentTimeMillis();
-            long timeElapsed = finish - start;
-            //long timeElapsedMicroseconds = timeElapsed * 1000;
-            //System.out.println();
-            //System.out.println("TEST " + (i + 1) + "/" + numberOfTests + " FINISHED - RESULTS");
-            //System.out.println("*****************************************");
-            //System.out.println("Total adds:               " + testResult.TotalAdds.longValue());
-            //System.out.println("Total removes:            " + testResult.TotalRemoves.longValue());
-            //System.out.println("Total contains:           " + testResult.TotalContains.longValue());
-            System.out.println(numberOfScanThreads +":"+ testResult.numberOfScannedKeys.longValue());
-            if(testResult.numberOfScannedKeys.longValue() == 0){
-                System.out.println("0!!!!");
-                int[] qre=new int[1000];
-                cs.getRange(qre,1,900);
-                for (int k=0;k<1000;k++){
-                    System.out.println(qre[k]);
-                }
-            }
-            //System.out.println("Adds/\u33B2:                  " + testResult.TotalAdds.doubleValue() / (timeElapsedMicroseconds));
-            //System.out.println("Removes/\u33B2:               " + testResult.TotalRemoves.doubleValue() / (timeElapsedMicroseconds));
-            //System.out.println("Contains/\u33B2:              " + testResult.TotalContains.doubleValue() / (timeElapsedMicroseconds));
-            //System.out.println("Total Threads:            " + numberOfThreads);
-            //System.out.println("Scan Threads:             " + numberOfScanThreads);
-            //System.out.println("Non Scan Threads:         " + (numberOfThreads-numberOfScanThreads));
-            //System.out.println("Total time:               " + timeElapsed + " milliseconds");
+            System.out.println("("+numberOfScanThreads +","+ testResult.numberOfScannedKeys.longValue()+")");
             numberOfThreads++;
             numberOfScanThreads++;
+            this.set = ((SetFactory)set).newInstance();
+        }
+
 
         }
-    }
+
 }

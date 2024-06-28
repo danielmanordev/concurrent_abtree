@@ -1,10 +1,14 @@
 import abstractions.Set;
+import abstractions.SetFactory;
 
-public class MTASet implements Set {
+public class MTASet implements Set, SetFactory {
 
     private OCCABTree occABTree;
 
+    private int a,b;
     public MTASet(int a, int b){
+        this.a = a;
+        this.b = b;
         this.occABTree = new OCCABTree(a,b);
     }
 
@@ -28,5 +32,10 @@ public class MTASet implements Set {
     public int getRange(int[] result, int low, int high) {
         int numOfScannedKeys = this.occABTree.scan(result,low,high);
         return numOfScannedKeys;
+    }
+
+    @Override
+    public Set newInstance() {
+        return new MTASet(this.a,this.b);
     }
 }
