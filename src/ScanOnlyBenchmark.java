@@ -38,8 +38,9 @@ public class ScanOnlyBenchmark {
             TestSet.fill(cs,dataRange);
 
             if(wu){
+
                 System.out.println("Warming up...");
-                TestResult testResult = TestSet.runTest(cs, numberOfThreads, numberOfScanThreads ,dataRange, perContains, perAdd,1,32000,testDuration,false);
+                TestResult testResult = TestSet.runTest(cs, 5, 0 ,dataRange, 0, 95,1,32000,20000,false);
                 System.out.println("Warming up done");
                 wu = false;
                 i--;
@@ -58,6 +59,14 @@ public class ScanOnlyBenchmark {
             //System.out.println("Total removes:            " + testResult.TotalRemoves.longValue());
             //System.out.println("Total contains:           " + testResult.TotalContains.longValue());
             System.out.println(numberOfScanThreads +":"+ testResult.numberOfScannedKeys.longValue());
+            if(testResult.numberOfScannedKeys.longValue() == 0){
+                System.out.println("0!!!!");
+                int[] qre=new int[1000];
+                cs.getRange(qre,1,900);
+                for (int k=0;k<1000;k++){
+                    System.out.println(qre[k]);
+                }
+            }
             //System.out.println("Adds/\u33B2:                  " + testResult.TotalAdds.doubleValue() / (timeElapsedMicroseconds));
             //System.out.println("Removes/\u33B2:               " + testResult.TotalRemoves.doubleValue() / (timeElapsedMicroseconds));
             //System.out.println("Contains/\u33B2:              " + testResult.TotalContains.doubleValue() / (timeElapsedMicroseconds));

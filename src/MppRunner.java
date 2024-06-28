@@ -30,14 +30,14 @@ public class MppRunner {
 
         int dataRange = 1000000;
         int numberOfThreads = 12;
-        int numberOfScanThreads = 12;//Integer.parseInt(args[0]);
+        int numberOfScanThreads = 1;//Integer.parseInt(args[0]);
         int a = 2;
         int b = 256;
         int numberOfTests = 5 ;
         int testDuration=10000;
-        int perAdd=0;
+        int perAdd=80;
         int perContains=0;
-        int perRemove=0;
+        int perRemove=100-perAdd-perContains;
         /// int perRange=100-perAdd-perContains-perRemove;
         ArrayList<Long> adds = new ArrayList();
         System.out.println("Number of available processors: "+availableProcessors);
@@ -55,7 +55,7 @@ public class MppRunner {
             TestSet.fill(concurrentSet,dataRange);
 
             long start = System.currentTimeMillis();
-            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, numberOfScanThreads ,dataRange, perContains, perAdd,1,32000,testDuration,true);
+            TestResult testResult = TestSet.runTest(concurrentSet, numberOfThreads, numberOfScanThreads ,dataRange, perContains, perAdd,1,32000,testDuration,false);
             long finish = System.currentTimeMillis();
             long timeElapsed = finish - start;
             long timeElapsedMicroseconds = timeElapsed * 1000;
@@ -76,7 +76,7 @@ public class MppRunner {
             System.out.println("Non Scan Threads:         " + (numberOfThreads-numberOfScanThreads));
             System.out.println("Total time:               " + timeElapsed + " milliseconds");
             //numberOfThreads++;
-            //numberOfScanThreads++;
+            numberOfScanThreads++;
             if (i > 1) {
                 adds.add(testResult.TotalAdds.longValue());
             }
