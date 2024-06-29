@@ -38,4 +38,9 @@ public class MTASet implements Set, SetFactory {
     public Set newInstance() {
         return new MTASet(this.a,this.b);
     }
+
+    @Override
+    public String getName() {
+        return "MTASet";
+    }
 }

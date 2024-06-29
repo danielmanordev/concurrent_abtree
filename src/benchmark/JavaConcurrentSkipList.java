@@ -47,4 +47,9 @@ public class JavaConcurrentSkipList implements Set, SetFactory {
     public Set newInstance() {
         return new JavaConcurrentSkipList();
     }
+
+    @Override
+    public String getName() {
+        return "JavaConcurrentSkipList";
+    }
 }

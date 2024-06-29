@@ -34,6 +34,7 @@ public class Scan32KWithInsertsAndDeletesBenchmark {
             System.out.println("insert: "+perAdd+"%");
             System.out.println("remove: "+perRemove+"%");
             System.out.println("contains: "+perContains+"%");
+            System.out.println("name: "+((SetFactory)set).getName());
             System.out.println("Scan32KWithInsertsAndDeletesBenchmark, Starting....");
 
 

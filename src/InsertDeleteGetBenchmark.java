@@ -31,6 +31,7 @@ public class InsertDeleteGetBenchmark implements Test {
         System.out.println("Number of tests: "+numberOfTests);
         System.out.println("Dataset Size: "+dataRange+" keys");
         System.out.println("Single test duration: "+testDuration+ " ms");
+        System.out.println("name: "+((SetFactory)set).getName());
         System.out.println("Starting, "+ perAdd+"% insert, "+perRemove+"% delete "+perContains+"% get");
         Set concurrentSet = set;
         for (int i = 0; i < numberOfTests; i++) {

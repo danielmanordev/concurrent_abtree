@@ -38,4 +38,9 @@ public class OCCABTreeWithScanSet implements Set, SetFactory {
     public Set newInstance() {
         return new OCCABTreeWithScanSet(a,b);
     }
+
+    @Override
+    public String getName() {
+        return "OCCABTreeWithScanSet";
+    }
 }
