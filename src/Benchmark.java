@@ -3,15 +3,11 @@ import benchmark.occabtreewithscan.src.OCCABTreeWithScanSet;
 
 public class Benchmark {
     public static void main(String[] args) {
-        int numberOfThreads = 80;
+        int numberOfThreads = 64;
 
         System.out.println("WARMUP - START");
-        var jcsScan3280insert20Deletewu = new Scan32KWithInsertsAndDeletesBenchmark(new JavaConcurrentSkipList(),80,20,numberOfThreads);
-        jcsScan3280insert20Deletewu.run();
-        var occabScan8020wu = new Scan32KWithInsertsAndDeletesBenchmark(new OCCABTreeWithScanSet(2,256),80,20,numberOfThreads);
-        occabScan8020wu.run();
-        var mtaSetScan3280insert20Deletewu = new Scan32KWithInsertsAndDeletesBenchmark(new MTASet(2,256),80,20,numberOfThreads);
-        mtaSetScan3280insert20Deletewu.run();
+        var wu = new WarmupBenchmark(new MTASet(2,256),80,20,30,80);
+        wu.run();
         System.out.println("WARMUP - END");
 
 
@@ -27,7 +23,6 @@ public class Benchmark {
         var mtaso = new ScanOnlyBenchmark(new MTASet(2,256),numberOfThreads);
         mtaso.run();
         System.out.println("SCAN ONLY - END");
-
         ////////////////////////////////////////////////////////
 
         System.out.println("80% Insert 20% Delete - START");

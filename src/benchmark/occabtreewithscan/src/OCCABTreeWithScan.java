@@ -29,7 +29,7 @@ public class OCCABTreeWithScan {
         entry = createInternalNode(true,1,anyKey);
         entry.nodes[0] = entryLeft;
 
-        this.threadsDataSize = 10000;
+        this.threadsDataSize = 100;
         this.threadsData = new ThreadData[threadsDataSize];
 
     }
@@ -847,7 +847,7 @@ public class OCCABTreeWithScan {
 
             // deletedKey.deletionTime = TIMESTAMP;
             deletedKey.deletionTime = TIMESTAMP.get();
-            int threadId = (int) Thread.currentThread().getId();
+            int threadId = (int) Thread.currentThread().getId()%100;
             initThread(threadId);
             announcePhysicalDeletion(threadId ,deletedKey);
 
@@ -1141,7 +1141,7 @@ public class OCCABTreeWithScan {
     }
 
     public int scan(int[] result, int low, int high) {
-        int threadId=((int) Thread.currentThread().getId());
+        int threadId=((int) Thread.currentThread().getId()%100);
         this.traversalStart(threadId,low,high,entry);
         var numberOfScannedKeys=traversalEnd(threadId,result);
         return numberOfScannedKeys;
