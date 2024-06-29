@@ -7,9 +7,11 @@ import java.util.ArrayList;
 
 public class ScanOnlyBenchmark implements Test {
     Set set;
+    int maxNumberOfScanThreads;
 
-    public ScanOnlyBenchmark(Set set){
+    public ScanOnlyBenchmark(Set set, int maxNumberOfScanThreads){
         this.set = set;
+        this.maxNumberOfScanThreads = maxNumberOfScanThreads;
     }
 
      public void run(){
@@ -17,7 +19,7 @@ public class ScanOnlyBenchmark implements Test {
         int dataRange = 1000000;
         int numberOfThreads = 1;
         int numberOfScanThreads = 1;//Integer.parseInt(args[0]);
-        int numberOfTests = 4;
+        int numberOfTests = maxNumberOfScanThreads;
         int testDuration=10000;
         int perAdd=0;
         int perContains=0;
@@ -37,11 +39,11 @@ public class ScanOnlyBenchmark implements Test {
 
         for (int i = 0; i < numberOfTests; i++) {
 
-            TestSet.fill(set,1000000);
+            TestSet.seed(set,1000000,1000000);
             long start = System.currentTimeMillis();
             TestResult testResult = TestSet.runTest(set, numberOfThreads, numberOfScanThreads ,dataRange, perContains, perAdd,1,32000,testDuration,scanOnly);
             long finish = System.currentTimeMillis();
-            System.out.println("("+numberOfScanThreads +","+ testResult.numberOfScannedKeys.longValue()+")");
+            System.out.println("("+numberOfScanThreads +" "+ testResult.numberOfScannedKeys.longValue()+")");
             numberOfThreads++;
             numberOfScanThreads++;
             this.set = ((SetFactory)set).newInstance();
