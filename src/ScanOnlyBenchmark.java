@@ -39,7 +39,7 @@ public class ScanOnlyBenchmark implements Test {
 
         for (int i = 0; i < numberOfTests; i++) {
 
-            TestSet.seed(set,1000000,1000000);
+            TestSet.fill(set,64000);
             long start = System.currentTimeMillis();
             TestResult testResult = TestSet.runTest(set, numberOfThreads, numberOfScanThreads ,dataRange, perContains, perAdd,1,32000,testDuration,scanOnly);
             long finish = System.currentTimeMillis();

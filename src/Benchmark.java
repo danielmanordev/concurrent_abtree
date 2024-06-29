@@ -1,8 +1,12 @@
 import benchmark.JavaConcurrentSkipList;
+import benchmark.occabtreewithscan.src.OCCABTreeWithScanSet;
 
 public class Benchmark {
     public static void main(String[] args) {
         System.out.println("SCAN ONLY");
+        System.out.println("OCCABTreeWithScanSet");
+        var occAabws = new ScanOnlyBenchmark(new OCCABTreeWithScanSet(2,256),8);
+        occAabws.run();
         System.out.println("JavaConcurrentSkipList");
         var jcs = new ScanOnlyBenchmark(new JavaConcurrentSkipList(),8);
         jcs.run();
