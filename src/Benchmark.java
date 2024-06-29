@@ -3,7 +3,7 @@ import benchmark.occabtreewithscan.src.OCCABTreeWithScanSet;
 
 public class Benchmark {
     public static void main(String[] args) {
-        int numberOfThreads = 8;
+        int numberOfThreads = 80;
 
         System.out.println("WARMUP - START");
         var jcsScan3280insert20Deletewu = new Scan32KWithInsertsAndDeletesBenchmark(new JavaConcurrentSkipList(),80,20,numberOfThreads);
