@@ -59,9 +59,9 @@ class TestSet extends Thread
 
                 } else {
 
-                    var randomInt = ThreadLocalRandom.current().nextInt(1,this.dataRange);
+                    int randomInt = ThreadLocalRandom.current().nextInt(1,this.dataRange);
 
-                    var opValue = ThreadLocalRandom.current().nextInt(0,100); // uniformly distributed
+                    int opValue = ThreadLocalRandom.current().nextInt(0,100); // uniformly distributed
 
 
                     if(opValue >= 0 && opValue < this.perCon) {
@@ -72,11 +72,8 @@ class TestSet extends Thread
                     else {
                         prints.add(randomInt + " not found");
                     }*/
-                        if(set.contains(randomInt) != 0)
-                        {
-                            numberOfContains=numberOfContains.add(BigInteger.ONE);
-                        }
-
+                        set.contains(randomInt);
+                        numberOfContains=numberOfContains.add(BigInteger.ONE);
                     }
 
                     // add
@@ -87,10 +84,8 @@ class TestSet extends Thread
                     else {
                         prints.add(randomInt + " exists and was not added") ;
                     }*/
-                        if(set.add(randomInt, randomInt) != 0) {
-                            numberOfAdds=numberOfAdds.add(BigInteger.ONE);
-                        }
-
+                        set.add(randomInt, randomInt);
+                        numberOfAdds=numberOfAdds.add(BigInteger.ONE);
                     }
                     else {
                    /*if(){
@@ -99,10 +94,8 @@ class TestSet extends Thread
                     else {
                         prints.add(randomInt + " exists and was not added") ;
                     }*/
-                        if(set.remove(randomInt) != 0) {
-                            numberOfRemoves=numberOfRemoves.add(BigInteger.ONE);
-                        }
-
+                        set.remove(randomInt);
+                        numberOfRemoves=numberOfRemoves.add(BigInteger.ONE);
                     }
 
                 }
