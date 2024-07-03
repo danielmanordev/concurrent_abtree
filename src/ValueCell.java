@@ -4,7 +4,7 @@ import util.VersionsBST;
 public class ValueCell implements Comparable<ValueCell> {
 
     private final VersionsBST versionsBst;
-    private VersionedValue latestValue;
+    public VersionedValue latestValue;
     public final int key;
 
     private void addLatestValueToBST(){

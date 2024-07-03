@@ -72,8 +72,11 @@ class TestSet extends Thread
                     else {
                         prints.add(randomInt + " not found");
                     }*/
-                        set.contains(randomInt);
-                        numberOfContains=numberOfContains.add(BigInteger.ONE);
+                        if(set.contains(randomInt) != 0)
+                        {
+                            numberOfContains=numberOfContains.add(BigInteger.ONE);
+                        }
+
                     }
 
                     // add
@@ -84,8 +87,10 @@ class TestSet extends Thread
                     else {
                         prints.add(randomInt + " exists and was not added") ;
                     }*/
-                        set.add(randomInt, randomInt);
-                        numberOfAdds=numberOfAdds.add(BigInteger.ONE);
+                        if(set.add(randomInt, randomInt) != 0) {
+                            numberOfAdds=numberOfAdds.add(BigInteger.ONE);
+                        }
+
                     }
                     else {
                    /*if(){
@@ -94,8 +99,10 @@ class TestSet extends Thread
                     else {
                         prints.add(randomInt + " exists and was not added") ;
                     }*/
-                        set.remove(randomInt);
-                        numberOfRemoves=numberOfRemoves.add(BigInteger.ONE);
+                        if(set.remove(randomInt) != 0) {
+                            numberOfRemoves=numberOfRemoves.add(BigInteger.ONE);
+                        }
+
                     }
 
                 }
