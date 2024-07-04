@@ -41,7 +41,7 @@ public class OCCABTree {
     }
 
     private boolean isParentOf(Node parent, Node child){
-        /*if(child == null){
+        if(child == null){
             return true;
         }
         for(int i=0;i<parent.size;i++){
@@ -50,7 +50,7 @@ public class OCCABTree {
                     return true;
                 }
             }
-        }*/
+        }
         return true;
     }
 
@@ -700,12 +700,13 @@ public class OCCABTree {
                    }
 
                    if(isRightMarked || isLeftMarked){
+                       if(!isLeftSameParent){
+                           //  left.left.unlock();
+                       }
                        if(!isRightSameParent){
                       //     right.right.unlock();
                        }
-                       if(!isLeftSameParent){
-                         //  left.left.unlock();
-                       }
+
 
                        node.unlock();
                        sibling.unlock();
@@ -742,13 +743,15 @@ public class OCCABTree {
                        left.left.right = newNodeExt;
                    }
 
+                   if(!isLeftSameParent){
+                       //   left.left.unlock();
+                   }
+
+
                    if(!isRightSameParent){
                      //  right.right.unlock();
                    }
 
-                   if(!isLeftSameParent){
-                    //   left.left.unlock();
-                   }
 
 
                    newNode = newNodeExt;
@@ -908,12 +911,13 @@ public class OCCABTree {
                    }
 
                    if(isRightMarked || isLeftMarked){
+                       if(!isLeftSameParent){
+                           //   left.left.unlock();
+                       }
                        if(!isRightSameParent){
                          //  right.right.unlock();
                        }
-                       if(!isLeftSameParent){
-                        //   left.left.unlock();
-                       }
+
 
                        node.unlock();
                        sibling.unlock();
@@ -1008,13 +1012,14 @@ public class OCCABTree {
                node.mark();
                parent.mark();
                sibling.mark();
+               if(!isLeftSameParent){
+                   //  left.left.unlock();
+               }
                if(!isRightSameParent){
                  //  right.right.unlock();
                }
 
-               if(!isLeftSameParent){
-                 //  left.left.unlock();
-               }
+
                node.unlock();
                sibling.unlock();
                parent.unlock();
