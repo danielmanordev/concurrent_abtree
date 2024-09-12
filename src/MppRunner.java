@@ -8,11 +8,11 @@ public class MppRunner {
     public static void main(String[] args) throws IOException, ExecutionException, InterruptedException {
         int cores = Runtime.getRuntime().availableProcessors();
 
-        int dataRange = 10000;
-        int numberOfThreads = 8;
+        int dataRange = 1000000;
+        int numberOfThreads = 1;
         int a = 2;
-        int b = 16;
-        int numberOfTests = 96;
+        int b = 256;
+        int numberOfTests = 7;
         int testDuration=10000;
         int perAdd=100;
         int perContains=0;
@@ -52,19 +52,9 @@ public class MppRunner {
             System.out.println("Contains/\u33B2:              " + testResult.TotalContains.longValue() / (timeElapsedMicroseconds));
             System.out.println("Threads:                  " + numberOfThreads);
             System.out.println("Total time:               " + timeElapsed + " milliseconds");
-            // numberOfThreads++;
-            if(i >1) {
-                adds.add(testResult.TotalAdds.longValue());
-            }
+            numberOfThreads*=2;
+
         }
-        if(numberOfTests > 2){
-            double average = adds
-                    .stream()
-                    .mapToDouble(n -> n)
-                    .average().orElse(0.0);
-            average /= 1000;
-            int numberOfCalcTests = adds.size();
-            System.out.println("Adds/\u33B2 last " +numberOfCalcTests+ " tests average:  " + average);
-        }
+
     }
 }
